@@ -7,14 +7,14 @@ namespace AvBench.Core.Scenarios;
 
 public sealed class ScenarioRunner
 {
-    private readonly AvProfile _profile;
+    private readonly string _avName;
     private readonly string _outputRoot;
     private readonly string _runnerVersion;
     private readonly string _suiteManifestSha;
 
-    public ScenarioRunner(AvProfile profile, string outputRoot, string runnerVersion, string suiteManifestSha)
+    public ScenarioRunner(string avName, string outputRoot, string runnerVersion, string suiteManifestSha)
     {
-        _profile = profile;
+        _avName = avName;
         _outputRoot = outputRoot;
         _runnerVersion = runnerVersion;
         _suiteManifestSha = suiteManifestSha;
@@ -84,7 +84,7 @@ public sealed class ScenarioRunner
         var result = new RunResult
         {
             ScenarioId = scenario.Id,
-            AvProfile = _profile.Name,
+            AvName = _avName,
             TimestampUtc = DateTime.UtcNow,
             Command = string.IsNullOrWhiteSpace(scenario.Arguments) ? scenario.FileName : $"{scenario.FileName} {scenario.Arguments}",
             WorkingDir = scenario.WorkingDirectory,

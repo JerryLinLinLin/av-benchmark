@@ -1,5 +1,4 @@
 using System.CommandLine;
-using System.Text.Json;
 using AvBench.Core.Environment;
 using AvBench.Core.Models;
 using AvBench.Core.Output;
@@ -13,11 +12,11 @@ public static class RunCommand
 {
     public static Command Create()
     {
-        var profileOption = new Option<FileInfo>("--profile")
+        var nameOption = new Option<string>("--name")
         {
-            Description = "Path to an AV profile JSON file."
+            Description = "Label for this VM's AV configuration, such as baseline-os or defender-default."
         };
-        profileOption.Required = true;
+        nameOption.Required = true;
 
         var benchDirOption = new Option<DirectoryInfo>("--bench-dir")
         {
@@ -38,14 +37,14 @@ public static class RunCommand
         };
 
         var command = new Command("run", "Execute milestone 1 benchmark scenarios.");
-        command.Options.Add(profileOption);
+        command.Options.Add(nameOption);
         command.Options.Add(benchDirOption);
         command.Options.Add(repetitionsOption);
         command.Options.Add(outputOption);
 
         command.SetAction(async parseResult =>
         {
-            var profilePath = parseResult.GetValue(profileOption)!;
+            var avName = parseResult.GetValue(nameOption)!;
             var benchDir = parseResult.GetValue(benchDirOption)!;
             var repetitions = parseResult.GetValue(repetitionsOption);
             var outputRoot = parseResult.GetValue(outputOption)!;
@@ -56,20 +55,15 @@ public static class RunCommand
                 throw new FileNotFoundException($"Suite manifest not found at {manifestPath}. Run `avbench setup` first.");
             }
 
-            if (!profilePath.Exists)
+            if (string.IsNullOrWhiteSpace(avName))
             {
-                throw new FileNotFoundException($"Profile not found: {profilePath.FullName}");
+                throw new InvalidOperationException("`--name` must be a non-empty AV configuration label.");
             }
 
-            var manifest = JsonSerializer.Deserialize(
+            var manifest = System.Text.Json.JsonSerializer.Deserialize(
                 await File.ReadAllTextAsync(manifestPath, CancellationToken.None),
                 AvBenchJsonContext.Default.SuiteManifest)
                 ?? throw new InvalidOperationException("Suite manifest could not be parsed.");
-
-            var profile = JsonSerializer.Deserialize(
-                await File.ReadAllTextAsync(profilePath.FullName, CancellationToken.None),
-                AvBenchJsonContext.Default.AvProfile)
-                ?? throw new InvalidOperationException("AV profile could not be parsed.");
 
             Directory.CreateDirectory(outputRoot.FullName);
             var runDirectory = Path.Combine(outputRoot.FullName, DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"));
@@ -80,7 +74,7 @@ public static class RunCommand
             Console.WriteLine("[run] Idle check: not yet enforced in milestone 1; proceeding with benchmark execution.");
 
             var runner = new ScenarioRunner(
-                profile,
+                avName.Trim(),
                 runDirectory,
                 SystemInfoProvider.GetRunnerVersion(),
                 SetupService.ComputeManifestSha(manifestPath));

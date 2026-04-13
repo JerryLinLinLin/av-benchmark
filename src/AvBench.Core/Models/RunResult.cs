@@ -7,8 +7,8 @@ public sealed class RunResult
     [JsonPropertyName("scenario_id")]
     public string ScenarioId { get; set; } = string.Empty;
 
-    [JsonPropertyName("av_profile")]
-    public string AvProfile { get; set; } = string.Empty;
+    [JsonPropertyName("av_name")]
+    public string AvName { get; set; } = string.Empty;
 
     [JsonPropertyName("repetition")]
     public int Repetition { get; set; }

@@ -9,7 +9,7 @@ public static class CsvResultWriter
     private static readonly string[] Headers =
     [
         "scenario_id",
-        "av_profile",
+        "av_name",
         "repetition",
         "timestamp_utc",
         "command",
@@ -39,7 +39,7 @@ public static class CsvResultWriter
         {
             builder.AppendLine(string.Join(",",
                 Escape(result.ScenarioId),
-                Escape(result.AvProfile),
+                Escape(result.AvName),
                 result.Repetition.ToString(CultureInfo.InvariantCulture),
                 Escape(result.TimestampUtc.ToString("O", CultureInfo.InvariantCulture)),
                 Escape(result.Command),
