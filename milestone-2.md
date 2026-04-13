@@ -1182,24 +1182,22 @@ Create `Program.cs` and `CompareCommand.cs` for the Compare project.
 
 ### Step 10: End-to-end test
 
-Run on two VMs (baseline + defender):
+All testing happens inside the same VM. Run `avbench` twice with different profiles (e.g., toggle Defender real-time protection between runs), then run `avbench-compare` locally against both result directories.
 
-VM 1 (baseline):
 ```powershell
+# Run 1: with current AV profile (e.g., defender-default)
 avbench setup --bench-dir C:\bench
-avbench run --profile profiles\baseline-os.json --bench-dir C:\bench --output results -n 3
-```
+avbench run --profile profiles\defender-default.json --bench-dir C:\bench --output C:\results\defender-default -n 3
 
-VM 2 (defender):
-```powershell
-avbench setup --bench-dir C:\bench
-avbench run --profile profiles\defender-default.json --bench-dir C:\bench --output results -n 3
-```
+# Run 2: disable real-time protection, run again as baseline
+# (manually toggle Defender or apply a different profile)
+avbench run --profile profiles\baseline-os.json --bench-dir C:\bench --output C:\results\baseline-os -n 3
 
-Copy results to host, run compare:
-```powershell
+# Compare both runs locally
 avbench-compare --baseline C:\results\baseline-os --input C:\results\defender-default --output C:\results\comparison
 ```
+
+If only one profile is available during development, test `avbench-compare` with synthetic data: duplicate a results directory, rename the profile in the copied `run.json` files, and run compare against both. This validates the comparison pipeline without needing a second AV configuration.
 
 Expected output:
 ```
