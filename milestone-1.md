@@ -5,7 +5,6 @@
 - `avbench setup` — install Git + Rust, clone ripgrep, run `cargo fetch`
 - `avbench run` — ripgrep compile scenarios (clean/incremental/noop) + `file-create-delete` API microbench
 - Job object process-tree runner with default metrics
-- AV process sampler
 - JSON output (`run.json`) and CSV flattening (`runs.csv`)
 
 ## Target Framework and Dependencies
@@ -50,7 +49,6 @@ av-benchmark/
       Runner/
         JobObject.cs              → P/Invoke wrapper for Windows Job objects
         ProcessTreeRunner.cs      → launch process under Job, collect metrics
-        AvProcessSampler.cs       → poll AV process CPU/WS during a run
       Scenarios/
         ScenarioRunner.cs         → orchestrate warmup + repetitions
         RipgrepScenario.cs
@@ -110,7 +108,7 @@ using System.CommandLine;
 using System.Security.Principal;
 using AvBench.Cli.Commands;
 
-// Require admin — tool installs, WPR, ProcMon, AV process sampling all need elevation
+// Require admin — tool installs and WPR tracing need elevation
 using var identity = WindowsIdentity.GetCurrent();
 var principal = new WindowsPrincipal(identity);
 if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
@@ -280,9 +278,6 @@ public sealed class RunResult
     [JsonPropertyName("total_processes")]
     public int TotalProcesses { get; set; }
 
-    [JsonPropertyName("av_samples")]
-    public List<AvSample> AvSamples { get; set; } = [];
-
     [JsonPropertyName("machine")]
     public MachineInfo Machine { get; set; } = new();
 
@@ -291,18 +286,6 @@ public sealed class RunResult
 
     [JsonPropertyName("suite_manifest_sha")]
     public string SuiteManifestSha { get; set; } = "";
-}
-
-public sealed class AvSample
-{
-    [JsonPropertyName("process")]
-    public string Process { get; set; } = "";
-
-    [JsonPropertyName("mean_cpu_pct")]
-    public double MeanCpuPct { get; set; }
-
-    [JsonPropertyName("peak_ws_mb")]
-    public long PeakWsMb { get; set; }
 }
 
 public sealed class MachineInfo
@@ -352,9 +335,6 @@ public sealed class AvProfile
 
     [JsonPropertyName("exclusion_paths")]
     public List<string> ExclusionPaths { get; set; } = [];
-
-    [JsonPropertyName("process_names")]
-    public List<string> ProcessNames { get; set; } = [];
 
     [JsonPropertyName("notes")]
     public string Notes { get; set; } = "";
@@ -986,121 +966,6 @@ public static class ProcessTreeRunner
 
 Why not `CREATE_SUSPENDED`? `Process.Start()` in .NET doesn't expose `CREATE_SUSPENDED` directly. We would need raw `CreateProcess` P/Invoke. For M1, the `Process.Start` then immediate `AssignProcess` approach is sufficient — compile workloads run for seconds to minutes, and the process is assigned to the job before it spawns any children. If we need exact coverage from process start, we can add raw `CreateProcess` P/Invoke in M2.
 
-## AV Process Sampler
-
-### `AvProcessSampler.cs`
-
-Polls AV process CPU and working set at a regular interval during a benchmark run.
-
-```csharp
-using System.Diagnostics;
-using AvBench.Core.Models;
-
-namespace AvBench.Core.Runner;
-
-public sealed class AvProcessSampler : IDisposable
-{
-    private readonly List<string> _processNames;
-    private readonly TimeSpan _interval;
-    private readonly CancellationTokenSource _cts = new();
-    private readonly Task _task;
-    private readonly List<Sample> _samples = [];
-
-    private record Sample(string Name, double CpuPct, long WorkingSetMb, DateTime Timestamp);
-
-    public AvProcessSampler(List<string> processNames, TimeSpan? interval = null)
-    {
-        _processNames = processNames;
-        _interval = interval ?? TimeSpan.FromSeconds(1);
-        _task = Task.Run(SampleLoop);
-    }
-
-    private async Task SampleLoop()
-    {
-        // Track per-process CPU times for delta calculation
-        var lastCpuTimes = new Dictionary<string, TimeSpan>();
-
-        while (!_cts.Token.IsCancellationRequested)
-        {
-            foreach (var name in _processNames)
-            {
-                // Remove .exe suffix for Process.GetProcessesByName
-                var searchName = name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
-                    ? name[..^4] : name;
-
-                foreach (var proc in Process.GetProcessesByName(searchName))
-                {
-                    try
-                    {
-                        var totalCpu = proc.TotalProcessorTime;
-                        var ws = proc.WorkingSet64 / (1024 * 1024);
-
-                        double cpuPct = 0;
-                        var key = $"{name}:{proc.Id}";
-                        if (lastCpuTimes.TryGetValue(key, out var lastCpu))
-                        {
-                            var cpuDelta = totalCpu - lastCpu;
-                            cpuPct = cpuDelta.TotalMilliseconds /
-                                     _interval.TotalMilliseconds /
-                                     Environment.ProcessorCount * 100;
-                        }
-                        lastCpuTimes[key] = totalCpu;
-
-                        lock (_samples)
-                        {
-                            _samples.Add(new Sample(name, cpuPct, ws, DateTime.UtcNow));
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        // Process may have exited between enumeration and property access
-                    }
-                    finally
-                    {
-                        proc.Dispose();
-                    }
-                }
-            }
-
-            try
-            {
-                await Task.Delay(_interval, _cts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-        }
-    }
-
-    /// <summary>Stop sampling and return aggregated results per process name.</summary>
-    public List<AvSample> StopAndAggregate()
-    {
-        _cts.Cancel();
-        _task.GetAwaiter().GetResult();
-
-        lock (_samples)
-        {
-            return _samples
-                .GroupBy(s => s.Name)
-                .Select(g => new AvSample
-                {
-                    Process = g.Key,
-                    MeanCpuPct = Math.Round(g.Average(s => s.CpuPct), 1),
-                    PeakWsMb = g.Max(s => s.WorkingSetMb)
-                })
-                .ToList();
-        }
-    }
-
-    public void Dispose()
-    {
-        _cts.Cancel();
-        _cts.Dispose();
-    }
-}
-```
-
 ## Scenario Orchestration
 
 ### `ScenarioRunner.cs`
@@ -1175,9 +1040,6 @@ public sealed class ScenarioRunner
         var stdoutLog = Path.GetTempFileName();
         var stderrLog = Path.GetTempFileName();
 
-        // Start AV sampling
-        using var sampler = new AvProcessSampler(_profile.ProcessNames);
-
         var treeResult = ProcessTreeRunner.Run(
             fileName: scenario.FileName,
             arguments: scenario.Arguments,
@@ -1185,8 +1047,6 @@ public sealed class ScenarioRunner
             stdoutLogPath: stdoutLog,
             stderrLogPath: stderrLog,
             timeout: TimeSpan.FromHours(2));
-
-        var avSamples = sampler.StopAndAggregate();
 
         if (!isWarmup)
         {
@@ -1207,7 +1067,6 @@ public sealed class ScenarioRunner
                 IoReadOps = treeResult.Accounting.IoReadOps,
                 IoWriteOps = treeResult.Accounting.IoWriteOps,
                 TotalProcesses = treeResult.Accounting.TotalProcesses,
-                AvSamples = avSamples,
                 Machine = CollectMachineInfo(),
                 RunnerVersion = _runnerVersion
             };
@@ -1434,8 +1293,7 @@ public static class CsvResultWriter
         "scenario_id", "av_profile", "repetition", "timestamp_utc",
         "exit_code", "wall_ms", "user_cpu_ms", "kernel_cpu_ms",
         "peak_job_memory_mb", "io_read_bytes", "io_write_bytes",
-        "io_read_ops", "io_write_ops", "total_processes",
-        "av_mean_cpu_pct", "av_peak_ws_mb"
+        "io_read_ops", "io_write_ops", "total_processes"
     ];
 
     public static void Write(IReadOnlyList<RunResult> results, string path)
@@ -1445,10 +1303,6 @@ public static class CsvResultWriter
 
         foreach (var r in results)
         {
-            // Aggregate AV samples: take max mean_cpu_pct across monitored processes
-            var avCpu = r.AvSamples.Count > 0 ? r.AvSamples.Max(s => s.MeanCpuPct) : 0;
-            var avWs = r.AvSamples.Count > 0 ? r.AvSamples.Max(s => s.PeakWsMb) : 0;
-
             sb.AppendLine(string.Join(",",
                 Escape(r.ScenarioId),
                 Escape(r.AvProfile),
@@ -1463,9 +1317,7 @@ public static class CsvResultWriter
                 r.IoWriteBytes.ToString(CultureInfo.InvariantCulture),
                 r.IoReadOps.ToString(CultureInfo.InvariantCulture),
                 r.IoWriteOps.ToString(CultureInfo.InvariantCulture),
-                r.TotalProcesses.ToString(CultureInfo.InvariantCulture),
-                avCpu.ToString("F1", CultureInfo.InvariantCulture),
-                avWs.ToString(CultureInfo.InvariantCulture)
+                r.TotalProcesses.ToString(CultureInfo.InvariantCulture)
             ));
         }
 
@@ -1493,7 +1345,6 @@ public static class CsvResultWriter
   "realtime_protection": false,
   "cloud_features": false,
   "exclusion_paths": [],
-  "process_names": [],
   "notes": "AV real-time protection disabled or no AV installed"
 }
 ```
@@ -1508,7 +1359,6 @@ public static class CsvResultWriter
   "realtime_protection": true,
   "cloud_features": true,
   "exclusion_paths": [],
-  "process_names": ["MsMpEng.exe", "NisSrv.exe"],
   "notes": "Default Defender settings, no exclusions"
 }
 ```
@@ -1555,11 +1405,7 @@ Verify that `TotalProcesses >= 1` and `TotalUserTimeMs` is non-zero for a real w
 
 Create `ProcessTreeRunner.cs`. This combines `JobObject`, `Process.Start`, `Stopwatch`, and stdout/stderr streaming. Test with `cargo build --release` in any small Rust project.
 
-### Step 5: Build AV process sampler
-
-Create `AvProcessSampler.cs`. Test by running it while a known process (e.g., `notepad.exe`) is active, verify that CPU% and WS values appear.
-
-### Step 6: Build tool installers
+### Step 5: Build tool installers
 
 Create `ToolInstaller.cs`, `GitInstaller.cs`, `RustInstaller.cs`, `RepoCloner.cs`. Test each on a clean VM:
 
@@ -1568,23 +1414,23 @@ Create `ToolInstaller.cs`, `GitInstaller.cs`, `RustInstaller.cs`, `RepoCloner.cs
 3. `RepoCloner.CloneAndPin("https://github.com/BurntSushi/ripgrep", @"C:\bench\ripgrep")` → repo exists
 4. `RepoCloner.CargoFetch(@"C:\bench\ripgrep")` → dependencies cached
 
-### Step 7: Build scenario definitions
+### Step 6: Build scenario definitions
 
 Create `RipgrepScenario.cs` and `FileMicrobenchScenario.cs`. These produce `ScenarioDefinition` objects or run in-process.
 
-### Step 8: Build ScenarioRunner
+### Step 7: Build ScenarioRunner
 
-Create `ScenarioRunner.cs` that ties together ProcessTreeRunner, AvProcessSampler, and the scenario definitions.
+Create `ScenarioRunner.cs` that ties together ProcessTreeRunner and the scenario definitions.
 
-### Step 9: Build output writers
+### Step 8: Build output writers
 
 Create `JsonResultWriter.cs` and `CsvResultWriter.cs`. Test by writing a fake `RunResult` and verifying the output files.
 
-### Step 10: Wire up CLI commands
+### Step 9: Wire up CLI commands
 
 Create `SetupCommand.cs` and `RunCommand.cs` that call the above components.
 
-### Step 11: End-to-end test
+### Step 10: End-to-end test
 
 On a VM with Defender enabled:
 
@@ -1619,7 +1465,6 @@ results/
 | `AssignProcessToJobObject` after `Process.Start` misses early children | Under-count metrics for first few ms | Acceptable for compile workloads (seconds+). Add raw `CreateProcess` with `CREATE_SUSPENDED` in M2 if needed. |
 | Git/Rust installer URLs become stale | Setup fails on new VMs | Use `tools-manifest.json` to override URLs. Pin known-good versions. |
 | AV blocks installer downloads | Setup fails | Document: whitelist download URLs in AV profile if needed, or pre-stage installers on a network share. |
-| `System.Diagnostics.Process.TotalProcessorTime` access denied for AV processes | Sampler returns zeros | Catch `Win32Exception` per-process, log warning, continue. Already running as admin by default. |
 | ripgrep `crates/core/main.rs` path may change across versions | Incremental scenario breaks | Pin ripgrep to a specific SHA. Validate the touch target path in `setup`. |
 | Job object accounting on nested jobs | Double-counting on older Windows | Target Windows Server 2022+ / Windows 11+ where nested jobs are fully supported. |
 
@@ -1635,5 +1480,4 @@ Verification checklist:
 4. `avbench run` with defender-default profile produces higher wall times than baseline
 5. `run.json` wall_ms, user_cpu_ms, io_read_bytes are non-zero for clean builds
 6. `runs.csv` has the correct number of rows (scenarios × repetitions)
-7. AV samples show non-zero CPU% for `MsMpEng.exe` during builds
-8. File microbench reports ops/sec in a plausible range (thousands to hundreds of thousands)
+7. File microbench reports ops/sec in a plausible range (thousands to hundreds of thousands)

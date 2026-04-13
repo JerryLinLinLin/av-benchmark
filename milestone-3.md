@@ -14,7 +14,7 @@ All M1/M2 components are assumed working:
 
 - Full tool installer chain (Git, Rust, VS Build Tools, CMake, Ninja, .NET SDK)
 - All compile scenarios (ripgrep, Roslyn, LLVM, Files)
-- Job object runner, AV sampler, output writers
+- Job object runner, output writers
 - `avbench-compare` with CSV and markdown output
 
 ## New Files
@@ -860,9 +860,6 @@ private RunResult RunOnce(ScenarioDefinition scenario, bool isWarmup, string rep
         collectors.Add(typeperf);
     }
 
-    // Start AV sampling
-    using var sampler = new AvProcessSampler(_profile.ProcessNames);
-
     var treeResult = ProcessTreeRunner.Run(
         fileName: scenario.FileName,
         arguments: scenario.Arguments,
@@ -877,8 +874,6 @@ private RunResult RunOnce(ScenarioDefinition scenario, bool isWarmup, string rep
         collector.Stop();
         collector.Dispose();
     }
-
-    var avSamples = sampler.StopAndAggregate();
 
     // ... build RunResult (same as M1) ...
 }

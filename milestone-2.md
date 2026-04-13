@@ -13,9 +13,7 @@
 All M1 components are assumed working:
 
 - Solution structure (`AvBench.Cli`, `AvBench.Core`)
-- Job object process-tree runner (`ProcessTreeRunner`, `JobObject`)
-- AV process sampler (`AvProcessSampler`)
-- Data models (`RunResult`, `AvProfile`, `SuiteManifest`, `ScenarioDefinition`)
+- Job object process-tree runner (`ProcessTreeRunner`, `JobObject`)\n- Data models (`RunResult`, `AvProfile`, `SuiteManifest`, `ScenarioDefinition`)
 - Output writers (`JsonResultWriter`, `CsvResultWriter`)
 - CLI framework (`SetupCommand`, `RunCommand`)
 - Tool installers (`ToolInstaller` base, `GitInstaller`, `RustInstaller`, `RepoCloner`)

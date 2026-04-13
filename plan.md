@@ -24,8 +24,8 @@ This split exists because each VM runs in isolation with its own AV profile and 
 - `avbench setup` automates everything from tool installation to dependency hydration on a clean Windows VM.
 - Separate untimed setup from timed benchmark execution.
 - Pin repo SHAs and toolchain versions for each test campaign.
-- Default metrics are kept lean: wall time, CPU time, I/O bytes, peak memory, AV process CPU%. Everything else is opt-in.
-- `avbench` always runs as Administrator. Tool installation, WPR tracing, and AV process sampling all require elevation. Rather than scattering privilege checks, the program validates elevation at startup and exits immediately if not elevated.
+- Default metrics are kept lean: wall time, CPU time, I/O bytes, peak memory. Everything else is opt-in.
+- `avbench` always runs as Administrator. Tool installation and WPR tracing require elevation. Rather than scattering privilege checks, the program validates elevation at startup and exits immediately if not elevated.
 
 ## Why C#
 
@@ -206,7 +206,6 @@ Each profile records:
 - real-time protection state
 - cloud/reputation features enabled or disabled
 - exclusion paths
-- AV process names to monitor (e.g., `MsMpEng.exe`, `NisSrv.exe`)
 - setup notes
 
 ### Compile phases
@@ -258,15 +257,6 @@ Also collected per run:
 - Start/end timestamps (UTC)
 - Command line and working directory
 - Runner version and scenario version
-
-### AV process sampling (default)
-
-At a fixed interval (e.g., 1 second), sample each AV process listed in the profile:
-
-- CPU % (user + kernel)
-- Working set (MB)
-
-This is simple to implement with `System.Diagnostics.Process` and is the minimum needed to attribute overhead to the AV product.
 
 ### Opt-in metrics
 
@@ -337,9 +327,6 @@ Also produces:
   "io_read_ops": 84000,
   "io_write_ops": 51000,
   "total_processes": 47,
-  "av_samples": [
-    { "process": "MsMpEng.exe", "mean_cpu_pct": 12.3, "peak_ws_mb": 210 }
-  ],
   "machine": {
     "os": "Windows Server 2022",
     "cpu": "4 vCPU",
@@ -474,7 +461,6 @@ Responsibilities:
       - Launch workload process, assign to Job (`AssignProcessToJobObject`).
       - Stream stdout/stderr to log files.
       - On completion, query `JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION` and `JOBOBJECT_EXTENDED_LIMIT_INFORMATION` for metrics.
-      - Sample AV processes during the run.
       - Validate exit code and expected artifacts.
       - Write `run.json`.
 5. Flatten all `run.json` files into `runs.csv`.
@@ -525,7 +511,6 @@ Behavior:
 Default:
 
 - **`JobAccountingCollector`** — queries Job object accounting on process exit.
-- **`AvProcessSampler`** — polls AV process CPU/working set at fixed interval using `System.Diagnostics.Process`.
 
 Opt-in:
 
@@ -609,7 +594,6 @@ Deliverables:
 - `avbench setup` — automated tool installation (Git, Rust) + ripgrep repo clone + `cargo fetch`
 - `avbench run` — ripgrep compile scenarios + one API microbench (`file-create-delete`)
 - Job object process-tree runner with default metrics
-- AV process sampler
 - JSON output (`run.json`)
 - CSV flattening (`runs.csv`)
 
