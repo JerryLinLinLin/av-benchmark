@@ -25,6 +25,7 @@ This split exists because each VM runs in isolation with its own AV profile and 
 - Separate untimed setup from timed benchmark execution.
 - Pin repo SHAs and toolchain versions for each test campaign.
 - Default metrics are kept lean: wall time, CPU time, I/O bytes, peak memory, AV process CPU%. Everything else is opt-in.
+- `avbench` always runs as Administrator. Tool installation, WPR tracing, ProcMon capture, and AV process sampling all require elevation. Rather than scattering privilege checks, the program validates elevation at startup and exits immediately if not elevated.
 
 ## Why C#
 
@@ -545,6 +546,7 @@ The only things that must exist before running `avbench setup` on a VM:
 2. The AV product installed and signature-updated (or no AV for baseline).
 3. The `avbench` binary itself (copied in or available on a share).
 4. Network access for downloading tools and cloning repos (during setup only).
+5. An elevated (Administrator) terminal. `avbench` checks for admin on startup and refuses to run without it.
 
 After running `avbench setup` + `avbench run`, copy the `results/` directory to shared storage, then restore the VM snapshot for the next profile.
 

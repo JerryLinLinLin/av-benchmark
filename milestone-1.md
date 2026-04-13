@@ -107,7 +107,17 @@ av-benchmark/
 
 ```csharp
 using System.CommandLine;
+using System.Security.Principal;
 using AvBench.Cli.Commands;
+
+// Require admin — tool installs, WPR, ProcMon, AV process sampling all need elevation
+using var identity = WindowsIdentity.GetCurrent();
+var principal = new WindowsPrincipal(identity);
+if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
+{
+    Console.Error.WriteLine("ERROR: avbench must run as Administrator.");
+    return 1;
+}
 
 var rootCommand = new RootCommand("AV benchmark suite");
 
@@ -494,7 +504,7 @@ public sealed class GitInstaller : ToolInstaller
     {
         var psi = new ProcessStartInfo(fileName, arguments)
         {
-            UseShellExecute = true,  // needed for elevation
+            UseShellExecute = false,
             CreateNoWindow = true
         };
         var proc = Process.Start(psi)!;
@@ -1609,7 +1619,7 @@ results/
 | `AssignProcessToJobObject` after `Process.Start` misses early children | Under-count metrics for first few ms | Acceptable for compile workloads (seconds+). Add raw `CreateProcess` with `CREATE_SUSPENDED` in M2 if needed. |
 | Git/Rust installer URLs become stale | Setup fails on new VMs | Use `tools-manifest.json` to override URLs. Pin known-good versions. |
 | AV blocks installer downloads | Setup fails | Document: whitelist download URLs in AV profile if needed, or pre-stage installers on a network share. |
-| `System.Diagnostics.Process.TotalProcessorTime` access denied for AV processes | Sampler returns zeros | Catch `Win32Exception` per-process, log warning, continue. Benchmark runner runs as admin. |
+| `System.Diagnostics.Process.TotalProcessorTime` access denied for AV processes | Sampler returns zeros | Catch `Win32Exception` per-process, log warning, continue. Already running as admin by default. |
 | ripgrep `crates/core/main.rs` path may change across versions | Incremental scenario breaks | Pin ripgrep to a specific SHA. Validate the touch target path in `setup`. |
 | Job object accounting on nested jobs | Double-counting on older Windows | Target Windows Server 2022+ / Windows 11+ where nested jobs are fully supported. |
 

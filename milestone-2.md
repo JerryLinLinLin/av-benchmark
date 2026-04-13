@@ -179,7 +179,7 @@ public sealed class VsBuildToolsInstaller : ToolInstaller
     {
         var psi = new ProcessStartInfo(fileName, arguments)
         {
-            UseShellExecute = true,
+            UseShellExecute = false,
             CreateNoWindow = true
         };
         var proc = Process.Start(psi)!;
@@ -266,7 +266,7 @@ public sealed class CmakeInstaller : ToolInstaller
     {
         var psi = new ProcessStartInfo(fileName, arguments)
         {
-            UseShellExecute = true,
+            UseShellExecute = false,
             CreateNoWindow = true
         };
         var proc = Process.Start(psi)!;
@@ -1211,7 +1211,6 @@ comparison/
 | Risk | Impact | Mitigation |
 |---|---|---|
 | VS Build Tools install takes 30+ minutes | Setup is very slow | Install once per VM snapshot. Document expected time. |
-| VS Build Tools requires elevation | Setup fails without admin | Document: avbench setup must run as administrator. |
 | LLVM clean build takes 30-60 minutes | Fewer repetitions practical | Use N=3 for LLVM; N=5 for faster workloads. Allow per-scenario rep count override. |
 | Files requires .NET 10 SDK (preview) | SDK availability may vary | Pin exact version in `tools-manifest.json`. Use `dotnet-install.ps1` to fetch exact version. |
 | Files has C++ projects requiring MSVC | Incremental MSVC builds may create noise | Measure full solution build. The C++ projects are small (dialog helpers). |

@@ -944,7 +944,7 @@ var fileDeltaOption = new Option<bool>("--file-delta")
 };
 var procmonOption = new Option<bool>("--procmon")
 {
-    Description = "Enable Process Monitor capture (opt-in, requires admin)",
+    Description = "Enable Process Monitor capture (opt-in)",
     DefaultValueFactory = _ => false
 };
 var buildLogOption = new Option<bool>("--build-log")
@@ -1033,8 +1033,6 @@ Create `ProcMonCollector.cs`. Test:
 3. Can open PML file in ProcMon GUI for verification
 4. Test graceful shutdown via `/Terminate`
 
-Note: ProcMon requires admin privileges. Collector should print a clear warning if it fails due to insufficient privileges.
-
 ### Step 5: Build `BuildLogCollector`
 
 Create `BuildLogCollector.cs`. Test:
@@ -1090,7 +1088,6 @@ Verify:
 | Risk | Impact | Mitigation |
 |---|---|---|
 | File-delta snapshot on large trees is slow | Delays between stop-workload and save-result | Limit snapshot scope to build output dirs only, not entire source tree. Use concurrent enumeration. |
-| ProcMon requires admin privileges | Collector fails on non-admin VMs | Print clear warning. Document that `--procmon` requires elevated shell. Check admin before starting. |
 | ProcMon PML files can be huge (GBs) | Disk space exhaustion | Apply filters via config. Consider `/Runtime <seconds>` to auto-stop. Warn user about expected file size. |
 | ProcMon captures system-wide activity | Noise from unrelated processes | Use filter config to exclude known noise. Post-processing can further filter by PID tree. |
 | MSBuild binary log contains full source paths | Privacy concern if shared | Document that `.binlog` files contain full paths. Not included in `compare.csv`. |

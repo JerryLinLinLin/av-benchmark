@@ -117,7 +117,7 @@ public sealed class PythonInstaller : ToolInstaller
     {
         var psi = new ProcessStartInfo(fileName, arguments)
         {
-            UseShellExecute = true,
+            UseShellExecute = false,
             CreateNoWindow = true
         };
         var proc = Process.Start(psi)!;
@@ -953,7 +953,7 @@ Create the interface in `AvBench.Core/Collectors/`.
 ### Step 6: Build WPR collector
 
 Create `WprCollector.cs`. Test:
-1. Verify `wpr -start GeneralProfile.Verbose` succeeds (requires admin)
+1. Verify `wpr -start GeneralProfile.Verbose` succeeds
 2. Run a short workload
 3. `wpr -stop trace.etl` saves file
 4. File is valid (open in WPA to verify)
@@ -1002,7 +1002,7 @@ results/
 | Python installer version pinned to 3.12.x | Newer Nuitka may require newer Python | Pin compatible versions in `tools-manifest.json`. Test compatibility. |
 | Nuitka standalone build is slow (5-15 min) | Fewer repetitions practical | Use N=3 for Nuitka scenarios, same as LLVM. |
 | Nuitka requires MSVC compiler (via VS Build Tools) | Already installed in M2 | Verify Nuitka can find MSVC. Set `CC` env var if needed. |
-| WPR not available on Windows Server without ADK | `--trace` fails silently | Print clear warning. Add Windows ADK to optional install table. Document in profile notes. |
+| WPR not available on Windows Server without ADK | `--trace` fails silently | Print clear warning. Add Windows ADK to optional install table. |
 | WPR trace adds disk I/O overhead | Perturbs measurement | Use memory mode (default). Document: `--trace` runs should not be used for timing comparisons, only root-cause analysis. |
 | typeperf counter names may differ by Windows version | Missing columns in CSV | Use well-known counters (`\Processor(_Total)\% Processor Time` etc.) that exist on all Windows versions. |
 | `urlmon.dll` for DLL load bench may not exist on Server Core | Bench fails | Fallback to `ntdll.dll` or `kernel32.dll` which are always loaded. |
