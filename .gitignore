@@ -1,0 +1,12 @@
+bin/
+obj/
+results/
+.vs/
+*.user
+*.suo
+*.cache
+*.log
+*.etl
+*.csv
+*.tmp
+bench/

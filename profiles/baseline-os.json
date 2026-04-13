@@ -1,0 +1,10 @@
+{
+  "name": "baseline-os",
+  "product": "none",
+  "product_version": "",
+  "realtime_protection": false,
+  "cloud_features": false,
+  "exclusion_paths": [],
+  "process_names": [],
+  "notes": "AV real-time protection disabled or no AV installed"
+}

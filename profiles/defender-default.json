@@ -1,0 +1,13 @@
+{
+  "name": "defender-default",
+  "product": "Microsoft Defender",
+  "product_version": "",
+  "realtime_protection": true,
+  "cloud_features": true,
+  "exclusion_paths": [],
+  "process_names": [
+    "MsMpEng.exe",
+    "NisSrv.exe"
+  ],
+  "notes": "Default Defender settings, no exclusions"
+}
