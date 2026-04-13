@@ -24,8 +24,6 @@ public static class CsvResultWriter
         "io_read_ops",
         "io_write_ops",
         "total_processes",
-        "av_mean_cpu_pct",
-        "av_peak_ws_mb",
         "file_batch_size",
         "file_total_operations",
         "file_ops_per_sec",
@@ -39,9 +37,6 @@ public static class CsvResultWriter
 
         foreach (var result in results)
         {
-            var avMeanCpu = result.AvSamples.Count == 0 ? 0 : result.AvSamples.Max(sample => sample.MeanCpuPct);
-            var avPeakWorkingSet = result.AvSamples.Count == 0 ? 0 : result.AvSamples.Max(sample => sample.PeakWsMb);
-
             builder.AppendLine(string.Join(",",
                 Escape(result.ScenarioId),
                 Escape(result.AvProfile),
@@ -59,8 +54,6 @@ public static class CsvResultWriter
                 result.IoReadOps.ToString(CultureInfo.InvariantCulture),
                 result.IoWriteOps.ToString(CultureInfo.InvariantCulture),
                 result.TotalProcesses.ToString(CultureInfo.InvariantCulture),
-                avMeanCpu.ToString("F1", CultureInfo.InvariantCulture),
-                avPeakWorkingSet.ToString(CultureInfo.InvariantCulture),
                 (result.FileMicrobench?.BatchSize ?? 0).ToString(CultureInfo.InvariantCulture),
                 (result.FileMicrobench?.TotalOperations ?? 0).ToString(CultureInfo.InvariantCulture),
                 (result.FileMicrobench?.OpsPerSec ?? 0).ToString("F3", CultureInfo.InvariantCulture),
@@ -80,4 +73,3 @@ public static class CsvResultWriter
         return value;
     }
 }
-

@@ -65,12 +65,12 @@ public sealed class ScenarioRunner
         var stderrPath = outputDirectory is null
             ? Path.Combine(Path.GetTempPath(), "avbench", $"{Guid.NewGuid():N}.stderr.log")
             : Path.Combine(outputDirectory, "stderr.log");
+        var combinedPath = outputDirectory is null
+            ? null
+            : Path.Combine(outputDirectory, "combined.log");
 
         Directory.CreateDirectory(Path.GetDirectoryName(stdoutPath)!);
         Directory.CreateDirectory(Path.GetDirectoryName(stderrPath)!);
-
-        using var sampler = new AvProcessSampler(_profile.ProcessNames);
-        sampler.Start();
 
         var execution = await ProcessTreeRunner.RunAsync(
             scenario.FileName,
@@ -80,8 +80,6 @@ public sealed class ScenarioRunner
             stderrPath,
             TimeSpan.FromHours(2),
             cancellationToken);
-
-        var avSamples = await sampler.StopAsync();
 
         var result = new RunResult
         {
@@ -100,13 +98,17 @@ public sealed class ScenarioRunner
             IoReadOps = execution.Accounting.IoReadOps,
             IoWriteOps = execution.Accounting.IoWriteOps,
             TotalProcesses = execution.Accounting.TotalProcesses,
-            AvSamples = avSamples,
             Machine = SystemInfoProvider.CollectMachineInfo(),
             RunnerVersion = _runnerVersion,
             SuiteManifestSha = _suiteManifestSha
         };
 
         scenario.EnrichResultFromLogs?.Invoke(result, stdoutPath, stderrPath);
+
+        if (combinedPath is not null)
+        {
+            await WriteCombinedLogAsync(stdoutPath, stderrPath, combinedPath, cancellationToken);
+        }
 
         if (outputDirectory is null)
         {
@@ -115,6 +117,37 @@ public sealed class ScenarioRunner
         }
 
         return result;
+    }
+
+    private static async Task WriteCombinedLogAsync(
+        string stdoutPath,
+        string stderrPath,
+        string combinedPath,
+        CancellationToken cancellationToken)
+    {
+        var stdout = await File.ReadAllTextAsync(stdoutPath, cancellationToken);
+        var stderr = await File.ReadAllTextAsync(stderrPath, cancellationToken);
+
+        await using var writer = new StreamWriter(combinedPath, append: false);
+        await writer.WriteLineAsync("===== stdout.log =====");
+        if (!string.IsNullOrEmpty(stdout))
+        {
+            await writer.WriteAsync(stdout);
+            if (!stdout.EndsWith(System.Environment.NewLine, StringComparison.Ordinal))
+            {
+                await writer.WriteLineAsync();
+            }
+        }
+
+        await writer.WriteLineAsync("===== stderr.log =====");
+        if (!string.IsNullOrEmpty(stderr))
+        {
+            await writer.WriteAsync(stderr);
+            if (!stderr.EndsWith(System.Environment.NewLine, StringComparison.Ordinal))
+            {
+                await writer.WriteLineAsync();
+            }
+        }
     }
 
     private static void TryDelete(string path)
@@ -132,4 +165,3 @@ public sealed class ScenarioRunner
         }
     }
 }
-

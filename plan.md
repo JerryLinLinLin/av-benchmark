@@ -109,7 +109,7 @@ Minimum Rust version: 1.85.0 stable. Optional PCRE2 feature build (`cargo build 
 Scenarios:
 
 - `clean-build` (`cargo build --release`)
-- `incremental-build` (touch one `.rs` file, rebuild)
+- `incremental-build` (make a small, harmless edit to one stable `.rs` file, rebuild)
 - `noop-build`
 
 #### `dotnet/roslyn`
@@ -297,6 +297,7 @@ results/
         run.json
         stdout.log
         stderr.log
+        combined.log       (merged stdout/stderr for easier manual inspection)
         trace.etl          (opt-in)
         counters.csv       (opt-in)
 ```

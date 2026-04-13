@@ -1154,7 +1154,7 @@ public static class RipgrepScenario
                 FileName = "cargo",
                 Arguments = "build --release",
                 WorkingDirectory = repoDir,
-                PreActions = [TouchFileCommand(repoDir)]
+                PreActions = [MutateIncrementalSourceCommand(repoDir)]
             },
             new ScenarioDefinition
             {
@@ -1167,12 +1167,21 @@ public static class RipgrepScenario
         ];
     }
 
-    private static string TouchFileCommand(string repoDir)
+    private static string MutateIncrementalSourceCommand(string repoDir)
     {
-        // Touch crates/core/main.rs to trigger incremental rebuild
+        // Make a harmless source edit to trigger a real incremental rebuild
         var target = Path.Combine(repoDir, "crates", "core", "main.rs");
-        // Use copy /b to update timestamp without changing content
-        return $"copy /b \"{target}\"+,, \"{target}\"";
+        return $"powershell -NoProfile -Command " +
+               "\"$p='{target}'; " +
+               "$marker='// avbench incremental marker: '; " +
+               "$content = Get-Content -Raw $p; " +
+               "if ($content -match [regex]::Escape($marker)) { " +
+               "  $content = $content -replace '([01])(?=[\\r\\n]*$)', { if ($args[0].Value -eq '1') { '0' } else { '1' } }; " +
+               "} else { " +
+               "  if (-not $content.EndsWith([Environment]::NewLine)) { $content += [Environment]::NewLine }; " +
+               "  $content += $marker + '1' + [Environment]::NewLine; " +
+               "} " +
+               "Set-Content -NoNewline -Path $p -Value $content\"";
     }
 }
 ```
@@ -1446,7 +1455,7 @@ results/
   20260413-153000/
     suite-manifest.json
     ripgrep-clean-build/
-      rep-01/run.json, stdout.log, stderr.log
+      rep-01/run.json, stdout.log, stderr.log, combined.log
       rep-02/...
       rep-03/...
     ripgrep-incremental-build/
@@ -1465,7 +1474,7 @@ results/
 | `AssignProcessToJobObject` after `Process.Start` misses early children | Under-count metrics for first few ms | Acceptable for compile workloads (seconds+). Add raw `CreateProcess` with `CREATE_SUSPENDED` in M2 if needed. |
 | Git/Rust installer URLs become stale | Setup fails on new VMs | Use `tools-manifest.json` to override URLs. Pin known-good versions. |
 | AV blocks installer downloads | Setup fails | Document: whitelist download URLs in AV profile if needed, or pre-stage installers on a network share. |
-| ripgrep `crates/core/main.rs` path may change across versions | Incremental scenario breaks | Pin ripgrep to a specific SHA. Validate the touch target path in `setup`. |
+| ripgrep `crates/core/main.rs` path may change across versions | Incremental scenario breaks | Pin ripgrep to a specific SHA. Validate the incremental source target path in `setup`. |
 | Job object accounting on nested jobs | Double-counting on older Windows | Target Windows Server 2022+ / Windows 11+ where nested jobs are fully supported. |
 
 ## Testing Strategy

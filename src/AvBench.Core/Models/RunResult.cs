@@ -52,9 +52,6 @@ public sealed class RunResult
     [JsonPropertyName("total_processes")]
     public uint TotalProcesses { get; set; }
 
-    [JsonPropertyName("av_samples")]
-    public List<AvSample> AvSamples { get; set; } = [];
-
     [JsonPropertyName("machine")]
     public MachineInfo Machine { get; set; } = new();
 
@@ -67,18 +64,6 @@ public sealed class RunResult
     [JsonPropertyName("file_microbench")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public FileMicrobenchMetrics? FileMicrobench { get; set; }
-}
-
-public sealed class AvSample
-{
-    [JsonPropertyName("process")]
-    public string Process { get; set; } = string.Empty;
-
-    [JsonPropertyName("mean_cpu_pct")]
-    public double MeanCpuPct { get; set; }
-
-    [JsonPropertyName("peak_ws_mb")]
-    public long PeakWsMb { get; set; }
 }
 
 public sealed class MachineInfo
@@ -110,4 +95,3 @@ public sealed class FileMicrobenchMetrics
     [JsonPropertyName("mean_latency_us")]
     public double MeanLatencyUs { get; set; }
 }
-

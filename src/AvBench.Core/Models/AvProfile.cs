@@ -22,10 +22,6 @@ public sealed class AvProfile
     [JsonPropertyName("exclusion_paths")]
     public List<string> ExclusionPaths { get; set; } = [];
 
-    [JsonPropertyName("process_names")]
-    public List<string> ProcessNames { get; set; } = [];
-
     [JsonPropertyName("notes")]
     public string Notes { get; set; } = string.Empty;
 }
-
