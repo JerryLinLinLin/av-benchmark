@@ -1,9 +1,0 @@
-{
-  "name": "defender-default",
-  "product": "Microsoft Defender",
-  "product_version": "",
-  "realtime_protection": true,
-  "cloud_features": true,
-  "exclusion_paths": [],
-  "notes": "Default Defender settings, no exclusions"
-}

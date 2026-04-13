@@ -13,7 +13,7 @@
 All M1 components are assumed working:
 
 - Solution structure (`AvBench.Cli`, `AvBench.Core`)
-- Job object process-tree runner (`ProcessTreeRunner`, `JobObject`)\n- Data models (`RunResult`, `AvProfile`, `SuiteManifest`, `ScenarioDefinition`)
+- Job object process-tree runner (`ProcessTreeRunner`, `JobObject`)\n- Data models (`RunResult`, `SuiteManifest`, `ScenarioDefinition`)
 - Output writers (`JsonResultWriter`, `CsvResultWriter`)
 - CLI framework (`SetupCommand`, `RunCommand`)
 - Tool installers (`ToolInstaller` base, `GitInstaller`, `RustInstaller`, `RepoCloner`)
@@ -723,7 +723,7 @@ public static class FilesScenario
 using System.CommandLine;
 using AvBench.Compare;
 
-var rootCommand = new RootCommand("AV benchmark cross-profile comparison tool");
+var rootCommand = new RootCommand("AV benchmark cross-configuration comparison tool");
 
 var baselineOption = new Option<DirectoryInfo>("--baseline")
 {
@@ -732,7 +732,7 @@ var baselineOption = new Option<DirectoryInfo>("--baseline")
 };
 var inputOption = new Option<DirectoryInfo[]>("--input")
 {
-    Description = "Paths to AV profile results directories",
+    Description = "Paths to AV configuration results directories",
     Required = true,
     AllowMultipleArgumentsPerToken = true
 };
@@ -778,20 +778,20 @@ public static class CompareCommand
         Console.WriteLine($"[compare] Loaded {baselineRuns.Count} baseline runs");
 
         // 2. Load all run.json files from each input
-        var allProfileRuns = new Dictionary<string, List<RunResult>>();
+        var allNamedRuns = new Dictionary<string, List<RunResult>>();
         foreach (var input in inputs)
         {
             var runs = LoadRuns(input);
             if (runs.Count > 0)
             {
-                var profileName = runs[0].AvProfile;
-                allProfileRuns[profileName] = runs;
-                Console.WriteLine($"[compare] Loaded {runs.Count} runs for profile '{profileName}'");
+                var avName = runs[0].AvName;
+                allNamedRuns[avName] = runs;
+                Console.WriteLine($"[compare] Loaded {runs.Count} runs for '{avName}'");
             }
         }
 
         // 3. Compute comparisons
-        var comparisons = CompareEngine.Compare(baselineRuns, allProfileRuns);
+        var comparisons = CompareEngine.Compare(baselineRuns, allNamedRuns);
 
         // 4. Write output
         output.Create();
@@ -826,8 +826,8 @@ namespace AvBench.Compare;
 public sealed class ComparisonRow
 {
     public string ScenarioId { get; init; } = "";
-    public string AvProfile { get; init; } = "";
-    public string BaselineProfile { get; init; } = "";
+    public string AvName { get; init; } = "";
+    public string BaselineName { get; init; } = "";
     public int Repetitions { get; init; }
     public double MeanWallMs { get; init; }
     public double MedianWallMs { get; init; }
@@ -844,7 +844,7 @@ public static class CompareEngine
 
     public static List<ComparisonRow> Compare(
         List<RunResult> baselineRuns,
-        Dictionary<string, List<RunResult>> profileRuns)
+        Dictionary<string, List<RunResult>> namedRuns)
     {
         var rows = new List<ComparisonRow>();
 
@@ -854,9 +854,9 @@ public static class CompareEngine
             .GroupBy(r => r.ScenarioId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        var baselineProfile = baselineRuns.FirstOrDefault()?.AvProfile ?? "baseline-os";
+        var baselineName = baselineRuns.FirstOrDefault()?.AvName ?? "baseline-os";
 
-        foreach (var (profileName, runs) in profileRuns)
+        foreach (var (avName, runs) in namedRuns)
         {
             var byScenario = runs
                 .Where(r => r.ExitCode == 0)
@@ -893,8 +893,8 @@ public static class CompareEngine
                 rows.Add(new ComparisonRow
                 {
                     ScenarioId = scenarioId,
-                    AvProfile = profileName,
-                    BaselineProfile = baselineProfile,
+                    AvName = avName,
+                    BaselineName = baselineName,
                     Repetitions = scenarioRuns.Count,
                     MeanWallMs = Math.Round(meanWall, 1),
                     MedianWallMs = Math.Round(medianWall, 1),
@@ -907,7 +907,7 @@ public static class CompareEngine
             }
         }
 
-        return rows.OrderBy(r => r.ScenarioId).ThenBy(r => r.AvProfile).ToList();
+        return rows.OrderBy(r => r.ScenarioId).ThenBy(r => r.AvName).ToList();
     }
 
     private static double Median(List<double> values)
@@ -941,7 +941,7 @@ public static class CompareCsvWriter
 {
     private static readonly string[] Headers =
     [
-        "scenario_id", "av_profile", "baseline_profile", "repetitions",
+        "scenario_id", "av_name", "baseline_name", "repetitions",
         "mean_wall_ms", "median_wall_ms", "mean_cpu_ms", "peak_memory_mb",
         "slowdown_pct", "cv_pct", "status"
     ];
@@ -955,8 +955,8 @@ public static class CompareCsvWriter
         {
             sb.AppendLine(string.Join(",",
                 r.ScenarioId,
-                r.AvProfile,
-                r.BaselineProfile,
+                r.AvName,
+                r.BaselineName,
                 r.Repetitions.ToString(CultureInfo.InvariantCulture),
                 r.MeanWallMs.ToString("F1", CultureInfo.InvariantCulture),
                 r.MedianWallMs.ToString("F1", CultureInfo.InvariantCulture),
@@ -991,17 +991,16 @@ public static class SummaryRenderer
         sb.AppendLine($"Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
         sb.AppendLine();
 
-        // Group by profile
-        var byProfile = rows.GroupBy(r => r.AvProfile);
+        var byName = rows.GroupBy(r => r.AvName);
 
-        foreach (var profileGroup in byProfile)
+        foreach (var nameGroup in byName)
         {
-            sb.AppendLine($"## {profileGroup.Key} vs {profileGroup.First().BaselineProfile}");
+            sb.AppendLine($"## {nameGroup.Key} vs {nameGroup.First().BaselineName}");
             sb.AppendLine();
             sb.AppendLine("| Scenario | Mean Wall (ms) | Slowdown | CV% | Status |");
             sb.AppendLine("|---|---:|---:|---:|---|");
 
-            foreach (var row in profileGroup.OrderBy(r => r.ScenarioId))
+            foreach (var row in nameGroup.OrderBy(r => r.ScenarioId))
             {
                 var slowdownStr = row.SlowdownPct >= 0
                     ? $"+{row.SlowdownPct:F1}%"
@@ -1012,16 +1011,16 @@ public static class SummaryRenderer
             sb.AppendLine();
 
             // Summary insights
-            var worst = profileGroup.Where(r => r.Status == "ok")
+            var worst = nameGroup.Where(r => r.Status == "ok")
                 .OrderByDescending(r => r.SlowdownPct).FirstOrDefault();
             if (worst is not null)
                 sb.AppendLine($"**Highest slowdown**: {worst.ScenarioId} at +{worst.SlowdownPct:F1}%");
 
-            var noisy = profileGroup.Where(r => r.Status == "noisy").ToList();
+            var noisy = nameGroup.Where(r => r.Status == "noisy").ToList();
             if (noisy.Count > 0)
                 sb.AppendLine($"**Noisy runs** (CV > 10%): {string.Join(", ", noisy.Select(r => r.ScenarioId))}");
 
-            var failed = profileGroup.Where(r => r.Status == "failed").ToList();
+            var failed = nameGroup.Where(r => r.Status == "failed").ToList();
             if (failed.Count > 0)
                 sb.AppendLine($"**Failed**: {string.Join(", ", failed.Select(r => r.ScenarioId))}");
 
@@ -1180,22 +1179,22 @@ Create `Program.cs` and `CompareCommand.cs` for the Compare project.
 
 ### Step 10: End-to-end test
 
-All testing happens inside the same VM. Run `avbench` twice with different profiles (e.g., toggle Defender real-time protection between runs), then run `avbench-compare` locally against both result directories.
+All testing happens inside the same VM. Run `avbench` twice with different names (e.g., toggle Defender real-time protection between runs), then run `avbench-compare` locally against both result directories.
 
 ```powershell
-# Run 1: with current AV profile (e.g., defender-default)
+# Run 1: with current AV (e.g., defender-default)
 avbench setup --bench-dir C:\bench
-avbench run --profile profiles\defender-default.json --bench-dir C:\bench --output C:\results\defender-default -n 3
+avbench run --name defender-default --bench-dir C:\bench --output C:\results\defender-default -n 3
 
 # Run 2: disable real-time protection, run again as baseline
-# (manually toggle Defender or apply a different profile)
-avbench run --profile profiles\baseline-os.json --bench-dir C:\bench --output C:\results\baseline-os -n 3
+# (manually toggle Defender off)
+avbench run --name baseline-os --bench-dir C:\bench --output C:\results\baseline-os -n 3
 
 # Compare both runs locally
 avbench-compare --baseline C:\results\baseline-os --input C:\results\defender-default --output C:\results\comparison
 ```
 
-If only one profile is available during development, test `avbench-compare` with synthetic data: duplicate a results directory, rename the profile in the copied `run.json` files, and run compare against both. This validates the comparison pipeline without needing a second AV configuration.
+If only one AV configuration is available during development, test `avbench-compare` with synthetic data: duplicate a results directory, rename the `av_name` in the copied `run.json` files, and run compare against both. This validates the comparison pipeline without needing a second AV configuration.
 
 Expected output:
 ```

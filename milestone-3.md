@@ -312,7 +312,7 @@ namespace AvBench.Core.Scenarios;
 
 public static class FileOpenCloseBench
 {
-    public static RunResult Execute(string tempRoot, int totalOps, string avProfile)
+    public static RunResult Execute(string tempRoot, int totalOps, string avName)
     {
         // Create one target file to repeatedly open/close
         Directory.CreateDirectory(tempRoot);
@@ -340,7 +340,7 @@ public static class FileOpenCloseBench
         return new RunResult
         {
             ScenarioId = "file-open-close",
-            AvProfile = avProfile,
+            AvName = avName,
             TimestampUtc = DateTime.UtcNow,
             Command = $"file-open-close ops={totalOps} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1}",
             WorkingDir = tempRoot,
@@ -361,7 +361,7 @@ namespace AvBench.Core.Scenarios;
 
 public static class DirEnumerateBench
 {
-    public static RunResult Execute(string targetDir, int iterations, string avProfile)
+    public static RunResult Execute(string targetDir, int iterations, string avName)
     {
         // targetDir should be a sizable directory tree (e.g., a cloned repo)
         if (!Directory.Exists(targetDir))
@@ -384,7 +384,7 @@ public static class DirEnumerateBench
         return new RunResult
         {
             ScenarioId = "dir-enumerate",
-            AvProfile = avProfile,
+            AvName = avName,
             TimestampUtc = DateTime.UtcNow,
             Command = $"dir-enumerate iters={iterations} entries_per_iter={totalEntries / iterations} ops_sec={opsPerSec:F1}",
             WorkingDir = targetDir,
@@ -405,7 +405,7 @@ namespace AvBench.Core.Scenarios;
 
 public static class CopyRenameMoveBench
 {
-    public static RunResult Execute(string tempRoot, int totalOps, string avProfile)
+    public static RunResult Execute(string tempRoot, int totalOps, string avName)
     {
         Directory.CreateDirectory(tempRoot);
         var sourceData = new byte[1024]; // 1KB files
@@ -423,7 +423,7 @@ public static class CopyRenameMoveBench
         return new RunResult
         {
             ScenarioId = "copy-rename-move",
-            AvProfile = avProfile,
+            AvName = avName,
             TimestampUtc = DateTime.UtcNow,
             Command = $"copy-rename-move ops={totalOps} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1}",
             WorkingDir = tempRoot,
@@ -461,7 +461,7 @@ namespace AvBench.Core.Scenarios;
 
 public static class ProcessCreateBench
 {
-    public static RunResult Execute(int totalOps, string avProfile)
+    public static RunResult Execute(int totalOps, string avName)
     {
         // Warmup
         for (int i = 0; i < 10; i++)
@@ -478,7 +478,7 @@ public static class ProcessCreateBench
         return new RunResult
         {
             ScenarioId = "process-create-wait",
-            AvProfile = avProfile,
+            AvName = avName,
             TimestampUtc = DateTime.UtcNow,
             Command = $"process-create-wait ops={totalOps} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1}",
             WorkingDir = Environment.CurrentDirectory,
@@ -513,7 +513,7 @@ namespace AvBench.Core.Scenarios;
 
 public static class RegistryBench
 {
-    public static RunResult Execute(int totalOps, string avProfile)
+    public static RunResult Execute(int totalOps, string avName)
     {
         // Open and query a well-known readonly registry key
         const string keyPath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion";
@@ -533,7 +533,7 @@ public static class RegistryBench
         return new RunResult
         {
             ScenarioId = "registry-open-query",
-            AvProfile = avProfile,
+            AvName = avName,
             TimestampUtc = DateTime.UtcNow,
             Command = $"registry-open-query ops={totalOps} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1}",
             WorkingDir = Environment.CurrentDirectory,
@@ -569,7 +569,7 @@ public static class DllLoadBench
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool FreeLibrary(IntPtr hModule);
 
-    public static RunResult Execute(int totalOps, string avProfile)
+    public static RunResult Execute(int totalOps, string avName)
     {
         // Use a DLL that's always present on Windows
         const string dllName = "urlmon.dll";
@@ -589,7 +589,7 @@ public static class DllLoadBench
         return new RunResult
         {
             ScenarioId = "dll-load-unload",
-            AvProfile = avProfile,
+            AvName = avName,
             TimestampUtc = DateTime.UtcNow,
             Command = $"dll-load-unload ops={totalOps} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1}",
             WorkingDir = Environment.CurrentDirectory,
@@ -901,12 +901,12 @@ scenarios.AddRange(BlackNuitkaScenario.Create(blackDir));
 
 // M3 API microbench — run after compile scenarios
 var tempMicro = Path.Combine(benchDir, "microbench_temp");
-microbenchResults.Add(FileOpenCloseBench.Execute(tempMicro, totalOps: 50_000, profileName));
-microbenchResults.Add(DirEnumerateBench.Execute(rgDir, iterations: 20, profileName));
-microbenchResults.Add(CopyRenameMoveBench.Execute(tempMicro, totalOps: 5_000, profileName));
-microbenchResults.Add(ProcessCreateBench.Execute(totalOps: 500, profileName));
-microbenchResults.Add(RegistryBench.Execute(totalOps: 100_000, profileName));
-microbenchResults.Add(DllLoadBench.Execute(totalOps: 10_000, profileName));
+microbenchResults.Add(FileOpenCloseBench.Execute(tempMicro, totalOps: 50_000, avName));
+microbenchResults.Add(DirEnumerateBench.Execute(rgDir, iterations: 20, avName));
+microbenchResults.Add(CopyRenameMoveBench.Execute(tempMicro, totalOps: 5_000, avName));
+microbenchResults.Add(ProcessCreateBench.Execute(totalOps: 500, avName));
+microbenchResults.Add(RegistryBench.Execute(totalOps: 100_000, avName));
+microbenchResults.Add(DllLoadBench.Execute(totalOps: 10_000, avName));
 ```
 
 ## Implementation Steps (ordered)
@@ -975,7 +975,7 @@ Update `RunCommand.cs` to add `--trace` and `--counters` options and register M3
 
 ```powershell
 # Full run with opt-in collectors
-avbench run --profile profiles\defender-default.json --bench-dir C:\bench --output results -n 3 --trace --counters
+avbench run --name defender-default --bench-dir C:\bench --output results -n 3 --trace --counters
 ```
 
 Expected additional output per rep:

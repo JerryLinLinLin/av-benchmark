@@ -9,10 +9,10 @@ Build a Windows VM benchmark suite in C# that answers two questions:
 
 The suite consists of two separate programs:
 
-1. **`avbench`** — runs inside each Windows VM. Handles environment setup (tool installation, repo cloning, dependency hydration) and benchmark execution. Each VM runs one AV profile.
-2. **`avbench-compare`** — runs on any machine (host, workstation, CI). Collects result directories from multiple VMs and produces cross-profile comparison output.
+1. **`avbench`** — runs inside each Windows VM. Handles environment setup (tool installation, repo cloning, dependency hydration) and benchmark execution. Each VM runs one AV configuration.
+2. **`avbench-compare`** — runs on any machine (host, workstation, CI). Collects result directories from multiple VMs and produces cross-configuration comparison output.
 
-This split exists because each VM runs in isolation with its own AV profile and snapshot. The in-VM program can only see its own results. Cross-profile comparison must happen outside.
+This split exists because each VM runs in isolation with its own AV configuration and snapshot. The in-VM program can only see its own results. Cross-configuration comparison must happen outside.
 
 ## Key Principles
 
@@ -45,19 +45,19 @@ PowerShell remains a helper only (e.g., `setup-test-vm.ps1` for reducing Windows
 │  1. avbench setup    (install tools,    │
 │                       clone repos,      │
 │                       hydrate deps)     │
-│  2. avbench run      (run benchmarks,   │
-│                       write run.json)   │
+│  2. avbench run --name baseline-os      │
+│         (run benchmarks, write run.json)│
 │  3. Copy results/ out to shared storage │
 └─────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────┐
 │  VM: defender-default snapshot          │
 │  1. avbench setup                       │
-│  2. avbench run                         │
+│  2. avbench run --name defender-default │
 │  3. Copy results/ out to shared storage │
 └─────────────────────────────────────────┘
 
-        ... repeat per AV profile ...
+        ... repeat per AV configuration ...
 
 ┌─────────────────────────────────────────┐
 │  Host / any machine                     │
@@ -188,25 +188,21 @@ Later additions (not in v1):
 
 ## Benchmark Matrix
 
-### AV profiles
+### AV identification
 
-Each AV condition is described by a JSON profile file.
+`avbench run` requires a `--name <label>` parameter that identifies this VM's AV configuration (e.g., `baseline-os`, `defender-default`, `eset-default`). This label is stamped into every `run.json` and used by `avbench-compare` to group results.
 
-Suggested profile kinds:
+In Milestone 4, `avbench` will auto-detect the installed AV product and version (supporting Microsoft Defender, Huorong, ESET, Bitdefender, and TrendMicro). The detected product name and version are recorded in `run.json`. Both can be manually overridden via `--av-name` and `--av-version` CLI flags for unsupported products or testing.
+
+Suggested `--name` labels:
 
 - `baseline-os` — AV real-time protection off (or no AV installed)
 - `defender-default`
-- `vendorA-default`
-- `vendorA-build-exclusions` — with build/output paths excluded
-- `vendorA-build-plus-cache-exclusions`
-
-Each profile records:
-
-- product name and version
-- real-time protection state
-- cloud/reputation features enabled or disabled
-- exclusion paths
-- setup notes
+- `defender-exclusions` — with build/output paths excluded
+- `eset-default`
+- `bitdefender-default`
+- `huorong-default`
+- `trendmicro-default`
 
 ### Compile phases
 
@@ -219,7 +215,7 @@ Every compile workload is measured in these phases:
 
 ### Execution block structure
 
-For each scenario + profile combination:
+For each scenario + configuration combination:
 
 1. Idle check (refuse to start if CPU > threshold)
 2. One warmup run (discarded — primes AV cache and disk cache)
@@ -302,7 +298,7 @@ results/
         counters.csv       (opt-in)
 ```
 
-The AV profile is recorded inside each `run.json`, not as a directory level, since each VM runs only one profile.
+The AV configuration name is recorded inside each `run.json`, not as a directory level, since each VM runs only one configuration.
 
 Also produces:
 
@@ -313,7 +309,7 @@ Also produces:
 ```json
 {
   "scenario_id": "ripgrep-clean-build",
-  "av_profile": "defender-default",
+  "av_name": "defender-default",
   "repetition": 1,
   "timestamp_utc": "2026-04-13T15:30:00Z",
   "command": "cargo build --release",
@@ -361,8 +357,8 @@ avbench-compare ^
 | Column | Description |
 |---|---|
 | `scenario_id` | e.g., `ripgrep-clean-build` |
-| `av_profile` | e.g., `defender-default` |
-| `baseline_profile` | e.g., `baseline-os` |
+| `av_name` | e.g., `defender-default` |
+| `baseline_name` | e.g., `baseline-os` |
 | `repetitions` | Number of measured runs |
 | `mean_wall_ms` | Mean wall-clock time |
 | `median_wall_ms` | Median wall-clock time |
@@ -376,7 +372,7 @@ avbench-compare ^
 
 Answers:
 
-- Which AV/profile slowed which workload the most?
+- Which AV configuration slowed which workload the most?
 - Was the slowdown CPU-bound or I/O-bound?
 - Which runs were too noisy to trust (CV > threshold)?
 
@@ -395,7 +391,7 @@ One solution, three projects:
 ### `avbench` CLI commands (in-VM program)
 
 - `avbench setup` — install tools, clone repos, hydrate dependencies, write manifests
-- `avbench run` — execute scenarios, collect metrics, write `run.json` and `runs.csv`
+- `avbench run` — execute scenarios, collect metrics, write `run.json` and `runs.csv`. Requires `--name` to label this VM's AV configuration.
 
 ### `avbench-compare` CLI (host program)
 
@@ -440,7 +436,7 @@ After tools are installed:
    - ripgrep: `cargo fetch`
    - Black/Nuitka: `python -m venv` + `pip install`
    - LLVM: CMake configure (generates Ninja build files)
-5. Write `suite-manifest.json` (repos, SHAs, tool versions, AV profile name).
+5. Write `suite-manifest.json` (repos, SHAs, tool versions).
 
 `setup` must not silently upgrade toolchains once a campaign has started. Re-running `setup` after a campaign starts should detect and warn about version drift.
 
@@ -452,10 +448,10 @@ Optionally run `setup-test-vm.ps1` to disable Windows Update, Superfetch, search
 
 Responsibilities:
 
-1. Load suite manifest and AV profile.
+1. Load suite manifest.
 2. Validate setup is complete (tools present, repos cloned, deps hydrated).
 3. Idle check: refuse if system CPU > threshold.
-4. For each scenario/profile block:
+4. For each scenario block:
    a. Warmup run (discarded).
    b. For each repetition:
       - Create Windows Job object (`CreateJobObject`).
@@ -533,17 +529,17 @@ After running `avbench setup` + `avbench run`, copy the `results/` directory to 
 Create separate snapshots for:
 
 - Baseline image (no AV or real-time protection off)
-- Each AV product / tuning profile
+- Each AV product / tuning configuration
 
 ## Statistical Rules
 
 Simple, defensible rules for v1:
 
-- One warmup run per scenario/profile block (discarded).
-- At least 5 measured repetitions per scenario/profile.
+- One warmup run per scenario block (discarded).
+- At least 5 measured repetitions per scenario.
 - Report mean, median, stdev, and coefficient of variation (CV).
 - Mark a scenario as `noisy` if CV > 10%.
-- Randomize scenario order within a profile block when possible.
+- Randomize scenario order within a run when possible.
 - Never compare a single best run against another single best run.
 
 ## Workload-Specific Notes
@@ -619,6 +615,12 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 - Add Black + Nuitka compile scenarios
 - Add remaining API microbench families
 - Add `--trace` (WPR) and `--counters` (typeperf) opt-in collectors
+
+### Milestone 4
+
+- Auto-detect installed AV product and version (Microsoft Defender, Huorong, ESET, Bitdefender, TrendMicro)
+- Record detected `av_product` and `av_version` in `run.json`
+- `--av-name` and `--av-version` CLI overrides for unsupported products or manual testing
 
 ## References
 

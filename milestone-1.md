@@ -39,7 +39,6 @@ av-benchmark/
       Models/
         RunResult.cs              → run.json data model
         SuiteManifest.cs
-        AvProfile.cs
         ScenarioDefinition.cs
       Setup/
         ToolInstaller.cs          → base class for tool install logic
@@ -56,9 +55,6 @@ av-benchmark/
       Output/
         JsonResultWriter.cs
         CsvResultWriter.cs
-  profiles/
-    baseline-os.json
-    defender-default.json
   scenarios/
     ripgrep.json
     file-create-delete.json
@@ -172,9 +168,9 @@ public static class RunCommand
 {
     public static Command Create()
     {
-        var profileOption = new Option<FileInfo>("--profile")
+        var nameOption = new Option<string>("--name")
         {
-            Description = "Path to AV profile JSON file",
+            Description = "Label for this VM's AV configuration (e.g., defender-default, baseline-os)",
             Required = true
         };
         var benchDirOption = new Option<DirectoryInfo>("--bench-dir")
@@ -194,18 +190,18 @@ public static class RunCommand
         };
 
         var command = new Command("run", "Execute benchmark scenarios and record metrics");
-        command.Options.Add(profileOption);
+        command.Options.Add(nameOption);
         command.Options.Add(benchDirOption);
         command.Options.Add(repetitionsOption);
         command.Options.Add(outputOption);
 
         command.SetAction(parseResult =>
         {
-            var profile = parseResult.GetValue(profileOption)!;
+            var name = parseResult.GetValue(nameOption)!;
             var benchDir = parseResult.GetValue(benchDirOption)!;
             var reps = parseResult.GetValue(repetitionsOption);
             var output = parseResult.GetValue(outputOption)!;
-            // 1. Load profile + manifest
+            // 1. Load manifest
             // 2. Idle check
             // 3. For each scenario: warmup + N reps
             // 4. Write runs.csv
@@ -233,8 +229,8 @@ public sealed class RunResult
     [JsonPropertyName("scenario_id")]
     public string ScenarioId { get; set; } = "";
 
-    [JsonPropertyName("av_profile")]
-    public string AvProfile { get; set; } = "";
+    [JsonPropertyName("av_name")]
+    public string AvName { get; set; } = "";
 
     [JsonPropertyName("repetition")]
     public int Repetition { get; set; }
@@ -307,41 +303,6 @@ public sealed class MachineInfo
 [JsonSerializable(typeof(RunResult))]
 [JsonSerializable(typeof(List<RunResult>))]
 public partial class RunResultContext : JsonSerializerContext { }
-```
-
-### `AvProfile.cs`
-
-```csharp
-using System.Text.Json.Serialization;
-
-namespace AvBench.Core.Models;
-
-public sealed class AvProfile
-{
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = "";
-
-    [JsonPropertyName("product")]
-    public string Product { get; set; } = "";
-
-    [JsonPropertyName("product_version")]
-    public string ProductVersion { get; set; } = "";
-
-    [JsonPropertyName("realtime_protection")]
-    public bool RealtimeProtection { get; set; }
-
-    [JsonPropertyName("cloud_features")]
-    public bool CloudFeatures { get; set; }
-
-    [JsonPropertyName("exclusion_paths")]
-    public List<string> ExclusionPaths { get; set; } = [];
-
-    [JsonPropertyName("notes")]
-    public string Notes { get; set; } = "";
-}
-
-[JsonSerializable(typeof(AvProfile))]
-public partial class AvProfileContext : JsonSerializerContext { }
 ```
 
 ### `SuiteManifest.cs`
@@ -981,14 +942,14 @@ namespace AvBench.Core.Scenarios;
 
 public sealed class ScenarioRunner
 {
-    private readonly AvProfile _profile;
+    private readonly string _avName;
     private readonly string _outputRoot;
     private readonly int _repetitions;
     private readonly string _runnerVersion;
 
-    public ScenarioRunner(AvProfile profile, string outputRoot, int repetitions, string runnerVersion)
+    public ScenarioRunner(string avName, string outputRoot, int repetitions, string runnerVersion)
     {
-        _profile = profile;
+        _avName = avName;
         _outputRoot = outputRoot;
         _repetitions = repetitions;
         _runnerVersion = runnerVersion;
@@ -1053,7 +1014,7 @@ public sealed class ScenarioRunner
             return new RunResult
             {
                 ScenarioId = scenario.Id,
-                AvProfile = _profile.Name,
+                AvName = _avName,
                 TimestampUtc = DateTime.UtcNow,
                 Command = $"{scenario.FileName} {scenario.Arguments}",
                 WorkingDir = scenario.WorkingDirectory,
@@ -1200,7 +1161,7 @@ public static class FileMicrobenchScenario
     /// Create and delete small temp files in a loop.
     /// Returns a RunResult with ops/sec in the command field for now.
     /// </summary>
-    public static RunResult Execute(string tempRoot, int totalOps, int batchSize, string avProfile)
+    public static RunResult Execute(string tempRoot, int totalOps, int batchSize, string avName)
     {
         Directory.CreateDirectory(tempRoot);
 
@@ -1225,7 +1186,7 @@ public static class FileMicrobenchScenario
         return new RunResult
         {
             ScenarioId = "file-create-delete",
-            AvProfile = avProfile,
+            AvName = avName,
             TimestampUtc = DateTime.UtcNow,
             Command = $"file-create-delete ops={totalOps} batch={batchSize} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1}",
             WorkingDir = tempRoot,
@@ -1299,7 +1260,7 @@ public static class CsvResultWriter
 {
     private static readonly string[] Headers =
     [
-        "scenario_id", "av_profile", "repetition", "timestamp_utc",
+        "scenario_id", "av_name", "repetition", "timestamp_utc",
         "exit_code", "wall_ms", "user_cpu_ms", "kernel_cpu_ms",
         "peak_job_memory_mb", "io_read_bytes", "io_write_bytes",
         "io_read_ops", "io_write_ops", "total_processes"
@@ -1314,7 +1275,7 @@ public static class CsvResultWriter
         {
             sb.AppendLine(string.Join(",",
                 Escape(r.ScenarioId),
-                Escape(r.AvProfile),
+                Escape(r.AvName),
                 r.Repetition.ToString(CultureInfo.InvariantCulture),
                 r.TimestampUtc.ToString("o"),
                 r.ExitCode.ToString(CultureInfo.InvariantCulture),
@@ -1342,36 +1303,6 @@ public static class CsvResultWriter
 }
 ```
 
-## Example Profile Files
-
-### `profiles/baseline-os.json`
-
-```json
-{
-  "name": "baseline-os",
-  "product": "none",
-  "product_version": "",
-  "realtime_protection": false,
-  "cloud_features": false,
-  "exclusion_paths": [],
-  "notes": "AV real-time protection disabled or no AV installed"
-}
-```
-
-### `profiles/defender-default.json`
-
-```json
-{
-  "name": "defender-default",
-  "product": "Microsoft Defender",
-  "product_version": "",
-  "realtime_protection": true,
-  "cloud_features": true,
-  "exclusion_paths": [],
-  "notes": "Default Defender settings, no exclusions"
-}
-```
-
 ## Implementation Steps (ordered)
 
 ### Step 1: Create solution and projects
@@ -1391,7 +1322,7 @@ dotnet add package System.CommandLine --version 2.0.5
 
 ### Step 2: Build data models
 
-Create `RunResult.cs`, `AvProfile.cs`, `SuiteManifest.cs`, `ScenarioDefinition.cs` in `AvBench.Core/Models/`. These are plain POCOs with `System.Text.Json` attributes and source generators.
+Create `RunResult.cs`, `SuiteManifest.cs`, `ScenarioDefinition.cs` in `AvBench.Core/Models/`. These are plain POCOs with `System.Text.Json` attributes and source generators.
 
 ### Step 3: Build Job Object P/Invoke wrapper
 
@@ -1445,7 +1376,7 @@ On a VM with Defender enabled:
 
 ```powershell
 avbench setup --bench-dir C:\bench
-avbench run --profile profiles\defender-default.json --bench-dir C:\bench --output results -n 3
+avbench run --name defender-default --bench-dir C:\bench --output results -n 3
 ```
 
 Expected output:
@@ -1485,8 +1416,8 @@ Verification checklist:
 
 1. `avbench setup` on a clean Windows Server 2022 VM installs Git + Rust and clones ripgrep
 2. Re-running `avbench setup` is idempotent (skips installed tools)
-3. `avbench run` with baseline profile produces `run.json` files with valid metrics
-4. `avbench run` with defender-default profile produces higher wall times than baseline
+3. `avbench run` with baseline label produces `run.json` files with valid metrics
+4. `avbench run` with defender-default label produces higher wall times than baseline
 5. `run.json` wall_ms, user_cpu_ms, io_read_bytes are non-zero for clean builds
 6. `runs.csv` has the correct number of rows (scenarios × repetitions)
 7. File microbench reports ops/sec in a plausible range (thousands to hundreds of thousands)
