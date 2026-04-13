@@ -148,6 +148,24 @@ Scenarios:
 - `nuitka-standalone`
 - `nuitka-onefile`
 
+#### `files-community/Files`
+
+Large C# / WinUI 3 desktop app (modern file manager, 43k stars). Exercises WindowsApp SDK 1.8, XAML compilation, CsWin32 source generator for Win32 P/Invoke, WinUI custom controls, packaged-app build pipeline, and C++ native helper projects. 97% C# — the heaviest Windows-native C# workload in the suite.
+
+Build requires Visual Studio Build Tools with WinUI workload, .NET 10 SDK (per `global.json` `10.0.102`), Windows 11 SDK `10.0.26100.0`, Windows App SDK 1.8, and MSVC v145 C++ tools (already needed for LLVM).
+
+```
+msbuild Files.slnx /p:Configuration=Release /p:Platform=x64
+```
+
+The solution contains ~15 projects (C# app, server, storage, controls, source generators, C++ dialog helpers, background tasks, tests). Produces a packaged WinUI 3 desktop app.
+
+Scenarios:
+
+- `clean-build` (delete `bin`/`obj`/`AppPackages` dirs, then `msbuild /t:Build`)
+- `incremental-build` (touch one `.cs` file in `src/Files.App/`, rebuild)
+- `noop-build` (rebuild with no changes)
+
 ### API microbench workloads
 
 Split by behavior, not collapsed into one mega-loop.
@@ -194,7 +212,7 @@ Each profile records:
 
 Every compile workload is measured in these phases:
 
-- `prepare` — untimed, dependency hydration
+- `prepare` — untimed, dependency hydration (NuGet restore, cargo fetch, etc.)
 - `clean-build` — first timed phase
 - `incremental-build`
 - `noop-build`
@@ -418,6 +436,7 @@ Each tool is installed silently using its official unattended installer. The set
 | Rust (rustup) | `rustup-init.exe -y --default-toolchain stable` | `rustc --version` |
 | Python 3.x | `python-*-amd64.exe /quiet InstallAllUsers=1 PrependPath=1` | `python --version` |
 | Nuitka + deps | `pip install nuitka ordered-set` | `python -m nuitka --version` |
+| Windows App SDK 1.8 | NuGet restore (auto via `msbuild /t:Restore`) | Restored by build |
 | Windows ADK (optional) | Only if `--trace` support is wanted | `wpr -help` |
 
 Tool versions can be pinned in a `tools-manifest.json` file to ensure reproducibility across VMs.
@@ -576,6 +595,16 @@ Simple, defensible rules for v1:
 - Smoke-test the produced executable after build (run `black --version` or format a small file).
 - Nuitka generates a compilation report (XML) — save it with `--build-log` opt-in.
 
+### Files (WinUI 3)
+
+- Requires VS Build Tools with WinUI workload, .NET 10 SDK, Windows 11 SDK 10.0.26100.0, Windows App SDK 1.8.
+- Most prerequisites overlap with LLVM (MSVC, Win SDK) and Roslyn (.NET SDK, VS Build Tools). The incremental cost is the WinUI workload component and .NET 10 SDK.
+- Solution is `Files.slnx` — build with `msbuild Files.slnx /p:Configuration=Release /p:Platform=x64`.
+- Run `msbuild /t:Restore` as untimed setup before the timed build.
+- For incremental-build, touch a `.cs` file in `src/Files.App/` (e.g., `App.xaml.cs` or a ViewModel file).
+- XAML compilation and CsWin32 source generation are key differentiators from Roslyn — they exercise MSBuild targets that generate many intermediate files and trigger AV scanning.
+- Watch for `Files.App.Server` and C++ native projects (`Files.App.Launcher`, `Files.App.OpenDialog`, `Files.App.SaveDialog`) — they link against MSVC and may add noise. Measure the full solution build to capture the realistic mixed workload.
+
 ## What To Build First
 
 ### Milestone 1
@@ -598,9 +627,10 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 
 ### Milestone 2
 
-- Extend `avbench setup` to install VS Build Tools, CMake, Ninja, .NET SDK
+- Extend `avbench setup` to install VS Build Tools, CMake, Ninja, .NET SDK (10.0.102 for Files)
 - Add Roslyn compile scenarios
 - Add LLVM compile scenarios
+- Add Files (WinUI 3) compile scenarios — clone repo, `msbuild /t:Restore`, then timed build
 - Build `avbench-compare` — reads results from multiple directories, produces `compare.csv` and `summary.md`
 
 ### Milestone 3
@@ -633,3 +663,6 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 - Roslyn Windows build guide: https://github.com/dotnet/roslyn/blob/main/docs/contributing/Building%2C%20Debugging%2C%20and%20Testing%20on%20Windows.md
 - Nuitka user manual: https://nuitka.net/doc/user-manual.html
 - Black README: https://github.com/psf/black/blob/main/README.md
+- Files build guide: https://files.community/docs/contributing/building-from-source
+- Files repo: https://github.com/files-community/Files
+- Windows App SDK downloads: https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads
