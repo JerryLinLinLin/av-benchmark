@@ -999,7 +999,7 @@ results/
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Python installer version pinned to 3.12.x | Newer Nuitka may require newer Python | Pin compatible versions in `tools-manifest.json`. Test compatibility. |
+| Python installer version pinned to 3.12.x | Newer Nuitka may require newer Python | Pin compatible versions in installer constants. Test compatibility. |
 | Nuitka standalone build is slow (5-15 min) | Fewer repetitions practical | Use N=3 for Nuitka scenarios, same as LLVM. |
 | Nuitka requires MSVC compiler (via VS Build Tools) | Already installed in M2 | Verify Nuitka can find MSVC. Set `CC` env var if needed. |
 | WPR not available on Windows Server without ADK | `--trace` fails silently | Print clear warning. Add Windows ADK to optional install table. |

@@ -25,7 +25,7 @@ This split exists because each VM runs in isolation with its own AV profile and 
 - Separate untimed setup from timed benchmark execution.
 - Pin repo SHAs and toolchain versions for each test campaign.
 - Default metrics are kept lean: wall time, CPU time, I/O bytes, peak memory, AV process CPU%. Everything else is opt-in.
-- `avbench` always runs as Administrator. Tool installation, WPR tracing, ProcMon capture, and AV process sampling all require elevation. Rather than scattering privilege checks, the program validates elevation at startup and exits immediately if not elevated.
+- `avbench` always runs as Administrator. Tool installation, WPR tracing, and AV process sampling all require elevation. Rather than scattering privilege checks, the program validates elevation at startup and exits immediately if not elevated.
 
 ## Why C#
 
@@ -276,9 +276,6 @@ These are not collected by default. Enable via CLI flags:
 |---|---|---|
 | WPR ETL trace | `--trace` | Full system ETW trace via `wpr -start` / `wpr -stop`. Produces `.etl` for analysis in WPA. |
 | PerfMon counters CSV | `--counters` | Sampled system counters via `typeperf`: CPU%, disk bytes/sec, available memory. |
-| ProcMon capture | `--procmon` | Sysinternals Process Monitor. Best for root-cause investigation, not every run. |
-| File-system delta | `--file-delta` | Snapshot build/output trees before and after. Record files created/deleted/modified and bytes by extension. |
-| Build system log | `--build-log` | MSBuild binary log for Roslyn, Nuitka XML report for Black. |
 
 ### API microbench metrics
 
@@ -312,7 +309,6 @@ results/
         stderr.log
         trace.etl          (opt-in)
         counters.csv       (opt-in)
-        file-delta.json    (opt-in)
 ```
 
 The AV profile is recorded inside each `run.json`, not as a directory level, since each VM runs only one profile.
@@ -439,8 +435,6 @@ Each tool is installed silently using its official unattended installer. The set
 | Nuitka + deps | `pip install nuitka ordered-set` | `python -m nuitka --version` |
 | Windows App SDK 1.8 | NuGet restore (auto via `msbuild /t:Restore`) | Restored by build |
 | Windows ADK (optional) | Only if `--trace` support is wanted | `wpr -help` |
-
-Tool versions can be pinned in a `tools-manifest.json` file to ensure reproducibility across VMs.
 
 #### Repo cloning and dependency hydration
 
@@ -595,7 +589,6 @@ Simple, defensible rules for v1:
 - Create a small `black_entry.py` wrapper as the Nuitka entry point.
 - Keep `standalone` and `onefile` as separate scenarios.
 - Smoke-test the produced executable after build (run `black --version` or format a small file).
-- Nuitka generates a compilation report (XML) — save it with `--build-log` opt-in.
 
 ### Files (WinUI 3)
 
@@ -642,13 +635,6 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 - Add remaining API microbench families
 - Add `--trace` (WPR) and `--counters` (typeperf) opt-in collectors
 
-### Milestone 4
-
-- Add `--file-delta` opt-in
-- Add `--procmon` opt-in
-- Add `--build-log` opt-in (MSBuild binary log, Nuitka XML report)
-- `tools-manifest.json` version pinning for full reproducibility
-
 ## References
 
 - Windows Job Objects: https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects
@@ -658,7 +644,6 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 - Windows Performance Recorder: https://learn.microsoft.com/en-us/windows-hardware/test/wpt/windows-performance-recorder
 - Event Tracing for Windows: https://learn.microsoft.com/en-us/windows/win32/etw/about-event-tracing
 - `typeperf`: https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/typeperf
-- Process Monitor: https://learn.microsoft.com/en-us/sysinternals/downloads/procmon
 - LLVM getting started: https://github.com/llvm/llvm-project/blob/main/llvm/docs/GettingStarted.rst
 - LLVM Visual Studio guide: https://github.com/llvm/llvm-project/blob/main/llvm/docs/GettingStartedVS.rst
 - ripgrep README: https://github.com/BurntSushi/ripgrep/blob/master/README.md

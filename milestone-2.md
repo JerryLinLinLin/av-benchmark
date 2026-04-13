@@ -1212,7 +1212,7 @@ comparison/
 |---|---|---|
 | VS Build Tools install takes 30+ minutes | Setup is very slow | Install once per VM snapshot. Document expected time. |
 | LLVM clean build takes 30-60 minutes | Fewer repetitions practical | Use N=3 for LLVM; N=5 for faster workloads. Allow per-scenario rep count override. |
-| Files requires .NET 10 SDK (preview) | SDK availability may vary | Pin exact version in `tools-manifest.json`. Use `dotnet-install.ps1` to fetch exact version. |
+| Files requires .NET 10 SDK (preview) | SDK availability may vary | Pin exact version in installer code. Use `dotnet-install.ps1` to fetch exact version. |
 | Files has C++ projects requiring MSVC | Incremental MSVC builds may create noise | Measure full solution build. The C++ projects are small (dialog helpers). |
 | `Roslyn Restore.cmd` may be renamed | Hydration fails | Pin Roslyn to a specific SHA. Validate `Restore.cmd` exists in `setup`. |
 | MSBuild path varies by VS version | Scenario fails to find MSBuild | Use vswhere with `-find MSBuild\**\Bin\MSBuild.exe` to discover dynamically. |
