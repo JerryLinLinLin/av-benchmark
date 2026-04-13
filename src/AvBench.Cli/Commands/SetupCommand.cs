@@ -18,7 +18,7 @@ public static class SetupCommand
             Description = "Optional ripgrep branch, tag, or SHA to check out before hydrating dependencies."
         };
 
-        var command = new Command("setup", "Install Git and Rust, clone ripgrep, and run cargo fetch.");
+        var command = new Command("setup", "Install milestone 2 toolchains, clone benchmark repos, hydrate dependencies, and write suite-manifest.json.");
         command.Options.Add(benchDirOption);
         command.Options.Add(ripgrepRefOption);
 

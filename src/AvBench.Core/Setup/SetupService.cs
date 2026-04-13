@@ -19,19 +19,80 @@ public sealed class SetupService
         var rustVersion = await new RustInstaller().EnsureInstalledAsync(cancellationToken);
 
         var ripgrep = await RepoCloner.CloneRipgrepAsync(benchDirectory, ripgrepRevision, cancellationToken);
+        var roslyn = await RepoCloner.CloneRoslynAsync(benchDirectory, cancellationToken);
+        var llvm = await RepoCloner.CloneLlvmAsync(benchDirectory, cancellationToken);
+        var files = await RepoCloner.CloneFilesAsync(benchDirectory, cancellationToken);
+
+        var llvmBuildDirectory = Path.Combine(benchDirectory, "llvm-build");
+        var requiredVsVersion = RepoCloner.ResolveVisualStudioVersion(roslyn.LocalPath);
+
+        var vsVersion = await new VsBuildToolsInstaller(requiredVsVersion).EnsureInstalledAsync(cancellationToken);
+        var cmakeVersion = await new CmakeInstaller().EnsureInstalledAsync(cancellationToken);
+        var ninjaVersion = await new NinjaInstaller().EnsureInstalledAsync(cancellationToken);
+        var dotnetInstaller = new DotNetSdkInstaller(
+        [
+            RepoCloner.ResolveDotNetSdkVersion(roslyn.LocalPath),
+            RepoCloner.ResolveDotNetSdkVersion(files.LocalPath)
+        ]);
+        var dotnetSdkVersions = await dotnetInstaller.EnsureInstalledAsync(cancellationToken);
+
         await RepoCloner.CargoFetchAsync(ripgrep.LocalPath, cancellationToken);
+        await RepoCloner.HydrateRoslynAsync(roslyn.LocalPath, cancellationToken);
+        await RepoCloner.HydrateLlvmAsync(llvm.LocalPath, llvmBuildDirectory, cancellationToken);
+        await RepoCloner.HydrateFilesAsync(files.LocalPath, cancellationToken);
 
         var manifest = new SuiteManifest
         {
             CreatedUtc = DateTime.UtcNow,
             BenchDirectory = benchDirectory,
             RunnerVersion = SystemInfoProvider.GetRunnerVersion(),
-            IncrementalTouchPath = RepoCloner.ResolveIncrementalTouchPath(ripgrep.LocalPath),
-            Repos = [ripgrep],
+            Repos =
+            [
+                ripgrep,
+                roslyn,
+                llvm,
+                files
+            ],
+            Workloads =
+            [
+                new WorkloadEntry
+                {
+                    Name = "ripgrep",
+                    RepoName = ripgrep.Name,
+                    WorkingDirectory = ripgrep.LocalPath,
+                    IncrementalTouchPath = RepoCloner.ResolveRipgrepTouchPath(ripgrep.LocalPath)
+                },
+                new WorkloadEntry
+                {
+                    Name = "roslyn",
+                    RepoName = roslyn.Name,
+                    WorkingDirectory = roslyn.LocalPath,
+                    IncrementalTouchPath = RepoCloner.ResolveRoslynTouchPath(roslyn.LocalPath)
+                },
+                new WorkloadEntry
+                {
+                    Name = "llvm",
+                    RepoName = llvm.Name,
+                    WorkingDirectory = llvm.LocalPath,
+                    BuildDirectory = llvmBuildDirectory,
+                    IncrementalTouchPath = RepoCloner.ResolveLlvmTouchPath(llvm.LocalPath)
+                },
+                new WorkloadEntry
+                {
+                    Name = "files",
+                    RepoName = files.Name,
+                    WorkingDirectory = files.LocalPath,
+                    IncrementalTouchPath = RepoCloner.ResolveFilesTouchPath(files.LocalPath)
+                }
+            ],
             Tools = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 ["git"] = gitVersion,
-                ["rustc"] = rustVersion
+                ["rustc"] = rustVersion,
+                ["visual_studio"] = vsVersion,
+                ["cmake"] = cmakeVersion,
+                ["ninja"] = ninjaVersion,
+                ["dotnet_sdks"] = dotnetSdkVersions
             }
         };
 
@@ -51,4 +112,3 @@ public sealed class SetupService
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
 }
-

@@ -2,10 +2,16 @@ namespace AvBench.Core.Setup;
 
 public static class KnownToolPaths
 {
+    public const string DotNetInstallDirectory = @"C:\Program Files\dotnet";
+    public const string NinjaInstallDirectory = @"C:\Tools\ninja";
+
     public static void EnsureCommonToolPaths()
     {
         EnsureGitOnPath();
         EnsureCargoOnPath();
+        EnsureDotNetOnPath();
+        EnsureNinjaOnPath();
+        EnsureCmakeOnPath();
     }
 
     public static void EnsureGitOnPath()
@@ -21,6 +27,21 @@ public static class KnownToolPaths
             "bin");
 
         AddToPathIfExists(cargoPath);
+    }
+
+    public static void EnsureDotNetOnPath()
+    {
+        AddToPathIfExists(DotNetInstallDirectory);
+    }
+
+    public static void EnsureNinjaOnPath()
+    {
+        AddToPathIfExists(NinjaInstallDirectory);
+    }
+
+    public static void EnsureCmakeOnPath()
+    {
+        AddToPathIfExists(@"C:\Program Files\CMake\bin");
     }
 
     private static void AddToPathIfExists(string path)

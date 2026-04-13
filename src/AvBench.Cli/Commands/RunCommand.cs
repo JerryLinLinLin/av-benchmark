@@ -36,7 +36,7 @@ public static class RunCommand
             DefaultValueFactory = _ => new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "results"))
         };
 
-        var command = new Command("run", "Execute milestone 1 benchmark scenarios.");
+        var command = new Command("run", "Execute milestone 2 benchmark scenarios.");
         command.Options.Add(nameOption);
         command.Options.Add(benchDirOption);
         command.Options.Add(repetitionsOption);
@@ -79,16 +79,22 @@ public static class RunCommand
                 SystemInfoProvider.GetRunnerVersion(),
                 SetupService.ComputeManifestSha(manifestPath));
 
-            var results = new List<RunResult>();
-            foreach (var scenario in RipgrepScenarioFactory.Create(manifest))
-            {
-                results.AddRange(await runner.ExecuteScenarioAsync(scenario, repetitions, CancellationToken.None));
-            }
+            var scenarios = new List<ScenarioDefinition>();
+            scenarios.AddRange(RipgrepScenarioFactory.Create(manifest));
+            scenarios.AddRange(RoslynScenarioFactory.Create(manifest));
+            scenarios.AddRange(LlvmScenarioFactory.Create(manifest));
+            scenarios.AddRange(FilesScenarioFactory.Create(manifest));
 
             var executablePath = Environment.ProcessPath
                 ?? throw new InvalidOperationException("Unable to resolve the current executable path.");
             var fileMicrobench = FileMicrobenchScenarioFactory.Create(executablePath, benchDir.FullName);
-            results.AddRange(await runner.ExecuteScenarioAsync(fileMicrobench, repetitions, CancellationToken.None));
+            scenarios.Add(fileMicrobench);
+
+            var results = new List<RunResult>();
+            foreach (var scenario in scenarios)
+            {
+                results.AddRange(await runner.ExecuteScenarioAsync(scenario, repetitions, CancellationToken.None));
+            }
 
             var csvPath = Path.Combine(runDirectory, "runs.csv");
             await CsvResultWriter.WriteAsync(results, csvPath, CancellationToken.None);
