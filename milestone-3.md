@@ -3,7 +3,7 @@
 ## Scope
 
 - Add remaining API microbench families
-- Add `--counters` (typeperf) opt-in collector
+- Integrate `TypeperfCollector` (always-on system counter sampling)
 
 ## Prerequisites from Milestone 1–2
 
@@ -551,27 +551,13 @@ public static class MotwBench
 }
 ```
 
-## Opt-in Collectors
+## TypeperfCollector (always-on)
 
 ### Architecture
 
-Opt-in collectors are started before the workload and stopped after. They produce additional output files alongside the standard `run.json`.
+`TypeperfCollector` is started unconditionally before every scenario run and stopped after. It produces a `counters.csv` alongside each `run.json`. Overhead is negligible (~0.01% CPU at 1-second sample intervals). The CSV is the primary diagnostic tool for explaining noisy runs.
 
-```csharp
-namespace AvBench.Core.Collectors;
-
-/// <summary>
-/// Interface for opt-in collectors that run alongside the benchmark.
-/// </summary>
-public interface IOptInCollector : IDisposable
-{
-    /// <summary>Start collecting before the workload begins.</summary>
-    void Start(string outputDir);
-
-    /// <summary>Stop collecting after the workload completes.</summary>
-    void Stop();
-}
-```
+No `IOptInCollector` interface or `--counters` flag — typeperf always runs.
 
 ### `TypeperfCollector.cs`
 
@@ -587,7 +573,7 @@ using System.Diagnostics;
 
 namespace AvBench.Core.Collectors;
 
-public sealed class TypeperfCollector : IOptInCollector
+public sealed class TypeperfCollector : IDisposable
 {
     private Process? _process;
     private string _outputPath = "";
@@ -665,65 +651,9 @@ public sealed class TypeperfCollector : IOptInCollector
 
 ## Integration with ScenarioRunner
 
-Extend `ScenarioRunner` to accept opt-in collectors via CLI flags.
+`TypeperfCollector` is already wired into `ScenarioRunner.RunOnce()` from M1 (always-on). No additional CLI flags needed.
 
-### New CLI options
-
-```csharp
-// In RunCommand.cs
-var countersOption = new Option<bool>("--counters")
-{
-    Description = "Enable typeperf performance counter sampling (opt-in)",
-    DefaultValueFactory = _ => false
-};
-
-command.Options.Add(countersOption);
-```
-
-### Updated `ScenarioRunner.RunOnce()`
-
-```csharp
-private RunResult RunOnce(ScenarioDefinition scenario, string repDir)
-{
-    foreach (var action in scenario.PreActions)
-        RunShell(action, scenario.WorkingDirectory);
-
-    var stdoutLog = Path.GetTempFileName();
-    var stderrLog = Path.GetTempFileName();
-
-    // Start opt-in collectors
-    var collectors = new List<IOptInCollector>();
-    if (_enableCounters)
-    {
-        var typeperf = new TypeperfCollector();
-        typeperf.Start(repDir);
-        collectors.Add(typeperf);
-    }
-
-    var treeResult = ProcessTreeRunner.Run(
-        fileName: scenario.FileName,
-        arguments: scenario.Arguments,
-        workingDirectory: scenario.WorkingDirectory,
-        stdoutLogPath: stdoutLog,
-        stderrLogPath: stderrLog,
-        timeout: TimeSpan.FromHours(2));
-
-    // Stop opt-in collectors
-    foreach (var collector in collectors)
-    {
-        collector.Stop();
-        collector.Dispose();
-    }
-
-    // ... build RunResult (same as M1) ...
-}
-```
-
-## Extending SetupCommand
-
-No additional tool installation needed for M3. Setup is unchanged from M2.
-
-## Extending RunCommand
+The M3 `RunCommand` extension adds the new microbench families:
 
 ```csharp
 // M3 API microbench — run after compile scenarios
@@ -765,41 +695,31 @@ Create `LatencyHistogram.cs` (shared percentile helper), then each bench file. T
 - `file-write-content`: 10K ops, each writes a unique-hash unsigned PE (clone+patch noop.exe in-loop), alternating .exe/.dll, verify each file deleted
 - `motw`: 500 ops no-motw vs motw-zone3, copy+execute real unsigned noop.exe, verify NTFS ADS written correctly, verify measurable latency difference
 
-### Step 2: Build `IOptInCollector` interface
+### Step 2: Build `TypeperfCollector`
 
-Create the interface in `AvBench.Core/Collectors/`.
-
-### Step 3: Build typeperf collector
-
-Create `TypeperfCollector.cs`. Test:
+Create `TypeperfCollector.cs` in `AvBench.Core/Collectors/`. Test:
 1. Start typeperf, wait 5 seconds, stop
 2. Verify `counters.csv` has header row + data rows
 3. Verify all 6 counter columns present
 
-### Step 4: Integrate collector into ScenarioRunner
+### Step 3: Wire up extended run command
 
-Update `ScenarioRunner` to accept `--counters` flag. Wire collector into `RunOnce()`.
+Update `RunCommand.cs` to register M3 microbench scenarios. No new CLI flags needed — `TypeperfCollector` is already wired into `ScenarioRunner.RunOnce()` from M1.
 
-### Step 5: Wire up extended run command
-
-Update `RunCommand.cs` to add `--counters` option and register M3 microbench scenarios.
-
-### Step 6: End-to-end test
+### Step 4: End-to-end test
 
 ```powershell
-# Full run with opt-in counter collector
-avbench run --name defender-default --bench-dir C:\bench --output results -n 3 --counters
+avbench run --name defender-default --bench-dir C:\bench --output results
 ```
 
-Expected additional output per rep:
+Expected output per scenario:
 ```
 results/
   <scenario>/
-    rep-01/
-      run.json
-      stdout.log
-      stderr.log
-      counters.csv     ← from --counters
+    run.json
+    stdout.log
+    stderr.log
+    counters.csv
 ```
 
 ## Key Risks and Mitigations
@@ -825,6 +745,6 @@ Manual verification:
 5. `file-write-content` with real unique-hash unsigned PEs shows higher latency than same-size random-content file creation (AV performs full PE inspection on every write)
 6. ProcessCreateBench unsigned exe produces higher latency than a cached signed-exe baseline
 7. MOTW bench: `motw-exe-motw-zone3` shows higher latency than `motw-exe-no-motw`; the real unsigned exe actually executes (exit code 0) in both variants
-8. `--counters` produces `counters.csv` with 6 counter columns
-9. Collector doesn't perturb timing by more than ~2% (compare runs with/without `--counters`)
+8. `counters.csv` always produced with 6 counter columns for every scenario
+9. TypeperfCollector doesn't perturb timing by more than ~2%
 10. Full suite run completes end-to-end with all scenarios active

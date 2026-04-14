@@ -19,12 +19,12 @@ This split exists because each VM runs in isolation with its own AV configuratio
 - Use C# for both programs.
 - Keep the benchmark core vendor-neutral. Do not depend on Defender-only tooling.
 - Use Windows Job objects via P/Invoke for process-tree accounting (CPU, I/O, memory) as the primary measurement layer.
-- Use `typeperf` as an opt-in system counter sampling layer for resource utilization analysis.
+- Use `typeperf` as an always-on system counter sampler for resource utilization analysis and anomaly diagnosis.
 - Compare AV products with VM snapshots, not by uninstalling and reinstalling on the same image.
 - `avbench setup` automates everything from tool installation to dependency hydration on a clean Windows VM.
 - Separate untimed setup from timed benchmark execution.
 - Pin repo SHAs and toolchain versions for each test campaign.
-- Default metrics are kept lean: wall time, CPU time, I/O bytes, peak memory. Everything else is opt-in.
+- Default metrics are kept lean: wall time, CPU time, I/O bytes, peak memory. `typeperf` counters are always collected alongside for diagnostic context.
 - `avbench` always runs as Administrator. Tool installation requires elevation. Rather than scattering privilege checks, the program validates elevation at startup and exits immediately if not elevated.
 
 ## Why C#
@@ -156,15 +156,26 @@ Every compile workload is measured in these phases:
 - `incremental-build`
 - `noop-build`
 
-### Execution block structure
+### Execution model — one session, one rep
 
-For each scenario + configuration combination:
+`avbench run` executes each scenario **exactly once** per invocation. Repetition is achieved by restoring the VM snapshot and re-running `avbench run` in a fresh session. This guarantees every rep starts from identical OS/AV state — no cached trust decisions, filesystem cache, or Prefetch data from prior runs.
+
+External orchestration (host-side script) handles the snapshot-restore loop:
+
+```
+for rep in 1..N:
+    restore VM snapshot
+    avbench run --name defender-default
+    copy results/ to shared/<av-name>/session-<rep>/
+```
+
+Per invocation:
 
 1. Idle check (refuse to start if CPU > threshold)
-2. N timed repetitions (default N=5)
+2. Run each scenario once
 3. Quick validation (check exit code and expected output artifacts)
 
-Within one repetition for compile workloads:
+Within one session for compile workloads:
 
 1. Clean (delete build artifacts)
 2. Build
@@ -207,13 +218,18 @@ Also collected per run:
 - For single-op latency (<1ms), Job object CPU accounting is useless — only `Stopwatch` should be used.
 - The kernel/user CPU ratio is statistically reliable for multi-second workloads because charging converges to the true distribution over thousands of scheduler ticks.
 
-### Opt-in metrics
+### System counters (always-on)
 
-These are not collected by default. Enable via CLI flags:
+`typeperf` samples 6 performance counters at 1-second intervals for every scenario run. Overhead is negligible (~0.01% CPU). The resulting `counters.csv` is the primary diagnostic tool for explaining noisy runs — a CPU or disk spike at a specific timestamp pinpoints exactly when background activity interfered.
 
-| Opt-in metric | Flag | Notes |
-|---|---|---|
-| PerfMon counters CSV | `--counters` | Sampled system counters via `typeperf`: CPU%, disk bytes/sec, available memory. |
+| Counter | Purpose |
+|---|---|
+| `\Processor(_Total)\% Processor Time` | Total CPU utilization |
+| `\PhysicalDisk(_Total)\Disk Bytes/sec` | Total disk throughput |
+| `\PhysicalDisk(_Total)\Disk Read Bytes/sec` | Disk read throughput |
+| `\PhysicalDisk(_Total)\Disk Write Bytes/sec` | Disk write throughput |
+| `\Memory\Available MBytes` | Free physical memory |
+| `\Memory\Pages/sec` | Page faults (memory pressure indicator) |
 
 ### API microbench metrics
 
@@ -239,11 +255,10 @@ Each VM produces a results directory that can be copied to shared storage.
 results/
   suite-manifest.json
   <scenario>/
-    rep-01/
-      run.json
-      stdout.log
-      stderr.log
-      counters.csv       (opt-in)
+    run.json
+    stdout.log
+    stderr.log
+    counters.csv
 ```
 
 The AV configuration name is recorded inside each `run.json`, not as a directory level, since each VM runs only one configuration.
@@ -260,7 +275,6 @@ Also produces:
   "av_name": "defender-default",
   "av_product": "Microsoft Defender Antivirus",
   "av_version": "4.18.24090.11",
-  "repetition": 1,
   "timestamp_utc": "2026-04-13T15:30:00Z",
   "command": "cargo build --release",
   "working_dir": "C:\\bench\\ripgrep",
@@ -291,7 +305,7 @@ Also produces:
 
 ### `avbench-compare` output (cross-VM)
 
-`avbench-compare` reads result directories from multiple VMs (copied to shared storage or a local folder) and produces:
+`avbench-compare` reads result directories from multiple VM sessions (copied to shared storage or a local folder) and produces:
 
 - `compare.csv` — aggregated comparison across profiles
 - `summary.md` — human-readable report
@@ -315,14 +329,14 @@ avbench-compare ^
 | `av_product` | e.g., `Microsoft Defender Antivirus` (auto-detected or overridden, M4) |
 | `av_version` | e.g., `4.18.24090.11` (auto-detected or overridden, M4) |
 | `baseline_name` | e.g., `baseline-os` |
-| `repetitions` | Number of measured runs |
+| `sessions` | Number of VM sessions (snapshot-restored runs) collected for this scenario+config |
 | `mean_wall_ms` | Mean wall-clock time |
 | `median_wall_ms` | Median wall-clock time |
 | `mean_cpu_ms` | Mean total CPU time (user + kernel) |
 | `kernel_cpu_pct` | Mean kernel CPU as percentage of total CPU. AV minifilter overhead lands in kernel mode, so this ratio shifting upward vs. baseline is the most direct signal of AV scanning impact. |
 | `baseline_kernel_cpu_pct` | Baseline's kernel CPU percentage for the same scenario. Shown side-by-side for easy comparison. |
 | `kernel_cpu_slowdown_pct` | `(kernel_cpu_pct - baseline_kernel_cpu_pct)` in percentage points. Positive = AV added kernel-mode overhead. |
-| `peak_memory_mb` | Max peak job memory across reps |
+| `peak_memory_mb` | Max peak job memory across sessions |
 | `slowdown_pct` | `(mean_wall - baseline_mean_wall) / baseline_mean_wall * 100` |
 | `cv_pct` | Coefficient of variation for wall time |
 | `status` | `ok`, `noisy`, or `failed` |
@@ -406,14 +420,15 @@ Responsibilities:
 1. Load suite manifest.
 2. Validate setup is complete (tools present, source trees fetched, deps hydrated).
 3. Idle check: refuse if system CPU > threshold.
-4. For each scenario block:
-   a. For each repetition:
+4. For each scenario:
+      - Start `typeperf` counter sampling.
       - Create Windows Job object (`CreateJobObject`).
       - Launch workload process, assign to Job (`AssignProcessToJobObject`).
       - Stream stdout/stderr to log files.
       - On completion, query `JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION` and `JOBOBJECT_EXTENDED_LIMIT_INFORMATION` for metrics.
+      - Stop `typeperf`.
       - Validate exit code and expected artifacts.
-      - Write `run.json`.
+      - Write `run.json` and `counters.csv`.
 5. Flatten all `run.json` files into `runs.csv`.
 
 ### `compare` (in `avbench-compare`, the host program)
@@ -461,9 +476,9 @@ Default:
 
 - **`JobAccountingCollector`** — queries Job object accounting on process exit.
 
-Opt-in:
+Always-on:
 
-- **`PerfCounterCollector`** — starts/stops `typeperf.exe` for sampled system counters.
+- **`TypeperfCollector`** — starts/stops `typeperf.exe` for sampled system counters. Runs unconditionally for every scenario.
 
 ## VM Image Preparation
 
@@ -486,11 +501,12 @@ Create separate snapshots for:
 
 Simple, defensible rules for v1:
 
-- No warmup runs — every repetition is measured. AV cache priming from a discarded warmup would hide the real cold-path overhead that developers experience on first build, package restore, or branch switch.
-- At least 5 measured repetitions per scenario.
-- Report mean, median, stdev, and coefficient of variation (CV).
+- No warmup runs — every run is a cold start from a freshly restored VM snapshot.
+- One run per VM session. Repetitions are achieved by restoring the snapshot and re-running. This eliminates OS/AV cache contamination between reps.
+- At least 5 sessions (reps) per AV configuration.
+- Report mean, median, stdev, and coefficient of variation (CV) across sessions.
 - Mark a scenario as `noisy` if CV > 10%.
-- Randomize scenario order within a run when possible.
+- Randomize scenario order within a session when possible.
 - Never compare a single best run against another single best run.
 
 ## Workload-Specific Notes
@@ -538,7 +554,7 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 ### Milestone 3
 
 - Add remaining API microbench families
-- Add `--counters` (typeperf) opt-in collector
+- Integrate `TypeperfCollector` (always-on system counter sampling)
 
 ### Milestone 4
 

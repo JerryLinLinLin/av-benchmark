@@ -55,7 +55,6 @@ Updated `run.json` example:
   "av_name": "defender-default",
   "av_product": "Microsoft Defender Antivirus",
   "av_version": "4.18.24090.11",
-  "repetition": 1,
   "timestamp_utc": "2025-01-15T10:30:00Z",
   "command": "cargo build --release",
   "working_dir": "C:\\bench\\ripgrep",
@@ -69,7 +68,7 @@ Updated `run.json` example:
 `CsvResultWriter` adds two columns after `av_name`:
 
 ```
-scenario_id, av_name, av_product, av_version, repetition, timestamp_utc, ...
+scenario_id, av_name, av_product, av_version, timestamp_utc, ...
 ```
 
 ## Detection — WSC query
@@ -219,9 +218,9 @@ Console.WriteLine($"[run] AV: {avProduct} v{avVersion}");
 `ScenarioRunner` receives `avProduct` and `avVersion` and stamps them on every `RunResult`:
 
 ```csharp
-private RunResult RunOnce(ScenarioDefinition scenario)
+private RunResult RunOnce(ScenarioDefinition scenario, string scenarioDir)
 {
-    // ... existing Job Object measurement code ...
+    // ... existing Job Object measurement + typeperf code ...
 
     return new RunResult
     {
@@ -229,7 +228,6 @@ private RunResult RunOnce(ScenarioDefinition scenario)
         AvName = _avName,
         AvProduct = _avProduct,
         AvVersion = _avVersion,
-        Repetition = rep,
         // ... remaining fields ...
     };
 }
@@ -248,7 +246,7 @@ Add `av_product` and `av_version` columns to `CompareCsvWriter.Headers` after `a
 ```csharp
 private static readonly string[] Headers =
 [
-    "scenario_id", "av_name", "av_product", "av_version", "baseline_name", "repetitions",
+    "scenario_id", "av_name", "av_product", "av_version", "baseline_name", "sessions",
     "mean_wall_ms", "median_wall_ms", "mean_cpu_ms",
     "kernel_cpu_pct", "baseline_kernel_cpu_pct", "kernel_cpu_slowdown_pct",
     "peak_memory_mb", "slowdown_pct", "cv_pct", "status"
@@ -286,7 +284,7 @@ sb.AppendLine($"## {nameGroup.Key} ({nameGroup.First().AvProduct} v{nameGroup.Fi
 
 ```powershell
 # Auto-detect AV (no overrides)
-avbench run --name defender-default --bench-dir C:\bench --output results -n 1
+avbench run --name defender-default --bench-dir C:\bench --output results
 
 # Expected:
 # [detect] Microsoft Defender Antivirus v4.18.24090.11
@@ -295,7 +293,7 @@ avbench run --name defender-default --bench-dir C:\bench --output results -n 1
 
 ```powershell
 # Override detection
-avbench run --name custom --bench-dir C:\bench --output results -n 1 \
+avbench run --name custom --bench-dir C:\bench --output results \
     --av-product "Custom AV" --av-version "1.0.0"
 
 # Expected:
@@ -305,7 +303,7 @@ avbench run --name custom --bench-dir C:\bench --output results -n 1 \
 
 ```powershell
 # Baseline (AV disabled/uninstalled)
-avbench run --name baseline-os --bench-dir C:\bench --output results -n 1
+avbench run --name baseline-os --bench-dir C:\bench --output results
 
 # Expected:
 # [detect] No AV product registered with Windows Security Center

@@ -511,7 +511,7 @@ public sealed class ComparisonRow
     public string ScenarioId { get; init; } = "";
     public string AvName { get; init; } = "";
     public string BaselineName { get; init; } = "";
-    public int Repetitions { get; init; }
+    public int Sessions { get; init; }
     public double MeanWallMs { get; init; }
     public double MedianWallMs { get; init; }
     public double MeanCpuMs { get; init; }
@@ -591,7 +591,7 @@ public static class CompareEngine
                     ScenarioId = scenarioId,
                     AvName = avName,
                     BaselineName = baselineName,
-                    Repetitions = scenarioRuns.Count,
+                    Sessions = scenarioRuns.Count,
                     MeanWallMs = Math.Round(meanWall, 1),
                     MedianWallMs = Math.Round(medianWall, 1),
                     MeanCpuMs = Math.Round(meanCpu, 1),
@@ -640,7 +640,7 @@ public static class CompareCsvWriter
 {
     private static readonly string[] Headers =
     [
-        "scenario_id", "av_name", "baseline_name", "repetitions",
+        "scenario_id", "av_name", "baseline_name", "sessions",
         "mean_wall_ms", "median_wall_ms", "mean_cpu_ms",
         "kernel_cpu_pct", "baseline_kernel_cpu_pct", "kernel_cpu_slowdown_pct",
         "peak_memory_mb", "slowdown_pct", "cv_pct", "status"
@@ -657,7 +657,7 @@ public static class CompareCsvWriter
                 r.ScenarioId,
                 r.AvName,
                 r.BaselineName,
-                r.Repetitions.ToString(CultureInfo.InvariantCulture),
+                r.Sessions.ToString(CultureInfo.InvariantCulture),
                 r.MeanWallMs.ToString("F1", CultureInfo.InvariantCulture),
                 r.MedianWallMs.ToString("F1", CultureInfo.InvariantCulture),
                 r.MeanCpuMs.ToString("F1", CultureInfo.InvariantCulture),
@@ -795,11 +795,11 @@ scenarios.AddRange(RoslynScenario.Create(roslynDir));
 // file-create-delete handled separately...
 
 // Execute all scenarios
-var runner = new ScenarioRunner(profile, outputRoot, repetitions, runnerVersion);
+var runner = new ScenarioRunner(profile, outputRoot, runnerVersion);
 var allResults = new List<RunResult>();
 foreach (var scenario in scenarios)
 {
-    var results = runner.Execute(scenario);
+    var results = runner.Execute(scenarios);
     allResults.AddRange(results);
 }
 ```
@@ -876,11 +876,11 @@ All testing happens inside the same VM. Run `avbench` twice with different names
 ```powershell
 # Run 1: with current AV (e.g., defender-default)
 avbench setup --bench-dir C:\bench
-avbench run --name defender-default --bench-dir C:\bench --output C:\results\defender-default -n 3
+avbench run --name defender-default --bench-dir C:\bench --output C:\results\defender-default
 
 # Run 2: disable real-time protection, run again as baseline
 # (manually toggle Defender off)
-avbench run --name baseline-os --bench-dir C:\bench --output C:\results\baseline-os -n 3
+avbench run --name baseline-os --bench-dir C:\bench --output C:\results\baseline-os
 
 # Compare both runs locally
 avbench-compare --baseline C:\results\baseline-os --input C:\results\defender-default --output C:\results\comparison
