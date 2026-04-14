@@ -27,12 +27,6 @@ public static class RunCommand
             DefaultValueFactory = _ => new DirectoryInfo(@"C:\bench")
         };
 
-        var repetitionsOption = new Option<int>("--repetitions", ["-n"])
-        {
-            Description = "Number of measured repetitions per scenario.",
-            DefaultValueFactory = _ => 5
-        };
-
         var outputOption = new Option<DirectoryInfo>("--output")
         {
             Description = "Directory that receives benchmark result folders.",
@@ -46,19 +40,11 @@ public static class RunCommand
             DefaultValueFactory = _ => []
         };
 
-        var countersOption = new Option<bool>("--counters")
-        {
-            Description = "Enable typeperf counter sampling for each repetition.",
-            DefaultValueFactory = _ => false
-        };
-
         var command = new Command("run", "Execute benchmark scenarios for the configured M1-M3 workload set.");
         command.Options.Add(nameOption);
         command.Options.Add(benchDirOption);
-        command.Options.Add(repetitionsOption);
         command.Options.Add(outputOption);
         command.Options.Add(workloadOption);
-        command.Options.Add(countersOption);
 
         command.SetAction(async parseResult =>
         {
@@ -66,9 +52,7 @@ public static class RunCommand
             {
                 var avName = parseResult.GetValue(nameOption)!;
                 var benchDir = parseResult.GetValue(benchDirOption)!;
-                var repetitions = parseResult.GetValue(repetitionsOption);
                 var outputRoot = parseResult.GetValue(outputOption)!;
-                var enableCounters = parseResult.GetValue(countersOption);
                 if (!BenchmarkWorkloads.TryNormalize(parseResult.GetValue(workloadOption), out var selectedWorkloads, out var error))
                 {
                     Console.Error.WriteLine($"ERROR: {error}");
@@ -102,8 +86,7 @@ public static class RunCommand
                     avName.Trim(),
                     outputRoot.FullName,
                     SystemInfoProvider.GetRunnerVersion(),
-                    SetupService.ComputeManifestSha(manifestPath),
-                    enableCounters);
+                    SetupService.ComputeManifestSha(manifestPath));
 
                 var scenarios = new List<ScenarioDefinition>();
                 if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Ripgrep))
@@ -123,11 +106,8 @@ public static class RunCommand
                     scenarios.AddRange(MicrobenchScenarioFactory.Create(executablePath, benchDir.FullName));
                 }
 
-                var results = new List<RunResult>();
-                foreach (var scenario in scenarios)
-                {
-                    results.AddRange(await runner.ExecuteScenarioAsync(scenario, repetitions, CancellationToken.None));
-                }
+                var orderedScenarios = OrderScenariosForSession(scenarios);
+                var results = await runner.ExecuteScenariosAsync(orderedScenarios, CancellationToken.None);
 
                 var csvPath = Path.Combine(outputRoot.FullName, "runs.csv");
                 await CsvResultWriter.WriteAsync(results, csvPath, CancellationToken.None);
@@ -170,5 +150,48 @@ public static class RunCommand
                     $"The suite manifest does not contain workload '{workload}'. Run `avbench setup --workload {workload}` first, or rerun setup with a broader workload selection.");
             }
         }
+    }
+
+    private static List<ScenarioDefinition> OrderScenariosForSession(IReadOnlyList<ScenarioDefinition> scenarios)
+    {
+        var groups = new List<List<ScenarioDefinition>>();
+        List<ScenarioDefinition>? currentGroup = null;
+        string? currentFamily = null;
+
+        foreach (var scenario in scenarios)
+        {
+            var family = GetScenarioFamily(scenario.Id);
+            if (currentGroup is null || !string.Equals(currentFamily, family, StringComparison.OrdinalIgnoreCase))
+            {
+                currentGroup = [];
+                groups.Add(currentGroup);
+                currentFamily = family;
+            }
+
+            currentGroup.Add(scenario);
+        }
+
+        for (var index = groups.Count - 1; index > 0; index--)
+        {
+            var swapIndex = Random.Shared.Next(index + 1);
+            (groups[index], groups[swapIndex]) = (groups[swapIndex], groups[index]);
+        }
+
+        return groups.SelectMany(static group => group).ToList();
+    }
+
+    private static string GetScenarioFamily(string scenarioId)
+    {
+        if (scenarioId.StartsWith("ripgrep-", StringComparison.OrdinalIgnoreCase))
+        {
+            return "ripgrep";
+        }
+
+        if (scenarioId.StartsWith("roslyn-", StringComparison.OrdinalIgnoreCase))
+        {
+            return "roslyn";
+        }
+
+        return scenarioId;
     }
 }

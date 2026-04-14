@@ -16,9 +16,6 @@ public sealed class RunResult
     [JsonPropertyName("av_version")]
     public string AvVersion { get; set; } = string.Empty;
 
-    [JsonPropertyName("repetition")]
-    public int Repetition { get; set; }
-
     [JsonPropertyName("timestamp_utc")]
     public DateTime TimestampUtc { get; set; }
 

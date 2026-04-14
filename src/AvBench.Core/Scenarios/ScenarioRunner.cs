@@ -14,35 +14,29 @@ public sealed class ScenarioRunner
     private readonly string _runnerVersion;
     private readonly string _suiteManifestSha;
     private readonly AvInfo _avInfo;
-    private readonly bool _enableCounters;
 
-    public ScenarioRunner(string avName, string outputRoot, string runnerVersion, string suiteManifestSha, bool enableCounters = false)
+    public ScenarioRunner(string avName, string outputRoot, string runnerVersion, string suiteManifestSha)
     {
         _avName = avName;
         _outputRoot = outputRoot;
         _runnerVersion = runnerVersion;
         _suiteManifestSha = suiteManifestSha;
         _avInfo = SystemInfoProvider.CollectAvInfo();
-        _enableCounters = enableCounters;
     }
 
-    public async Task<List<RunResult>> ExecuteScenarioAsync(
-        ScenarioDefinition scenario,
-        int repetitions,
+    public async Task<List<RunResult>> ExecuteScenariosAsync(
+        IReadOnlyList<ScenarioDefinition> scenarios,
         CancellationToken cancellationToken)
     {
-        FileSystemUtil.DeletePathIfExists(Path.Combine(_outputRoot, scenario.Id));
-
-        var results = new List<RunResult>(repetitions);
-        for (var repetition = 1; repetition <= repetitions; repetition++)
+        var results = new List<RunResult>(scenarios.Count);
+        foreach (var scenario in scenarios)
         {
-            var scenarioDirectory = Path.Combine(_outputRoot, scenario.Id, $"rep-{repetition:D2}");
+            var scenarioDirectory = Path.Combine(_outputRoot, scenario.Id);
+            FileSystemUtil.DeletePathIfExists(scenarioDirectory);
             Directory.CreateDirectory(scenarioDirectory);
 
-            Console.WriteLine($"[run] {scenario.Id} rep {repetition}/{repetitions}");
+            Console.WriteLine($"[run] {scenario.Id}");
             var result = await RunOnceAsync(scenario, scenarioDirectory, cancellationToken);
-            result.Repetition = repetition;
-
             await JsonResultWriter.WriteAsync(result, Path.Combine(scenarioDirectory, "run.json"), cancellationToken);
             results.Add(result);
 
@@ -74,14 +68,13 @@ public sealed class ScenarioRunner
         Directory.CreateDirectory(Path.GetDirectoryName(stdoutPath)!);
         Directory.CreateDirectory(Path.GetDirectoryName(stderrPath)!);
 
-        var collectors = new List<IOptInCollector>();
+        TypeperfCollector? collector = null;
         try
         {
-            if (_enableCounters && outputDirectory is not null)
+            if (outputDirectory is not null)
             {
-                var collector = new TypeperfCollector();
+                collector = new TypeperfCollector();
                 collector.Start(outputDirectory);
-                collectors.Add(collector);
             }
 
             var execution = await ProcessTreeRunner.RunAsync(
@@ -122,7 +115,7 @@ public sealed class ScenarioRunner
         }
         finally
         {
-            foreach (var collector in collectors)
+            if (collector is not null)
             {
                 try
                 {

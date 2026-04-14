@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace AvBench.Core.Collectors;
 
-public sealed class TypeperfCollector : IOptInCollector
+public sealed class TypeperfCollector : IDisposable
 {
     private static readonly string[] Counters =
     [
