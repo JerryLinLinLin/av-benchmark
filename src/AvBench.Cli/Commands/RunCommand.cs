@@ -80,7 +80,7 @@ public static class RunCommand
                 Directory.CreateDirectory(outputRoot.FullName);
                 File.Copy(manifestPath, Path.Combine(outputRoot.FullName, SetupService.SuiteManifestFileName), overwrite: true);
 
-                Console.WriteLine("[run] Idle check: not yet enforced in milestone 1; proceeding with benchmark execution.");
+                await IdleChecker.VerifyAsync(CancellationToken.None);
 
                 var runner = new ScenarioRunner(
                     avName.Trim(),
