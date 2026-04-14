@@ -833,6 +833,13 @@ public sealed class JobAccountingInfo
 
 ## Process-Tree Runner
 
+### Timing accuracy
+
+The runner uses two timing mechanisms with different accuracy characteristics:
+
+- **`Stopwatch` (wall time):** QPC-based, sub-microsecond resolution on invariant-TSC hardware. Reliable for all workload durations.
+- **Job object `TotalUserTime` / `TotalKernelTime`:** Expressed in 100ns ticks but charged at scheduler clock interrupt granularity (~15.625ms / 64 Hz). Reliable for multi-second compile workloads; not meaningful for sub-second intervals. The kernel/user ratio converges to the true distribution over thousands of scheduler ticks.
+
 ### `ProcessTreeRunner.cs`
 
 Launches a workload command under a Job Object, streams stdout/stderr to files, waits for completion, then queries accounting.

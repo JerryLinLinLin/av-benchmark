@@ -19,13 +19,13 @@ This split exists because each VM runs in isolation with its own AV configuratio
 - Use C# for both programs.
 - Keep the benchmark core vendor-neutral. Do not depend on Defender-only tooling.
 - Use Windows Job objects via P/Invoke for process-tree accounting (CPU, I/O, memory) as the primary measurement layer.
-- Use `WPR` (Windows Performance Recorder) as an opt-in detailed trace layer for root-cause investigation.
+- Use `typeperf` as an opt-in system counter sampling layer for resource utilization analysis.
 - Compare AV products with VM snapshots, not by uninstalling and reinstalling on the same image.
 - `avbench setup` automates everything from tool installation to dependency hydration on a clean Windows VM.
 - Separate untimed setup from timed benchmark execution.
 - Pin repo SHAs and toolchain versions for each test campaign.
 - Default metrics are kept lean: wall time, CPU time, I/O bytes, peak memory. Everything else is opt-in.
-- `avbench` always runs as Administrator. Tool installation and WPR tracing require elevation. Rather than scattering privilege checks, the program validates elevation at startup and exits immediately if not elevated.
+- `avbench` always runs as Administrator. Tool installation requires elevation. Rather than scattering privilege checks, the program validates elevation at startup and exits immediately if not elevated.
 
 ## Why C#
 
@@ -73,29 +73,6 @@ PowerShell remains a helper only (e.g., `setup-test-vm.ps1` for reducing Windows
 
 ### Compile workloads
 
-#### `llvm/llvm-project`
-
-Heavy C/C++ workload. Large source tree, high compile volume, high file churn.
-
-Use on Windows with Visual Studio Build Tools + Ninja + CMake:
-
-```
-cmake -S llvm\llvm -B build -G Ninja ^
-  -DLLVM_ENABLE_PROJECTS=clang ^
-  -DLLVM_TARGETS_TO_BUILD=X86 ^
-  -DCMAKE_BUILD_TYPE=Release
-ninja -C build
-```
-
-Keep the build scope fixed (LLVM + Clang, X86 target only). Building LLVM + Clang in Release mode needs ~15-20 GB disk. An SSD-backed VM is assumed.
-
-Scenarios:
-
-- `configure` (CMake generation, separate from compile)
-- `clean-build` (`ninja -C build`)
-- `incremental-build` (touch one `.cpp`, rebuild)
-- `noop-build` (rebuild with no changes)
-
 #### `BurntSushi/ripgrep`
 
 Medium Rust workload. Simple build entry point, fast iteration.
@@ -132,22 +109,6 @@ Scenarios:
 - `noop-build`
 
 Restore is always untimed and belongs in suite setup.
-
-#### `psf/black` with Nuitka
-
-Python-to-native packaging workload. Real CLI app.
-
-```
-python -m nuitka --standalone black_entry.py
-python -m nuitka --onefile black_entry.py
-```
-
-Where `black_entry.py` is a small wrapper calling Black's CLI entry point. Keep `standalone` and `onefile` as separate scenarios. Smoke-test the produced binary after each build.
-
-Scenarios:
-
-- `nuitka-standalone`
-- `nuitka-onefile`
 
 ### API microbench workloads
 
@@ -236,13 +197,23 @@ Also collected per run:
 - Command line and working directory
 - Runner version and scenario version
 
+#### Timing accuracy and granularity
+
+**Wall-clock (`Stopwatch`):** Based on `QueryPerformanceCounter` (QPC), which uses the TSC register on modern processors. Resolution is ~333ns on a 3 GHz TSC; sub-microsecond in practice. Not affected by power management or Turbo Boost on invariant-TSC hardware (all modern x64 processors). Suitable for timing individual operations in microbench families.
+
+**CPU time (Job object `TotalUserTime` / `TotalKernelTime`):** Stored in 100-nanosecond ticks, but **actual charging granularity is the scheduler clock interrupt — typically 15.625ms (64 Hz)**. The kernel charges CPU time to whichever thread is running when the clock tick fires. A thread running for 14ms may get charged 0ms or 15.6ms. Implications:
+
+- For compile workloads (30s+), this is negligible: ±15ms on a 30s measurement is <0.05% error, further reduced by averaging 5+ reps.
+- For API microbench totals (1–10s), the error averages out across many scheduler ticks.
+- For single-op latency (<1ms), Job object CPU accounting is useless — only `Stopwatch` should be used.
+- The kernel/user CPU ratio is statistically reliable for multi-second workloads because charging converges to the true distribution over thousands of scheduler ticks.
+
 ### Opt-in metrics
 
 These are not collected by default. Enable via CLI flags:
 
 | Opt-in metric | Flag | Notes |
 |---|---|---|
-| WPR ETL trace | `--trace` | Full system ETW trace via `wpr -start` / `wpr -stop`. Produces `.etl` for analysis in WPA. |
 | PerfMon counters CSV | `--counters` | Sampled system counters via `typeperf`: CPU%, disk bytes/sec, available memory. |
 
 ### API microbench metrics
@@ -276,7 +247,6 @@ results/
         stdout.log
         stderr.log
         combined.log       (merged stdout/stderr for easier manual inspection)
-        trace.etl          (opt-in)
         counters.csv       (opt-in)
 ```
 
@@ -345,6 +315,9 @@ avbench-compare ^
 | `mean_wall_ms` | Mean wall-clock time |
 | `median_wall_ms` | Median wall-clock time |
 | `mean_cpu_ms` | Mean total CPU time (user + kernel) |
+| `kernel_cpu_pct` | Mean kernel CPU as percentage of total CPU. AV minifilter overhead lands in kernel mode, so this ratio shifting upward vs. baseline is the most direct signal of AV scanning impact. |
+| `baseline_kernel_cpu_pct` | Baseline's kernel CPU percentage for the same scenario. Shown side-by-side for easy comparison. |
+| `kernel_cpu_slowdown_pct` | `(kernel_cpu_pct - baseline_kernel_cpu_pct)` in percentage points. Positive = AV added kernel-mode overhead. |
 | `peak_memory_mb` | Max peak job memory across reps |
 | `slowdown_pct` | `(mean_wall - baseline_mean_wall) / baseline_mean_wall * 100` |
 | `cv_pct` | Coefficient of variation for wall time |
@@ -355,7 +328,7 @@ avbench-compare ^
 Answers:
 
 - Which AV configuration slowed which workload the most?
-- Was the slowdown CPU-bound or I/O-bound?
+- Was the slowdown CPU-bound or I/O-bound? (The kernel CPU % shift between baseline and AV-enabled runs directly answers this: AV minifilter scanning executes in kernel mode within the build process tree, so a kernel CPU ratio increase pinpoints AV overhead.)
 - Which runs were too noisy to trust (CV > threshold)?
 
 ## C# System Design
@@ -393,14 +366,8 @@ Each tool is installed silently using its official unattended installer. The set
 |---|---|---|
 | Git for Windows | `Git-*-64-bit.exe /VERYSILENT /NORESTART` | `git --version` |
 | Visual Studio Build Tools / MSBuild | `winget install Microsoft.VisualStudio.BuildTools` with VCTools, managed desktop build tools, WinUI/Windows SDK, and C++ ATL components | `vswhere -products *` |
-| CMake | MSI silent install or bundled with VS Build Tools | `cmake --version` |
-| Ninja | Download release zip, extract to PATH | `ninja --version` |
 | .NET SDK | `dotnet-sdk-*-win-x64.exe /quiet /norestart` | `dotnet --list-sdks` |
 | Rust (rustup) | `rustup-init.exe -y --default-toolchain stable` | `rustc --version` |
-| Python 3.x | `python-*-amd64.exe /quiet InstallAllUsers=1 PrependPath=1` or `winget install Python.Python.3.14` | `python --version` |
-| Nuitka + deps | `pip install nuitka ordered-set` | `python -m nuitka --version` |
-| Windows App SDK 1.8 | NuGet restore (auto via `msbuild /t:Restore`) | Restored by build |
-| Windows ADK (optional) | Only if `--trace` support is wanted | `wpr -help` |
 
 #### Repo acquisition and dependency hydration
 
@@ -408,20 +375,16 @@ After tools are installed:
 
 1. Resolve an exact source snapshot for each repo and fetch it into a pinned location (e.g., `C:\bench\<repo>`).
 2. Prefer GitHub source archives over full `git clone`:
-   - ripgrep and LLVM use the latest release tag archive by default
+   - ripgrep uses the latest release tag archive by default
    - Roslyn uses the default branch head archive because milestone 2 tracks the current upstream build layout
    - `--ripgrep-ref` resolves the requested ref to an exact commit SHA and downloads that archive
 3. Record the exact commit SHA plus source metadata (`source_kind`, `source_reference`, `archive_url`) in `suite-manifest.json`.
 4. Read repo manifests where possible:
    - `global.json` (Roslyn .NET SDK version)
    - `Cargo.toml` / `rust-toolchain.toml` (ripgrep Rust version)
-   - `pyproject.toml` (Black Python requirements)
-   - `CMakeLists.txt` (LLVM CMake version requirements)
 5. Hydrate dependencies (untimed):
    - Roslyn: `Restore.cmd`
    - ripgrep: `cargo fetch`
-   - Black/Nuitka: `python -m venv` + `pip install`
-   - LLVM: CMake configure in a VS developer shell (current upstream requires Python to be on PATH)
 6. Write `suite-manifest.json` (repos, SHAs, source metadata, tool versions).
 
 If Visual Studio installation leaves Windows in a real pending-restart state, `avbench setup` should stop with a clear message telling the user to restart the PC and rerun setup. Ignore the Visual Studio bootstrapper's own queued cleanup JSON delete under `C:\ProgramData\Microsoft\VisualStudio\Packages\_bootstrapper\`, because current VS 2026 installs can leave that behind even when `vswhere` reports `isRebootRequired=false`.
@@ -499,7 +462,6 @@ Default:
 
 Opt-in:
 
-- **`WprCollector`** — starts/stops `wpr.exe` for ETW tracing.
 - **`PerfCounterCollector`** — starts/stops `typeperf.exe` for sampled system counters.
 
 ## VM Image Preparation
@@ -532,14 +494,6 @@ Simple, defensible rules for v1:
 
 ## Workload-Specific Notes
 
-### LLVM
-
-- Treat `cmake` configure and `ninja` build as separate scenarios.
-- Keep generator (`Ninja`) and project set (`clang`, X86-only) fixed for the full campaign.
-- Store build dir outside the source tree for easy cleanup.
-- LLVM source acquisition should prefer the latest GitHub release archive over a full clone to reduce setup time and bandwidth.
-- LLVM + Clang Release build needs ~15-20 GB disk space.
-
 ### ripgrep
 
 - Best candidate for early runner development — fast builds, simple toolchain.
@@ -554,12 +508,6 @@ Simple, defensible rules for v1:
 - Solution file is `Roslyn.slnx`.
 - Timed benchmark command is `dotnet build Roslyn.slnx -c Release /m /nr:false`.
 - Watch for compiler server (`VBCSCompiler.exe`) behavior — it stays resident and may affect subsequent runs.
-
-### Black + Nuitka
-
-- Create a small `black_entry.py` wrapper as the Nuitka entry point.
-- Keep `standalone` and `onefile` as separate scenarios.
-- Smoke-test the produced executable after build (run `black --version` or format a small file).
 
 ## What To Build First
 
@@ -582,17 +530,14 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 
 ### Milestone 2
 
-- Extend `avbench setup` to install Visual Studio/MSBuild prerequisites, CMake, Ninja, Python, and the .NET SDKs needed by Roslyn
+- Extend `avbench setup` to install Visual Studio/MSBuild prerequisites and the .NET SDKs needed by Roslyn
 - Add Roslyn compile scenarios
-- Add LLVM compile scenarios
 - Build `avbench-compare` — reads results from multiple directories, produces `compare.csv` and `summary.md`
 
 ### Milestone 3
 
-- Extend `avbench setup` to install Python, Nuitka
-- Add Black + Nuitka compile scenarios
 - Add remaining API microbench families
-- Add `--trace` (WPR) and `--counters` (typeperf) opt-in collectors
+- Add `--counters` (typeperf) opt-in collector
 
 ### Milestone 4
 
@@ -605,11 +550,7 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 - Windows Job Objects: https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects
 - `JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION`: https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_and_io_accounting_information
 - `JOBOBJECT_BASIC_ACCOUNTING_INFORMATION`: https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_accounting_information
-- Windows Performance Toolkit (WPR/WPA): https://learn.microsoft.com/en-us/windows-hardware/test/wpt/
-- Windows Performance Recorder: https://learn.microsoft.com/en-us/windows-hardware/test/wpt/windows-performance-recorder
-- Event Tracing for Windows: https://learn.microsoft.com/en-us/windows/win32/etw/about-event-tracing
 - `typeperf`: https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/typeperf
-- LLVM getting started: https://github.com/llvm/llvm-project/blob/main/llvm/docs/GettingStarted.rst
 - LLVM Visual Studio guide: https://github.com/llvm/llvm-project/blob/main/llvm/docs/GettingStartedVS.rst
 - ripgrep README: https://github.com/BurntSushi/ripgrep/blob/master/README.md
 - Roslyn Windows build guide: https://github.com/dotnet/roslyn/blob/main/docs/contributing/Building%2C%20Debugging%2C%20and%20Testing%20on%20Windows.md
