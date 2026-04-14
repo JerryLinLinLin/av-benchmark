@@ -86,16 +86,13 @@ public static class RunCommand
                 ValidateRequestedWorkloads(manifest, selectedWorkloads);
 
                 Directory.CreateDirectory(outputRoot.FullName);
-                var runDirectory = Path.Combine(outputRoot.FullName, DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"));
-                Directory.CreateDirectory(runDirectory);
-
-                File.Copy(manifestPath, Path.Combine(runDirectory, SetupService.SuiteManifestFileName), overwrite: true);
+                File.Copy(manifestPath, Path.Combine(outputRoot.FullName, SetupService.SuiteManifestFileName), overwrite: true);
 
                 Console.WriteLine("[run] Idle check: not yet enforced in milestone 1; proceeding with benchmark execution.");
 
                 var runner = new ScenarioRunner(
                     avName.Trim(),
-                    runDirectory,
+                    outputRoot.FullName,
                     SystemInfoProvider.GetRunnerVersion(),
                     SetupService.ComputeManifestSha(manifestPath));
 
@@ -124,10 +121,10 @@ public static class RunCommand
                     results.AddRange(await runner.ExecuteScenarioAsync(scenario, repetitions, CancellationToken.None));
                 }
 
-                var csvPath = Path.Combine(runDirectory, "runs.csv");
+                var csvPath = Path.Combine(outputRoot.FullName, "runs.csv");
                 await CsvResultWriter.WriteAsync(results, csvPath, CancellationToken.None);
 
-                Console.WriteLine($"[run] Wrote {results.Count} run records to {runDirectory}");
+                Console.WriteLine($"[run] Wrote {results.Count} run records to {outputRoot.FullName}");
                 return 0;
             }
             catch (InvalidOperationException ex)

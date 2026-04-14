@@ -1,5 +1,6 @@
 using System.CommandLine;
 using System.Text.Json;
+using AvBench.Core.Internal;
 using AvBench.Core.Models;
 using AvBench.Core.Serialization;
 
@@ -45,17 +46,9 @@ public static class InternalFileCreateDeleteCommand
 
             Directory.CreateDirectory(root.FullName);
 
-            RunBatch(root.FullName, batchSize);
-
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var completed = 0;
-            while (completed < totalOperations)
-            {
-                var currentBatch = Math.Min(batchSize, totalOperations - completed);
-                RunBatch(root.FullName, currentBatch);
-                completed += currentBatch;
-            }
-
+            var histogram = new LatencyHistogram();
+            RunBatches(root.FullName, totalOperations, batchSize, histogram);
             stopwatch.Stop();
 
             var metrics = new FileMicrobenchMetrics
@@ -63,7 +56,11 @@ public static class InternalFileCreateDeleteCommand
                 BatchSize = batchSize,
                 TotalOperations = totalOperations,
                 OpsPerSec = totalOperations / stopwatch.Elapsed.TotalSeconds,
-                MeanLatencyUs = stopwatch.Elapsed.TotalMicroseconds / totalOperations
+                MeanLatencyUs = histogram.MeanUs,
+                P50Us = histogram.GetPercentile(50),
+                P95Us = histogram.GetPercentile(95),
+                P99Us = histogram.GetPercentile(99),
+                MaxUs = histogram.MaxUs
             };
 
             Console.Out.Write(JsonSerializer.Serialize(metrics, AvBenchJsonContext.Default.FileMicrobenchMetrics));
@@ -73,20 +70,32 @@ public static class InternalFileCreateDeleteCommand
         return command;
     }
 
-    private static void RunBatch(string root, int count)
+    private static void RunBatches(string root, int totalOperations, int batchSize, LatencyHistogram histogram)
     {
         Span<byte> data = stackalloc byte[64];
+        var completed = 0;
 
-        for (var index = 0; index < count; index++)
+        while (completed < totalOperations)
         {
-            var path = Path.Combine(root, $"bench_{index:D5}.tmp");
-
-            using (var stream = File.Create(path))
+            var currentBatch = Math.Min(batchSize, totalOperations - completed);
+            for (var index = 0; index < currentBatch; index++)
             {
-                stream.Write(data);
+                var operationIndex = completed + index;
+                var path = Path.Combine(root, $"bench_{operationIndex:D5}.tmp");
+                var start = System.Diagnostics.Stopwatch.GetTimestamp();
+
+                using (var stream = File.Create(path))
+                {
+                    stream.Write(data);
+                }
+
+                File.Delete(path);
+
+                var end = System.Diagnostics.Stopwatch.GetTimestamp();
+                histogram.RecordElapsedTicks(start, end);
             }
 
-            File.Delete(path);
+            completed += currentBatch;
         }
     }
 }

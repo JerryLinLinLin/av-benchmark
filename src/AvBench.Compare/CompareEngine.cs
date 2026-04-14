@@ -36,6 +36,8 @@ public static class CompareEngine
                     {
                         ScenarioId = group.Key,
                         AvName = avName,
+                        AvProduct = scenarioRuns[0].AvProduct,
+                        AvVersion = scenarioRuns[0].AvVersion,
                         BaselineName = baselineName,
                         Repetitions = scenarioRuns.Count,
                         Status = "failed"
@@ -65,6 +67,8 @@ public static class CompareEngine
                 {
                     ScenarioId = group.Key,
                     AvName = avName,
+                    AvProduct = successfulRuns[0].AvProduct,
+                    AvVersion = successfulRuns[0].AvVersion,
                     BaselineName = baselineName,
                     Repetitions = successfulRuns.Count,
                     MeanWallMs = Math.Round(meanWall, 1),
@@ -115,6 +119,10 @@ public sealed class ComparisonRow
     public string ScenarioId { get; init; } = string.Empty;
 
     public string AvName { get; init; } = string.Empty;
+
+    public string AvProduct { get; init; } = string.Empty;
+
+    public string AvVersion { get; init; } = string.Empty;
 
     public string BaselineName { get; init; } = string.Empty;
 

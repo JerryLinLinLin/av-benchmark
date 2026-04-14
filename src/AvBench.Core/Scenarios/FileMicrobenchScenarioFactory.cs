@@ -37,10 +37,15 @@ public static class FileMicrobenchScenarioFactory
                     return;
                 }
 
-                runResult.FileMicrobench = JsonSerializer.Deserialize(json, AvBenchJsonContext.Default.FileMicrobenchMetrics)
+                var metrics = JsonSerializer.Deserialize(json, AvBenchJsonContext.Default.FileMicrobenchMetrics)
                     ?? throw new InvalidOperationException("File microbench output was not valid JSON.");
+
+                runResult.FileMicrobench = metrics;
+                runResult.P50Us = metrics.P50Us;
+                runResult.P95Us = metrics.P95Us;
+                runResult.P99Us = metrics.P99Us;
+                runResult.MaxUs = metrics.MaxUs;
             }
         };
     }
 }
-

@@ -10,6 +10,12 @@ public sealed class RunResult
     [JsonPropertyName("av_name")]
     public string AvName { get; set; } = string.Empty;
 
+    [JsonPropertyName("av_product")]
+    public string AvProduct { get; set; } = string.Empty;
+
+    [JsonPropertyName("av_version")]
+    public string AvVersion { get; set; } = string.Empty;
+
     [JsonPropertyName("repetition")]
     public int Repetition { get; set; }
 
@@ -51,6 +57,22 @@ public sealed class RunResult
 
     [JsonPropertyName("total_processes")]
     public uint TotalProcesses { get; set; }
+
+    [JsonPropertyName("p50_us")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public double? P50Us { get; set; }
+
+    [JsonPropertyName("p95_us")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public double? P95Us { get; set; }
+
+    [JsonPropertyName("p99_us")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public double? P99Us { get; set; }
+
+    [JsonPropertyName("max_us")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public double? MaxUs { get; set; }
 
     [JsonPropertyName("machine")]
     public MachineInfo Machine { get; set; } = new();
@@ -94,4 +116,16 @@ public sealed class FileMicrobenchMetrics
 
     [JsonPropertyName("mean_latency_us")]
     public double MeanLatencyUs { get; set; }
+
+    [JsonPropertyName("p50_us")]
+    public double P50Us { get; set; }
+
+    [JsonPropertyName("p95_us")]
+    public double P95Us { get; set; }
+
+    [JsonPropertyName("p99_us")]
+    public double P99Us { get; set; }
+
+    [JsonPropertyName("max_us")]
+    public double MaxUs { get; set; }
 }

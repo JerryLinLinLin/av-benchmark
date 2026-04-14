@@ -9,6 +9,8 @@ public static class CompareCsvWriter
     [
         "scenario_id",
         "av_name",
+        "av_product",
+        "av_version",
         "baseline_name",
         "repetitions",
         "mean_wall_ms",
@@ -33,6 +35,8 @@ public static class CompareCsvWriter
             builder.AppendLine(string.Join(",",
                 Escape(row.ScenarioId),
                 Escape(row.AvName),
+                Escape(row.AvProduct),
+                Escape(row.AvVersion),
                 Escape(row.BaselineName),
                 row.Repetitions.ToString(CultureInfo.InvariantCulture),
                 row.MeanWallMs.ToString("F1", CultureInfo.InvariantCulture),
