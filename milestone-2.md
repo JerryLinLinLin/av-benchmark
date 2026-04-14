@@ -2,7 +2,7 @@
 
 ## Scope
 
-- Extend `avbench setup` to install VS Build Tools, CMake, Ninja, .NET SDK
+- Extend `avbench setup` to install Visual Studio/MSBuild prerequisites, CMake, Ninja, Python, and .NET SDKs
 - Add Roslyn compile scenarios (clean/incremental/noop)
 - Add LLVM compile scenarios (configure, clean/incremental/noop)
 - Add Files (WinUI 3) compile scenarios (clean/incremental/noop)
@@ -80,16 +80,19 @@ dotnet add package System.CommandLine --version 2.0.5
 
 ### `VsBuildToolsInstaller.cs`
 
-VS Build Tools is the heaviest install. It requires the `vs_buildtools.exe` bootstrapper with `--quiet --wait` and workload IDs.
+Visual Studio/MSBuild is the heaviest install. Live verification against the current Roslyn and Files repos showed that milestone 2 needs:
+- `Microsoft.VisualStudio.Workload.VCTools`
+- `Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools`
+- `Microsoft.VisualStudio.Workload.UniversalBuildTools`
+- `Microsoft.VisualStudio.Component.Windows11SDK.26100`
+- `Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs`
+- `Microsoft.VisualStudio.Component.VC.ATL`
 
-Workloads needed:
-- `Microsoft.VisualStudio.Workload.VCTools` — C++ desktop build tools (MSVC, Windows SDK) — for LLVM and Files native projects
-- `Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools` — .NET desktop build tools — for Roslyn
-- `Microsoft.VisualStudio.ComponentGroup.UWP.BuildTools` — UWP build tools
-- `Microsoft.VisualStudio.Workload.UniversalBuildTools` — Universal Windows Platform build tools
-- Individual component: `Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs` — WinUI/WinAppSDK for Files
+Detection: `vswhere.exe -latest -products * -requires Microsoft.Component.MSBuild -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64`.
 
-Detection: `vswhere.exe -products * -property installationPath` — vswhere ships with the VS Installer at `%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe`.
+Important behavior:
+- If Windows already has a pending restart, setup should stop before attempting Visual Studio install.
+- If the installer prints a restart-required message or leaves pending restart state behind, `avbench setup` should stop and tell the user to restart Windows and rerun setup.
 
 ```csharp
 using System.Diagnostics;
@@ -477,25 +480,17 @@ Extend `RepoCloner` to support all three new repos. Each repo has specific hydra
 
 ### Roslyn
 
-```csharp
-public static void HydrateRoslyn(string repoDir)
-{
-    Console.WriteLine($"[setup] Running Restore.cmd in {repoDir}");
-    var psi = new ProcessStartInfo("cmd.exe", "/c Restore.cmd")
-    {
-        WorkingDirectory = repoDir,
-        UseShellExecute = false
-    };
-    var proc = Process.Start(psi)!;
-    proc.WaitForExit();
-    if (proc.ExitCode != 0)
-        throw new InvalidOperationException($"Roslyn Restore.cmd failed: exit {proc.ExitCode}");
-}
+Hydration remains `Restore.cmd`, but the timed benchmark command is not `Build.cmd` anymore. Live verification showed current Roslyn builds reliably with:
+
+```powershell
+dotnet build Roslyn.slnx -c Release /m /nr:false
 ```
+
+This avoids current `Build.cmd`/MSBuild runtime mismatches on newer repos.
 
 ### LLVM
 
-CMake configure is untimed setup. It generates Ninja build files.
+CMake configure is untimed setup. It generates Ninja build files and currently requires Python to be available on PATH. Run configure inside the VS developer shell.
 
 ```csharp
 public static void HydrateLlvm(string repoDir, string buildDir)
@@ -524,7 +519,9 @@ public static void HydrateLlvm(string repoDir, string buildDir)
 
 ### Files
 
-MSBuild restore is untimed setup.
+The current Files build guide requires Visual Studio 2022 17.13+ with .NET 10.0.102, Windows 11 SDK 10.0.26100.0, MSVC v145, and C++ ATL, plus Windows App SDK 1.8. For `avbench setup` we automate the equivalent MSBuild/Build Tools prerequisites.
+
+MSBuild restore is untimed setup and must include `RestorePackagesConfig=true`.
 
 ```csharp
 public static void HydrateFiles(string repoDir)
@@ -534,7 +531,7 @@ public static void HydrateFiles(string repoDir)
 
     Console.WriteLine($"[setup] MSBuild restore in {repoDir}");
     var psi = new ProcessStartInfo(msbuild,
-        $"Files.slnx /t:Restore /p:Platform=x64 /p:Configuration=Release")
+        $"Files.slnx /t:Restore /p:Platform=x64 /p:Configuration=Release /p:RestorePackagesConfig=true /nr:false")
     {
         WorkingDirectory = repoDir,
         UseShellExecute = false
@@ -557,17 +554,15 @@ public static class RoslynScenario
 {
     public static List<ScenarioDefinition> Create(string repoDir)
     {
-        // Roslyn builds via Build.cmd which uses msbuild internally
-        // Build.cmd is in the repo root
-        var buildCmd = Path.Combine(repoDir, "Build.cmd");
+        var solutionPath = Path.Combine(repoDir, "Roslyn.slnx");
 
         return
         [
             new ScenarioDefinition
             {
                 Id = "roslyn-clean-build",
-                FileName = "cmd.exe",
-                Arguments = $"/c \"{buildCmd}\"",
+                FileName = "dotnet",
+                Arguments = $"build \"{solutionPath}\" -c Release /m /nr:false",
                 WorkingDirectory = repoDir,
                 PreActions =
                 [
@@ -1124,7 +1119,7 @@ dotnet add package System.CommandLine --version 2.0.5
 Create `VsBuildToolsInstaller.cs`, `CmakeInstaller.cs`, `NinjaInstaller.cs`, `DotNetSdkInstaller.cs` in `AvBench.Core/Setup/`.
 
 Test each on a clean VM:
-1. `VsBuildToolsInstaller.EnsureInstalledAsync()` → `vswhere` detects install
+1. `VsBuildToolsInstaller.EnsureInstalledAsync()` → `vswhere` detects install or setup exits with a restart-required message
 2. `CmakeInstaller.EnsureInstalledAsync()` → `cmake --version` works
 3. `NinjaInstaller.EnsureInstalledAsync()` → `ninja --version` works
 4. `DotNetSdkInstaller.EnsureInstalledAsync()` → `dotnet --list-sdks` shows both versions
@@ -1141,15 +1136,15 @@ Extend `RepoCloner` with `HydrateRoslyn()`, `HydrateLlvm()`, `HydrateFiles()`.
 
 Test:
 - Roslyn: `Restore.cmd` completes without errors
-- LLVM: `cmake` configure generates `build.ninja` in build dir
-- Files: `msbuild /t:Restore` restores NuGet packages
+- LLVM: `cmake` configure generates `build.ninja` in build dir and succeeds with Python available
+- Files: `msbuild /t:Restore /p:RestorePackagesConfig=true /nr:false` restores NuGet and native packages
 
 ### Step 5: Build scenario definitions
 
 Create `RoslynScenario.cs`, `LlvmScenario.cs`, `FilesScenario.cs`.
 
 Test each scenario standalone:
-- Roslyn clean build via `Build.cmd` produces output in `artifacts/`
+- Roslyn clean build via `dotnet build Roslyn.slnx -c Release /m /nr:false` produces output in `artifacts/`
 - LLVM clean build via `ninja` produces clang binary
 - Files clean build via `msbuild` produces output in `src/Files.App/bin/`
 
@@ -1211,7 +1206,7 @@ comparison/
 | LLVM clean build takes 30-60 minutes | Fewer repetitions practical | Use N=3 for LLVM; N=5 for faster workloads. Allow per-scenario rep count override. |
 | Files requires .NET 10 SDK (preview) | SDK availability may vary | Pin exact version in installer code. Use `dotnet-install.ps1` to fetch exact version. |
 | Files has C++ projects requiring MSVC | Incremental MSVC builds may create noise | Measure full solution build. The C++ projects are small (dialog helpers). |
-| `Roslyn Restore.cmd` may be renamed | Hydration fails | Pin Roslyn to a specific SHA. Validate `Restore.cmd` exists in `setup`. |
+| Visual Studio install may require reboot | Setup cannot finish in one pass | Detect pending restart, tell the user to restart Windows, and rerun `avbench setup`. |
 | MSBuild path varies by VS version | Scenario fails to find MSBuild | Use vswhere with `-find MSBuild\**\Bin\MSBuild.exe` to discover dynamically. |
 | Comparison across VMs with different hardware | Invalid slowdown numbers | `compare.csv` includes `machine` info from `run.json`. Document: all VMs must use identical hardware specs. |
 | LLVM clone is 1.5+ GB | Setup slow on limited bandwidth | Use `--depth 1` for shallow clone when not pinning specific SHA. Add `--filter=blob:none` for partial clone. |

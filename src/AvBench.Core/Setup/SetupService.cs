@@ -3,9 +3,11 @@ using System.Text.Json;
 using AvBench.Core.Environment;
 using AvBench.Core.Models;
 using AvBench.Core.Serialization;
+using System.Runtime.Versioning;
 
 namespace AvBench.Core.Setup;
 
+[SupportedOSPlatform("windows")]
 public sealed class SetupService
 {
     public const string SuiteManifestFileName = "suite-manifest.json";
@@ -28,6 +30,11 @@ public sealed class SetupService
         var requiredVsVersion = DetermineRequiredVisualStudioVersion(RepoCloner.ResolveVisualStudioVersion(roslyn.LocalPath));
 
         var vsVersion = await new VsBuildToolsInstaller(requiredVsVersion).EnsureInstalledAsync(cancellationToken);
+        if (WindowsRestartDetector.IsRestartPending())
+        {
+            throw SetupRestartRequiredException.PendingVisualStudioFinalize();
+        }
+
         var cmakeVersion = await new CmakeInstaller().EnsureInstalledAsync(cancellationToken);
         var ninjaVersion = await new NinjaInstaller().EnsureInstalledAsync(cancellationToken);
         var pythonVersion = await new PythonInstaller().EnsureInstalledAsync(cancellationToken);

@@ -1,10 +1,21 @@
 using AvBench.Core.Internal;
+using System.Runtime.Versioning;
 
 namespace AvBench.Core.Setup;
 
+[SupportedOSPlatform("windows")]
 public sealed class VsBuildToolsInstaller(string? minimumVersion = null) : ToolInstaller
 {
     private const string WingetPackageId = "Microsoft.VisualStudio.BuildTools";
+    private static readonly string[] RequiredComponents =
+    [
+        "Microsoft.VisualStudio.Workload.VCTools",
+        "Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools",
+        "Microsoft.VisualStudio.Workload.UniversalBuildTools",
+        "Microsoft.VisualStudio.Component.Windows11SDK.26100",
+        "Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs",
+        "Microsoft.VisualStudio.Component.VC.ATL"
+    ];
 
     private static readonly string VswherePath = Path.Combine(
         System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86),
@@ -43,28 +54,39 @@ public sealed class VsBuildToolsInstaller(string? minimumVersion = null) : ToolI
 
     public override async Task InstallAsync(CancellationToken cancellationToken)
     {
-        await Task.Yield();
+        if (WindowsRestartDetector.IsRestartPending())
+        {
+            throw SetupRestartRequiredException.BeforeVisualStudioInstall();
+        }
 
         var overrideArguments = string.Join(" ",
-            "--quiet",
-            "--wait",
-            "--norestart",
-            "--add Microsoft.VisualStudio.Workload.VCTools",
-            "--add Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools",
-            "--add Microsoft.VisualStudio.Workload.UniversalBuildTools",
-            "--add Microsoft.VisualStudio.Component.Windows11SDK.26100",
-            "--add Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs",
-            "--includeRecommended");
+            new[] { "--quiet", "--wait", "--norestart" }
+                .Concat(RequiredComponents.Select(static component => $"--add {component}"))
+                .Concat(new[] { "--includeRecommended" }));
 
         var arguments =
             $"install -e --id {WingetPackageId} --source winget " +
             "--accept-package-agreements --accept-source-agreements --silent " +
             $"--override \"{overrideArguments}\"";
 
-        var exitCode = RunProcess("winget", arguments);
-        if (exitCode != 0 && exitCode != 3010)
+        var result = await ProcessUtil.RunAsync(
+            "winget",
+            arguments,
+            Directory.GetCurrentDirectory(),
+            cancellationToken);
+
+        if (result.ExitCode != 0 && result.ExitCode != 3010)
         {
-            throw new InvalidOperationException($"Visual Studio Build Tools install exited with code {exitCode}.");
+            throw new InvalidOperationException(
+                BuildInstallFailureMessage(result.ExitCode, result.Stdout, result.Stderr));
+        }
+
+        if (result.ExitCode == 3010
+            || RequiresRestart(result.Stdout)
+            || RequiresRestart(result.Stderr)
+            || WindowsRestartDetector.IsRestartPending())
+        {
+            throw SetupRestartRequiredException.AfterVisualStudioInstall();
         }
     }
 
@@ -126,5 +148,27 @@ public sealed class VsBuildToolsInstaller(string? minimumVersion = null) : ToolI
         return value
             .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .FirstOrDefault(static line => !string.IsNullOrWhiteSpace(line));
+    }
+
+    private static bool RequiresRestart(string? output)
+    {
+        return !string.IsNullOrWhiteSpace(output)
+            && output.Contains("restart your pc", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string BuildInstallFailureMessage(int exitCode, string stdout, string stderr)
+    {
+        var message = $"Visual Studio Build Tools install exited with code {exitCode}.";
+        if (!string.IsNullOrWhiteSpace(stdout))
+        {
+            message += $"{System.Environment.NewLine}{System.Environment.NewLine}stdout:{System.Environment.NewLine}{stdout.Trim()}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(stderr))
+        {
+            message += $"{System.Environment.NewLine}{System.Environment.NewLine}stderr:{System.Environment.NewLine}{stderr.Trim()}";
+        }
+
+        return message;
     }
 }

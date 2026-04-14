@@ -28,8 +28,16 @@ public static class SetupCommand
             var ripgrepRef = parseResult.GetValue(ripgrepRefOption);
 
             var service = new SetupService();
-            await service.ExecuteAsync(benchDir.FullName, ripgrepRef, CancellationToken.None);
-            return 0;
+            try
+            {
+                await service.ExecuteAsync(benchDir.FullName, ripgrepRef, CancellationToken.None);
+                return 0;
+            }
+            catch (SetupRestartRequiredException ex)
+            {
+                Console.WriteLine($"[setup] {ex.Message}");
+                return 2;
+            }
         });
 
         return command;

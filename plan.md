@@ -116,18 +116,18 @@ Scenarios:
 
 Heavy C# workload. Real-world Microsoft compiler repo.
 
-Build on Windows with Visual Studio 2022 + .NET SDK matching `global.json` `sdk.version`:
+Build on Windows with Visual Studio 2022 17.13+ and the .NET SDK matching `global.json` `sdk.version`:
 
 ```
 Restore.cmd   (untimed, during suite setup)
-Build.cmd     (timed)
+dotnet build Roslyn.slnx -c Release /m /nr:false   (timed)
 ```
 
-Roslyn uses `Roslyn.slnx` as of recent commits. Requires .NET Framework 4.7.2 minimum.
+Roslyn uses `Roslyn.slnx` as of recent commits. The current repo also builds cleanly with `dotnet build Roslyn.slnx` even when `Build.cmd` expects a newer Visual Studio/MSBuild pairing. Requires .NET Framework 4.7.2 minimum.
 
 Scenarios:
 
-- `clean-build` (`Build.cmd`)
+- `clean-build` (`dotnet build Roslyn.slnx -c Release /m /nr:false`)
 - `incremental-build` (touch one stable `.cs` file, rebuild)
 - `noop-build`
 
@@ -153,7 +153,7 @@ Scenarios:
 
 Large C# / WinUI 3 desktop app (modern file manager, 43k stars). Exercises WindowsApp SDK 1.8, XAML compilation, CsWin32 source generator for Win32 P/Invoke, WinUI custom controls, packaged-app build pipeline, and C++ native helper projects. 97% C# — the heaviest Windows-native C# workload in the suite.
 
-Build requires Visual Studio Build Tools with WinUI workload, .NET 10 SDK (per `global.json` `10.0.102`), Windows 11 SDK `10.0.26100.0`, Windows App SDK 1.8, and MSVC v145 C++ tools (already needed for LLVM).
+The current Files build guide requires Visual Studio 2022 17.13+ with Windows 11 SDK `10.0.26100.0`, .NET 10 SDK `10.0.102`, MSVC v145 build tools, and C++ ATL for the latest v145 toolset, plus Windows App SDK 1.8. For `avbench setup`, we automate the equivalent Visual Studio Build Tools/MSBuild prerequisites.
 
 ```
 msbuild Files.slnx /p:Configuration=Release /p:Platform=x64
@@ -410,12 +410,12 @@ Each tool is installed silently using its official unattended installer. The set
 | Tool | Install method | Detection |
 |---|---|---|
 | Git for Windows | `Git-*-64-bit.exe /VERYSILENT /NORESTART` | `git --version` |
-| Visual Studio Build Tools 2022 | `vs_buildtools.exe --quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended` | `vswhere -products *` |
+| Visual Studio Build Tools / MSBuild | `winget install Microsoft.VisualStudio.BuildTools` with VCTools, managed desktop build tools, WinUI/Windows SDK, and C++ ATL components | `vswhere -products *` |
 | CMake | MSI silent install or bundled with VS Build Tools | `cmake --version` |
 | Ninja | Download release zip, extract to PATH | `ninja --version` |
 | .NET SDK | `dotnet-sdk-*-win-x64.exe /quiet /norestart` | `dotnet --list-sdks` |
 | Rust (rustup) | `rustup-init.exe -y --default-toolchain stable` | `rustc --version` |
-| Python 3.x | `python-*-amd64.exe /quiet InstallAllUsers=1 PrependPath=1` | `python --version` |
+| Python 3.x | `python-*-amd64.exe /quiet InstallAllUsers=1 PrependPath=1` or `winget install Python.Python.3.14` | `python --version` |
 | Nuitka + deps | `pip install nuitka ordered-set` | `python -m nuitka --version` |
 | Windows App SDK 1.8 | NuGet restore (auto via `msbuild /t:Restore`) | Restored by build |
 | Windows ADK (optional) | Only if `--trace` support is wanted | `wpr -help` |
@@ -435,8 +435,11 @@ After tools are installed:
    - Roslyn: `Restore.cmd`
    - ripgrep: `cargo fetch`
    - Black/Nuitka: `python -m venv` + `pip install`
-   - LLVM: CMake configure (generates Ninja build files)
+   - LLVM: CMake configure in a VS developer shell (current upstream requires Python to be on PATH)
+   - Files: `msbuild Files.slnx /t:Restore /p:Configuration=Release /p:Platform=x64 /p:RestorePackagesConfig=true /nr:false`
 5. Write `suite-manifest.json` (repos, SHAs, tool versions).
+
+If Visual Studio installation leaves Windows in a pending-restart state, `avbench setup` should stop with a clear message telling the user to restart the PC and rerun setup.
 
 `setup` must not silently upgrade toolchains once a campaign has started. Re-running `setup` after a campaign starts should detect and warn about version drift.
 
@@ -561,9 +564,10 @@ Simple, defensible rules for v1:
 
 ### Roslyn
 
-- Separate `Restore.cmd` (untimed) from `Build.cmd` (timed).
-- Requires Visual Studio 2022 Preview + .NET SDK matching `global.json`.
+- Separate `Restore.cmd` (untimed) from the timed build.
+- Requires Visual Studio/MSBuild plus the .NET SDK matching `global.json`.
 - Solution file is `Roslyn.slnx`.
+- Timed benchmark command is `dotnet build Roslyn.slnx -c Release /m /nr:false`.
 - Watch for compiler server (`VBCSCompiler.exe`) behavior — it stays resident and may affect subsequent runs.
 
 ### Black + Nuitka
@@ -574,10 +578,11 @@ Simple, defensible rules for v1:
 
 ### Files (WinUI 3)
 
-- Requires VS Build Tools with WinUI workload, .NET 10 SDK, Windows 11 SDK 10.0.26100.0, Windows App SDK 1.8.
+- Current upstream docs require Visual Studio 2022 17.13+ with .NET 10 SDK `10.0.102`, Windows 11 SDK `10.0.26100.0`, MSVC v145, and C++ ATL, plus Windows App SDK 1.8.
+- `avbench setup` should automate the equivalent MSBuild/Build Tools prerequisites and must stop for a reboot if Visual Studio install requests one.
 - Most prerequisites overlap with LLVM (MSVC, Win SDK) and Roslyn (.NET SDK, VS Build Tools). The incremental cost is the WinUI workload component and .NET 10 SDK.
 - Solution is `Files.slnx` — build with `msbuild Files.slnx /p:Configuration=Release /p:Platform=x64`.
-- Run `msbuild /t:Restore` as untimed setup before the timed build.
+- Run `msbuild /t:Restore /p:RestorePackagesConfig=true /nr:false` as untimed setup before the timed build.
 - For incremental-build, touch a `.cs` file in `src/Files.App/` (e.g., `App.xaml.cs` or a ViewModel file).
 - XAML compilation and CsWin32 source generation are key differentiators from Roslyn — they exercise MSBuild targets that generate many intermediate files and trigger AV scanning.
 - Watch for `Files.App.Server` and C++ native projects (`Files.App.Launcher`, `Files.App.OpenDialog`, `Files.App.SaveDialog`) — they link against MSVC and may add noise. Measure the full solution build to capture the realistic mixed workload.
@@ -603,7 +608,7 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 
 ### Milestone 2
 
-- Extend `avbench setup` to install VS Build Tools, CMake, Ninja, .NET SDK (10.0.102 for Files)
+- Extend `avbench setup` to install Visual Studio/MSBuild prerequisites, CMake, Ninja, Python, and the .NET SDKs needed by Roslyn and Files
 - Add Roslyn compile scenarios
 - Add LLVM compile scenarios
 - Add Files (WinUI 3) compile scenarios — clone repo, `msbuild /t:Restore`, then timed build
