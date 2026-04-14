@@ -4,7 +4,6 @@ public static class BenchmarkWorkloads
 {
     public const string Ripgrep = "ripgrep";
     public const string Roslyn = "roslyn";
-    public const string Llvm = "llvm";
     public const string FileCreateDelete = "file-create-delete";
     public const string All = "all";
 
@@ -12,7 +11,6 @@ public static class BenchmarkWorkloads
     [
         Ripgrep,
         Roslyn,
-        Llvm,
         FileCreateDelete
     ];
 
@@ -22,15 +20,34 @@ public static class BenchmarkWorkloads
 
     public static IReadOnlyList<string> Normalize(IEnumerable<string>? values)
     {
+        if (TryNormalize(values, out var workloads, out var error))
+        {
+            return workloads;
+        }
+
+        throw new InvalidOperationException(error);
+    }
+
+    public static bool TryNormalize(
+        IEnumerable<string>? values,
+        out IReadOnlyList<string> workloads,
+        out string? error)
+    {
         var normalized = new List<string>();
         foreach (var raw in values ?? [])
         {
             foreach (var part in raw.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             {
-                var value = NormalizeSingle(part);
+                if (!TryNormalizeSingle(part, out var value, out error))
+                {
+                    workloads = [];
+                    return false;
+                }
+
                 if (string.Equals(value, All, StringComparison.OrdinalIgnoreCase))
                 {
-                    return AllWorkloads;
+                    workloads = AllWorkloads;
+                    return true;
                 }
 
                 if (!normalized.Contains(value, StringComparer.OrdinalIgnoreCase))
@@ -40,7 +57,9 @@ public static class BenchmarkWorkloads
             }
         }
 
-        return normalized.Count == 0 ? AllWorkloads : normalized;
+        workloads = normalized.Count == 0 ? AllWorkloads : normalized;
+        error = null;
+        return true;
     }
 
     public static bool Contains(IReadOnlyCollection<string> selectedWorkloads, string workload)
@@ -50,43 +69,48 @@ public static class BenchmarkWorkloads
         => Contains(selectedWorkloads, Ripgrep);
 
     public static bool RequiresVisualStudio(IReadOnlyCollection<string> selectedWorkloads)
-        => Contains(selectedWorkloads, Roslyn)
-            || Contains(selectedWorkloads, Llvm);
+        => Contains(selectedWorkloads, Roslyn);
 
     public static bool RequiresDotNetSdk(IReadOnlyCollection<string> selectedWorkloads)
         => Contains(selectedWorkloads, Roslyn);
 
-    public static bool RequiresCmake(IReadOnlyCollection<string> selectedWorkloads)
-        => Contains(selectedWorkloads, Llvm);
-
-    public static bool RequiresNinja(IReadOnlyCollection<string> selectedWorkloads)
-        => Contains(selectedWorkloads, Llvm);
-
-    public static bool RequiresPython(IReadOnlyCollection<string> selectedWorkloads)
-        => Contains(selectedWorkloads, Llvm);
-
     public static bool IncludesSourceTree(IReadOnlyCollection<string> selectedWorkloads)
         => Contains(selectedWorkloads, Ripgrep)
-            || Contains(selectedWorkloads, Roslyn)
-            || Contains(selectedWorkloads, Llvm);
+            || Contains(selectedWorkloads, Roslyn);
 
-    private static string NormalizeSingle(string value)
+    private static bool TryNormalizeSingle(string value, out string normalized, out string? error)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new InvalidOperationException($"Workload names cannot be empty. Known workloads: {HelpText}.");
+            normalized = string.Empty;
+            error = $"Workload names cannot be empty. Known workloads: {HelpText}.";
+            return false;
         }
 
-        return value.Trim().ToLowerInvariant() switch
+        switch (value.Trim().ToLowerInvariant())
         {
-            All => All,
-            Ripgrep => Ripgrep,
-            Roslyn => Roslyn,
-            Llvm => Llvm,
-            FileCreateDelete => FileCreateDelete,
-            "microbench" => FileCreateDelete,
-            "file" => FileCreateDelete,
-            _ => throw new InvalidOperationException($"Unknown workload '{value}'. Known workloads: {HelpText}.")
-        };
+            case All:
+                normalized = All;
+                error = null;
+                return true;
+            case Ripgrep:
+                normalized = Ripgrep;
+                error = null;
+                return true;
+            case Roslyn:
+                normalized = Roslyn;
+                error = null;
+                return true;
+            case FileCreateDelete:
+            case "microbench":
+            case "file":
+                normalized = FileCreateDelete;
+                error = null;
+                return true;
+            default:
+                normalized = string.Empty;
+                error = $"Unknown workload '{value}'. Known workloads: {HelpText}.";
+                return false;
+        }
     }
 }

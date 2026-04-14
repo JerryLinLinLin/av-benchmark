@@ -7,16 +7,7 @@ internal static class ScenarioSupport
 {
     public static void DeletePathIfExists(string path)
     {
-        if (Directory.Exists(path))
-        {
-            Directory.Delete(path, recursive: true);
-            return;
-        }
-
-        if (File.Exists(path))
-        {
-            File.Delete(path);
-        }
+        FileSystemUtil.DeletePathIfExists(path);
     }
 
     public static async Task EnsureFileExistsAsync(string path, string description)

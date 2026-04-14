@@ -24,9 +24,6 @@ public sealed class SetupService
 
         RepoEntry? ripgrep = null;
         RepoEntry? roslyn = null;
-        RepoEntry? llvm = null;
-
-        var llvmBuildDirectory = Path.Combine(benchDirectory, "llvm-build");
         var repos = new List<RepoEntry>();
         var workloads = new List<WorkloadEntry>();
         var tools = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -41,12 +38,6 @@ public sealed class SetupService
         {
             roslyn = await RepoCloner.CloneRoslynAsync(benchDirectory, cancellationToken);
             repos.Add(roslyn);
-        }
-
-        if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Llvm))
-        {
-            llvm = await RepoCloner.CloneLlvmAsync(benchDirectory, cancellationToken);
-            repos.Add(llvm);
         }
 
         if (BenchmarkWorkloads.RequiresRust(selectedWorkloads))
@@ -64,21 +55,6 @@ public sealed class SetupService
             {
                 throw SetupRestartRequiredException.PendingVisualStudioFinalize();
             }
-        }
-
-        if (BenchmarkWorkloads.RequiresCmake(selectedWorkloads))
-        {
-            tools["cmake"] = await new CmakeInstaller().EnsureInstalledAsync(cancellationToken);
-        }
-
-        if (BenchmarkWorkloads.RequiresNinja(selectedWorkloads))
-        {
-            tools["ninja"] = await new NinjaInstaller().EnsureInstalledAsync(cancellationToken);
-        }
-
-        if (BenchmarkWorkloads.RequiresPython(selectedWorkloads))
-        {
-            tools["python"] = await new PythonInstaller().EnsureInstalledAsync(cancellationToken);
         }
 
         if (BenchmarkWorkloads.RequiresDotNetSdk(selectedWorkloads))
@@ -115,19 +91,6 @@ public sealed class SetupService
                 RepoName = roslyn.Name,
                 WorkingDirectory = roslyn.LocalPath,
                 IncrementalTouchPath = RepoCloner.ResolveRoslynTouchPath(roslyn.LocalPath)
-            });
-        }
-
-        if (llvm is not null)
-        {
-            await RepoCloner.HydrateLlvmAsync(llvm.LocalPath, llvmBuildDirectory, cancellationToken);
-            workloads.Add(new WorkloadEntry
-            {
-                Name = BenchmarkWorkloads.Llvm,
-                RepoName = llvm.Name,
-                WorkingDirectory = llvm.LocalPath,
-                BuildDirectory = llvmBuildDirectory,
-                IncrementalTouchPath = RepoCloner.ResolveLlvmTouchPath(llvm.LocalPath)
             });
         }
 

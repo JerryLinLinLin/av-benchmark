@@ -45,19 +45,21 @@ public static class CompareEngine
 
                 var wallSamples = successfulRuns.Select(static run => (double)run.WallMs).ToArray();
                 var cpuSamples = successfulRuns.Select(static run => (double)(run.UserCpuMs + run.KernelCpuMs)).ToArray();
-                var ioSamples = successfulRuns.Select(static run => (double)(run.IoReadBytes + run.IoWriteBytes)).ToArray();
+                var kernelCpuSamples = successfulRuns.Select(static run => (double)run.KernelCpuMs).ToArray();
 
                 var meanWall = wallSamples.Average();
                 var meanCpu = cpuSamples.Average();
-                var meanIoBytes = ioSamples.Average();
+                var meanKernelCpu = kernelCpuSamples.Average();
                 var cvPct = wallSamples.Length > 1
                     ? StandardDeviation(wallSamples) / meanWall * 100.0
                     : 0.0;
+                var kernelCpuPct = CalculatePercent(meanKernelCpu, meanCpu);
 
                 baselineByScenario.TryGetValue(group.Key, out var baselineScenarioRuns);
                 var baselineMeanWall = baselineScenarioRuns?.Average(static run => (double)run.WallMs) ?? 0.0;
                 var baselineMeanCpu = baselineScenarioRuns?.Average(static run => (double)(run.UserCpuMs + run.KernelCpuMs)) ?? 0.0;
-                var baselineMeanIo = baselineScenarioRuns?.Average(static run => (double)(run.IoReadBytes + run.IoWriteBytes)) ?? 0.0;
+                var baselineMeanKernelCpu = baselineScenarioRuns?.Average(static run => (double)run.KernelCpuMs) ?? 0.0;
+                var baselineKernelCpuPct = CalculatePercent(baselineMeanKernelCpu, baselineMeanCpu);
 
                 rows.Add(new ComparisonRow
                 {
@@ -68,6 +70,9 @@ public static class CompareEngine
                     MeanWallMs = Math.Round(meanWall, 1),
                     MedianWallMs = Math.Round(Median(wallSamples), 1),
                     MeanCpuMs = Math.Round(meanCpu, 1),
+                    KernelCpuPct = Math.Round(kernelCpuPct, 1),
+                    BaselineKernelCpuPct = Math.Round(baselineKernelCpuPct, 1),
+                    KernelCpuSlowdownPct = Math.Round(kernelCpuPct - baselineKernelCpuPct, 1),
                     PeakMemoryMb = successfulRuns.Max(static run => run.PeakJobMemoryMb),
                     SlowdownPct = baselineMeanWall > 0
                         ? Math.Round((meanWall - baselineMeanWall) / baselineMeanWall * 100.0, 1)
@@ -77,8 +82,7 @@ public static class CompareEngine
                         ? "failed"
                         : cvPct > NoisyThresholdPct
                             ? "noisy"
-                            : "ok",
-                    ResourceHint = DetermineResourceHint(meanCpu, baselineMeanCpu, meanIoBytes, baselineMeanIo)
+                            : "ok"
                 });
             }
         }
@@ -86,22 +90,8 @@ public static class CompareEngine
         return rows;
     }
 
-    private static string DetermineResourceHint(
-        double meanCpu,
-        double baselineMeanCpu,
-        double meanIoBytes,
-        double baselineMeanIoBytes)
-    {
-        var cpuDeltaPct = baselineMeanCpu > 0 ? (meanCpu - baselineMeanCpu) / baselineMeanCpu * 100.0 : 0.0;
-        var ioDeltaPct = baselineMeanIoBytes > 0 ? (meanIoBytes - baselineMeanIoBytes) / baselineMeanIoBytes * 100.0 : 0.0;
-
-        if (Math.Abs(cpuDeltaPct - ioDeltaPct) < 10.0)
-        {
-            return "mixed";
-        }
-
-        return cpuDeltaPct > ioDeltaPct ? "cpu" : "io";
-    }
+    private static double CalculatePercent(double numerator, double denominator)
+        => denominator > 0 ? numerator / denominator * 100.0 : 0.0;
 
     private static double Median(IReadOnlyList<double> values)
     {
@@ -136,6 +126,12 @@ public sealed class ComparisonRow
 
     public double MeanCpuMs { get; init; }
 
+    public double KernelCpuPct { get; init; }
+
+    public double BaselineKernelCpuPct { get; init; }
+
+    public double KernelCpuSlowdownPct { get; init; }
+
     public long PeakMemoryMb { get; init; }
 
     public double SlowdownPct { get; init; }
@@ -143,6 +139,4 @@ public sealed class ComparisonRow
     public double CvPct { get; init; }
 
     public string Status { get; init; } = string.Empty;
-
-    public string ResourceHint { get; init; } = string.Empty;
 }

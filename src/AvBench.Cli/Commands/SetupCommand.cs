@@ -33,13 +33,17 @@ public static class SetupCommand
 
         command.SetAction(async parseResult =>
         {
-            var benchDir = parseResult.GetValue(benchDirOption)!;
-            var ripgrepRef = parseResult.GetValue(ripgrepRefOption);
-            var workloads = BenchmarkWorkloads.Normalize(parseResult.GetValue(workloadOption));
-
-            var service = new SetupService();
             try
             {
+                var benchDir = parseResult.GetValue(benchDirOption)!;
+                var ripgrepRef = parseResult.GetValue(ripgrepRefOption);
+                if (!BenchmarkWorkloads.TryNormalize(parseResult.GetValue(workloadOption), out var workloads, out var error))
+                {
+                    Console.Error.WriteLine($"ERROR: {error}");
+                    return 1;
+                }
+
+                var service = new SetupService();
                 await service.ExecuteAsync(benchDir.FullName, ripgrepRef, workloads, CancellationToken.None);
                 return 0;
             }
@@ -47,6 +51,16 @@ public static class SetupCommand
             {
                 Console.WriteLine($"[setup] {ex.Message}");
                 return 2;
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.Error.WriteLine($"ERROR: {ex.Message}");
+                return 1;
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.Error.WriteLine($"ERROR: {ex.Message}");
+                return 1;
             }
         });
 

@@ -15,23 +15,53 @@ public static class SummaryRenderer
 
         foreach (var group in rows.GroupBy(static row => row.AvName).OrderBy(static group => group.Key, StringComparer.OrdinalIgnoreCase))
         {
-            builder.AppendLine($"## {group.Key}");
+            var baselineName = group.First().BaselineName;
+            builder.AppendLine($"## {group.Key} vs {baselineName}");
             builder.AppendLine();
-            builder.AppendLine("| Scenario | Slowdown % | Mean Wall (ms) | Mean CPU (ms) | CV % | Status | Hint |");
-            builder.AppendLine("|---|---:|---:|---:|---:|---|---|");
+            builder.AppendLine("| Scenario | Mean Wall (ms) | Slowdown | Kernel CPU % | Baseline Kernel % | Kernel Shift | CV % | Status |");
+            builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---|");
 
             foreach (var row in group.OrderByDescending(static item => item.SlowdownPct).ThenBy(static item => item.ScenarioId, StringComparer.OrdinalIgnoreCase))
             {
+                var slowdown = row.SlowdownPct >= 0
+                    ? $"+{row.SlowdownPct:F1}%"
+                    : $"{row.SlowdownPct:F1}%";
+                var kernelShift = row.KernelCpuSlowdownPct >= 0
+                    ? $"+{row.KernelCpuSlowdownPct:F1}pp"
+                    : $"{row.KernelCpuSlowdownPct:F1}pp";
+
                 builder.AppendLine(string.Format(
                     CultureInfo.InvariantCulture,
-                    "| {0} | {1:F1} | {2:F1} | {3:F1} | {4:F1} | {5} | {6} |",
+                    "| {0} | {1:F1} | {2} | {3:F1}% | {4:F1}% | {5} | {6:F1}% | {7} |",
                     row.ScenarioId,
-                    row.SlowdownPct,
                     row.MeanWallMs,
-                    row.MeanCpuMs,
+                    slowdown,
+                    row.KernelCpuPct,
+                    row.BaselineKernelCpuPct,
+                    kernelShift,
                     row.CvPct,
-                    row.Status,
-                    row.ResourceHint));
+                    row.Status));
+            }
+
+            var worstSlowdown = group
+                .Where(static row => string.Equals(row.Status, "ok", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(static row => row.SlowdownPct)
+                .FirstOrDefault();
+            if (worstSlowdown is not null)
+            {
+                builder.AppendLine();
+                builder.AppendLine($"Highest slowdown: {worstSlowdown.ScenarioId} at {worstSlowdown.SlowdownPct:+0.0;-0.0;0.0}%");
+            }
+
+            var largestKernelShift = group
+                .Where(static row => string.Equals(row.Status, "ok", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(static row => row.KernelCpuSlowdownPct)
+                .FirstOrDefault();
+            if (largestKernelShift is not null && largestKernelShift.KernelCpuSlowdownPct > 0)
+            {
+                builder.AppendLine();
+                builder.AppendLine(
+                    $"Largest kernel CPU shift: {largestKernelShift.ScenarioId} at {largestKernelShift.KernelCpuSlowdownPct:+0.0;-0.0;0.0}pp ({largestKernelShift.BaselineKernelCpuPct:F1}% -> {largestKernelShift.KernelCpuPct:F1}%)");
             }
 
             var noisy = group.Where(static row => string.Equals(row.Status, "noisy", StringComparison.OrdinalIgnoreCase)).ToList();

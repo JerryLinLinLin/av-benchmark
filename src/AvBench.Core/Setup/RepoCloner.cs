@@ -32,17 +32,6 @@ public static class RepoCloner
                 RepositorySourcePreference.DefaultBranchHead),
             cancellationToken);
 
-    public static Task<RepoEntry> CloneLlvmAsync(string benchDirectory, CancellationToken cancellationToken)
-        => PrepareRepositoryAsync(
-            new GitHubRepositorySpec(
-                "llvm-project",
-                "llvm",
-                "llvm-project",
-                Path.Combine(benchDirectory, "llvm-project"),
-                null,
-                RepositorySourcePreference.LatestRelease),
-            cancellationToken);
-
     public static async Task CargoFetchAsync(string repoDirectory, CancellationToken cancellationToken)
     {
         Console.WriteLine($"[setup] Running cargo fetch in {repoDirectory}");
@@ -59,18 +48,6 @@ public static class RepoCloner
 
         Console.WriteLine($"[setup] Running Roslyn restore in {repoDirectory}");
         await ProcessUtil.EnsureSuccessAsync("cmd.exe", "/d /c Restore.cmd", repoDirectory, "Roslyn Restore.cmd", cancellationToken);
-    }
-
-    public static async Task HydrateLlvmAsync(string repoDirectory, string buildDirectory, CancellationToken cancellationToken)
-    {
-        Directory.CreateDirectory(buildDirectory);
-
-        Console.WriteLine($"[setup] Configuring LLVM in {buildDirectory}");
-        await VsBuildToolsInstaller.EnsureSuccessInDeveloperShellAsync(
-            BuildLlvmConfigureCommand(repoDirectory, buildDirectory),
-            repoDirectory,
-            "LLVM CMake configure",
-            cancellationToken);
     }
 
     public static string ResolveRipgrepTouchPath(string repoDirectory)
@@ -101,20 +78,6 @@ public static class RepoCloner
                 .FirstOrDefault(),
             "Unable to locate a C# source file for the Roslyn incremental scenario.");
 
-    public static string ResolveLlvmTouchPath(string repoDirectory)
-        => ResolveFirstExistingPath(
-            new[]
-            {
-                Path.Combine(repoDirectory, "llvm", "lib", "Support", "APInt.cpp"),
-                Path.Combine(repoDirectory, "llvm", "lib", "Support", "CommandLine.cpp"),
-                Path.Combine(repoDirectory, "llvm", "lib", "Support", "WithColor.cpp")
-            },
-            () => Directory.EnumerateFiles(Path.Combine(repoDirectory, "llvm"), "*.cpp", SearchOption.AllDirectories)
-                .Where(static path => !path.Contains($"{Path.DirectorySeparatorChar}build{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
-                .OrderBy(static path => path.Length)
-                .FirstOrDefault(),
-            "Unable to locate a C++ source file for the LLVM incremental scenario.");
-
     public static string ResolveDotNetSdkVersion(string repoDirectory)
     {
         using var document = LoadGlobalJson(repoDirectory);
@@ -143,19 +106,6 @@ public static class RepoCloner
         return null;
     }
 
-    public static string BuildLlvmConfigureCommand(string repoDirectory, string buildDirectory)
-    {
-        var sourceDirectory = Path.Combine(repoDirectory, "llvm");
-        return string.Join(" ",
-            "cmake",
-            $"-S \"{sourceDirectory}\"",
-            $"-B \"{buildDirectory}\"",
-            "-G Ninja",
-            "-DLLVM_ENABLE_PROJECTS=clang",
-            "-DLLVM_TARGETS_TO_BUILD=X86",
-            "-DCMAKE_BUILD_TYPE=Release");
-    }
-
     private static async Task<RepoEntry> PrepareRepositoryAsync(
         GitHubRepositorySpec spec,
         CancellationToken cancellationToken)
@@ -174,7 +124,7 @@ public static class RepoCloner
             if (Directory.Exists(spec.TargetDirectory))
             {
                 Console.WriteLine($"[setup] Replacing {spec.TargetDirectory} with source archive {resolution.SourceReference} ({resolution.CommitSha})");
-                Directory.Delete(spec.TargetDirectory, recursive: true);
+                FileSystemUtil.DeletePathIfExists(spec.TargetDirectory);
             }
             else
             {
@@ -381,7 +331,7 @@ public static class RepoCloner
 
             if (Directory.Exists(extractDirectory))
             {
-                Directory.Delete(extractDirectory, recursive: true);
+                FileSystemUtil.DeletePathIfExists(extractDirectory);
             }
         }
     }

@@ -53,79 +53,91 @@ public static class RunCommand
 
         command.SetAction(async parseResult =>
         {
-            var avName = parseResult.GetValue(nameOption)!;
-            var benchDir = parseResult.GetValue(benchDirOption)!;
-            var repetitions = parseResult.GetValue(repetitionsOption);
-            var outputRoot = parseResult.GetValue(outputOption)!;
-            var selectedWorkloads = BenchmarkWorkloads.Normalize(parseResult.GetValue(workloadOption));
-
-            var manifestPath = Path.Combine(benchDir.FullName, SetupService.SuiteManifestFileName);
-            if (!File.Exists(manifestPath))
+            try
             {
-                throw new FileNotFoundException($"Suite manifest not found at {manifestPath}. Run `avbench setup` first.");
-            }
+                var avName = parseResult.GetValue(nameOption)!;
+                var benchDir = parseResult.GetValue(benchDirOption)!;
+                var repetitions = parseResult.GetValue(repetitionsOption);
+                var outputRoot = parseResult.GetValue(outputOption)!;
+                if (!BenchmarkWorkloads.TryNormalize(parseResult.GetValue(workloadOption), out var selectedWorkloads, out var error))
+                {
+                    Console.Error.WriteLine($"ERROR: {error}");
+                    return 1;
+                }
 
-            if (string.IsNullOrWhiteSpace(avName))
+                var manifestPath = Path.Combine(benchDir.FullName, SetupService.SuiteManifestFileName);
+                if (!File.Exists(manifestPath))
+                {
+                    throw new FileNotFoundException($"Suite manifest not found at {manifestPath}. Run `avbench setup` first.");
+                }
+
+                if (string.IsNullOrWhiteSpace(avName))
+                {
+                    throw new InvalidOperationException("`--name` must be a non-empty AV configuration label.");
+                }
+
+                var manifest = System.Text.Json.JsonSerializer.Deserialize(
+                    await File.ReadAllTextAsync(manifestPath, CancellationToken.None),
+                    AvBenchJsonContext.Default.SuiteManifest)
+                    ?? throw new InvalidOperationException("Suite manifest could not be parsed.");
+
+                ValidateRequestedWorkloads(manifest, selectedWorkloads);
+
+                Directory.CreateDirectory(outputRoot.FullName);
+                var runDirectory = Path.Combine(outputRoot.FullName, DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"));
+                Directory.CreateDirectory(runDirectory);
+
+                File.Copy(manifestPath, Path.Combine(runDirectory, SetupService.SuiteManifestFileName), overwrite: true);
+
+                Console.WriteLine("[run] Idle check: not yet enforced in milestone 1; proceeding with benchmark execution.");
+
+                var runner = new ScenarioRunner(
+                    avName.Trim(),
+                    runDirectory,
+                    SystemInfoProvider.GetRunnerVersion(),
+                    SetupService.ComputeManifestSha(manifestPath));
+
+                var scenarios = new List<ScenarioDefinition>();
+                if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Ripgrep))
+                {
+                    scenarios.AddRange(RipgrepScenarioFactory.Create(manifest));
+                }
+
+                if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Roslyn))
+                {
+                    scenarios.AddRange(RoslynScenarioFactory.Create(manifest));
+                }
+
+                var executablePath = Environment.ProcessPath
+                    ?? throw new InvalidOperationException("Unable to resolve the current executable path.");
+                if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.FileCreateDelete))
+                {
+                    var fileMicrobench = FileMicrobenchScenarioFactory.Create(executablePath, benchDir.FullName);
+                    scenarios.Add(fileMicrobench);
+                }
+
+                var results = new List<RunResult>();
+                foreach (var scenario in scenarios)
+                {
+                    results.AddRange(await runner.ExecuteScenarioAsync(scenario, repetitions, CancellationToken.None));
+                }
+
+                var csvPath = Path.Combine(runDirectory, "runs.csv");
+                await CsvResultWriter.WriteAsync(results, csvPath, CancellationToken.None);
+
+                Console.WriteLine($"[run] Wrote {results.Count} run records to {runDirectory}");
+                return 0;
+            }
+            catch (InvalidOperationException ex)
             {
-                throw new InvalidOperationException("`--name` must be a non-empty AV configuration label.");
+                Console.Error.WriteLine($"ERROR: {ex.Message}");
+                return 1;
             }
-
-            var manifest = System.Text.Json.JsonSerializer.Deserialize(
-                await File.ReadAllTextAsync(manifestPath, CancellationToken.None),
-                AvBenchJsonContext.Default.SuiteManifest)
-                ?? throw new InvalidOperationException("Suite manifest could not be parsed.");
-
-            ValidateRequestedWorkloads(manifest, selectedWorkloads);
-
-            Directory.CreateDirectory(outputRoot.FullName);
-            var runDirectory = Path.Combine(outputRoot.FullName, DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"));
-            Directory.CreateDirectory(runDirectory);
-
-            File.Copy(manifestPath, Path.Combine(runDirectory, SetupService.SuiteManifestFileName), overwrite: true);
-
-            Console.WriteLine("[run] Idle check: not yet enforced in milestone 1; proceeding with benchmark execution.");
-
-            var runner = new ScenarioRunner(
-                avName.Trim(),
-                runDirectory,
-                SystemInfoProvider.GetRunnerVersion(),
-                SetupService.ComputeManifestSha(manifestPath));
-
-            var scenarios = new List<ScenarioDefinition>();
-            if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Ripgrep))
+            catch (FileNotFoundException ex)
             {
-                scenarios.AddRange(RipgrepScenarioFactory.Create(manifest));
+                Console.Error.WriteLine($"ERROR: {ex.Message}");
+                return 1;
             }
-
-            if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Roslyn))
-            {
-                scenarios.AddRange(RoslynScenarioFactory.Create(manifest));
-            }
-
-            if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Llvm))
-            {
-                scenarios.AddRange(LlvmScenarioFactory.Create(manifest));
-            }
-
-            var executablePath = Environment.ProcessPath
-                ?? throw new InvalidOperationException("Unable to resolve the current executable path.");
-            if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.FileCreateDelete))
-            {
-                var fileMicrobench = FileMicrobenchScenarioFactory.Create(executablePath, benchDir.FullName);
-                scenarios.Add(fileMicrobench);
-            }
-
-            var results = new List<RunResult>();
-            foreach (var scenario in scenarios)
-            {
-                results.AddRange(await runner.ExecuteScenarioAsync(scenario, repetitions, CancellationToken.None));
-            }
-
-            var csvPath = Path.Combine(runDirectory, "runs.csv");
-            await CsvResultWriter.WriteAsync(results, csvPath, CancellationToken.None);
-
-            Console.WriteLine($"[run] Wrote {results.Count} run records to {runDirectory}");
-            return 0;
         });
 
         return command;
