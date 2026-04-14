@@ -135,7 +135,7 @@ Later additions (not in v1):
 
 `avbench run` requires a `--name <label>` parameter that identifies this VM's AV configuration (e.g., `baseline-os`, `defender-default`, `eset-default`). This label is stamped into every `run.json` and used by `avbench-compare` to group results.
 
-In Milestone 4, `avbench` will auto-detect the installed AV product and version (supporting Microsoft Defender, Huorong, ESET, Bitdefender, and TrendMicro). The detected product name and version are recorded in `run.json`. Both can be manually overridden via `--av-name` and `--av-version` CLI flags for unsupported products or testing.
+In Milestone 4, `avbench` will auto-detect the installed AV product and version by querying Windows Security Center (`root\SecurityCenter2\AntiVirusProduct`). This works for any AV that registers with WSC — no hardcoded per-product logic. The product version is read from the exe's `FileVersionInfo`. Both fields can be manually overridden via `--av-product` and `--av-version` CLI flags.
 
 Suggested `--name` labels:
 
@@ -542,9 +542,9 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 
 ### Milestone 4
 
-- Auto-detect installed AV product and version (Microsoft Defender, Huorong, ESET, Bitdefender, TrendMicro)
+- Auto-detect installed AV product and version via Windows Security Center (`root\SecurityCenter2`)
 - Record detected `av_product` and `av_version` in `run.json`
-- `--av-name` and `--av-version` CLI overrides for unsupported products or manual testing
+- `--av-product` and `--av-version` CLI overrides
 
 ## References
 

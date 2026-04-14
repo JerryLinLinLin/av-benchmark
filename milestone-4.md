@@ -2,16 +2,16 @@
 
 ## Scope
 
-- Auto-detect installed AV product and version on Windows VMs
-- Supported products: Microsoft Defender, Huorong, ESET, Bitdefender, TrendMicro
+- Auto-detect installed AV product and version via Windows Security Center (`root\SecurityCenter2`)
+- Works for **any** AV that registers with WSC — no hardcoded per-product logic
 - Record detected `av_product` and `av_version` in `run.json`
-- `--av-name` and `--av-version` CLI overrides for unsupported products or manual testing
-- Graceful fallback: if no AV is detected and no override is provided, fields are set to `"unknown"`
+- `--av-product` and `--av-version` CLI overrides
+- Fallback: if WSC returns no AV and no override is provided, fields are set to `"unknown"`
 
 ## Prerequisites
 
 - Milestone 1 complete (`avbench run` working with `--name`, `RunResult` model, JSON output)
-- Admin-always policy already enforced at startup (required for WMI and registry queries)
+- Windows 10 or Windows 11 (client OS — WSC is always available)
 
 ## New files
 
@@ -19,15 +19,8 @@
 src/
   AvBench.Core/
     Detection/
-      AvDetector.cs             → public API: DetectAsync() returns AvInfo
-      AvInfo.cs                 → product name + version record
-      Detectors/
-        DefenderDetector.cs     → Microsoft Defender detection
-        HuorongDetector.cs      → Huorong detection
-        EsetDetector.cs         → ESET detection
-        BitdefenderDetector.cs  → Bitdefender detection
-        TrendMicroDetector.cs   → TrendMicro detection
-        IAvDetectorStrategy.cs  → per-product interface
+      AvDetector.cs   → single-file: queries WSC, returns AvInfo
+      AvInfo.cs        → product name + version record
 ```
 
 ## Data model
@@ -79,437 +72,112 @@ Updated `run.json` example:
 scenario_id, av_name, av_product, av_version, repetition, timestamp_utc, ...
 ```
 
-## Detection strategy per product
+## Detection — WSC query
 
-### Interface
+Every AV product that integrates with Windows registers itself with the Windows Security Center service (`wscsvc`). The WMI class `root\SecurityCenter2\AntiVirusProduct` exposes all registered products with these properties:
 
-```csharp
-namespace AvBench.Core.Detection.Detectors;
+| Property | Description |
+|---|---|
+| `displayName` | Human-readable product name (e.g., `"Windows Defender"`, `"ESET Security"`) |
+| `instanceGuid` | Unique GUID for this registration |
+| `pathToSignedProductExe` | Path to the product's main exe. **Caveat**: Defender sets this to `windowsdefender://` (a protocol handler, not a file path). Third-party AVs set real file paths. |
+| `pathToSignedReportingExe` | Path to the reporting exe. **Always a real file path** — even for Defender (`%ProgramFiles%\Windows Defender\MsMpeng.exe`). May contain environment variables that must be expanded. |
+| `productState` | Encoded bitmask: on/off/snoozed/expired |
+| `timestamp` | Last update timestamp |
 
-public interface IAvDetectorStrategy
-{
-    /// <summary>
-    /// Human-readable product name (e.g., "Microsoft Defender Antivirus").
-    /// </summary>
-    string ProductName { get; }
+**Version extraction strategy:** Try `pathToSignedReportingExe` first (always a real file path), fall back to `pathToSignedProductExe`. Environment variables (`%ProgramFiles%`) must be expanded before use. Call `FileVersionInfo.GetVersionInfo()` to get the product version.
 
-    /// <summary>
-    /// Returns the product version string, or null if this AV is not installed.
-    /// </summary>
-    Task<string?> DetectVersionAsync();
-}
-```
+Verified on this machine:
+- **Defender**: `displayName` = `"Windows Defender"`, `pathToSignedProductExe` = `"windowsdefender://"` (not a file!), `pathToSignedReportingExe` = `"%ProgramFiles%\Windows Defender\MsMpeng.exe"` → version `4.18.25080.5`
+- **ESET**: `displayName` = `"ESET Security"`, `pathToSignedProductExe` = `"C:\Program Files\ESET\ESET Security\ecmds.exe"`, `pathToSignedReportingExe` = `"C:\Program Files\ESET\ESET Security\ekrn.exe"` → version `19.1.12.0`
 
-### Microsoft Defender — `DefenderDetector.cs`
-
-Detection approach:
-1. Check if the `WinDefend` service exists and is running
-2. Query `Get-MpComputerStatus` via PowerShell to get `AMProductVersion`
-3. Fallback: read `HKLM\SOFTWARE\Microsoft\Windows Defender\Signature Updates\ASSignatureVersion`
+### `AvDetector.cs`
 
 ```csharp
 using System.Diagnostics;
-using System.ServiceProcess;
-using Microsoft.Win32;
-
-namespace AvBench.Core.Detection.Detectors;
-
-public sealed class DefenderDetector : IAvDetectorStrategy
-{
-    public string ProductName => "Microsoft Defender Antivirus";
-
-    public async Task<string?> DetectVersionAsync()
-    {
-        // 1. Check WinDefend service
-        try
-        {
-            using var sc = new ServiceController("WinDefend");
-            if (sc.Status != ServiceControllerStatus.Running)
-                return null;
-        }
-        catch (InvalidOperationException)
-        {
-            return null; // service not installed
-        }
-
-        // 2. Try PowerShell Get-MpComputerStatus
-        var version = await RunPowerShellAsync(
-            "(Get-MpComputerStatus).AMProductVersion");
-
-        if (!string.IsNullOrWhiteSpace(version))
-            return version.Trim();
-
-        // 3. Fallback: registry
-        using var key = Registry.LocalMachine.OpenSubKey(
-            @"SOFTWARE\Microsoft\Windows Defender\Signature Updates");
-        return key?.GetValue("ASSignatureVersion") as string;
-    }
-
-    private static async Task<string?> RunPowerShellAsync(string command)
-    {
-        var psi = new ProcessStartInfo("powershell.exe", $"-NoProfile -Command \"{command}\"")
-        {
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
-
-        using var proc = Process.Start(psi);
-        if (proc is null) return null;
-
-        var output = await proc.StandardOutput.ReadToEndAsync();
-        await proc.WaitForExitAsync();
-
-        return proc.ExitCode == 0 ? output.Trim() : null;
-    }
-}
-```
-
-### Huorong — `HuorongDetector.cs`
-
-Detection approach:
-1. Check if the `HipsTray` service exists and is running
-2. Read product version from `HKLM\SOFTWARE\Huorong\Sysdiag\Scan Engine` → `EngineVersion`
-3. Fallback: read file version from `C:\Program Files\Huorong\Sysdiag\bin\HipsTray.exe`
-
-```csharp
-using System.Diagnostics;
-using System.ServiceProcess;
-using Microsoft.Win32;
-
-namespace AvBench.Core.Detection.Detectors;
-
-public sealed class HuorongDetector : IAvDetectorStrategy
-{
-    public string ProductName => "Huorong Internet Security";
-
-    public Task<string?> DetectVersionAsync()
-    {
-        // 1. Check HipsTray service
-        try
-        {
-            using var sc = new ServiceController("HipsTray");
-            if (sc.Status != ServiceControllerStatus.Running)
-                return Task.FromResult<string?>(null);
-        }
-        catch (InvalidOperationException)
-        {
-            return Task.FromResult<string?>(null);
-        }
-
-        // 2. Try registry
-        using var key = Registry.LocalMachine.OpenSubKey(
-            @"SOFTWARE\Huorong\Sysdiag\Scan Engine");
-        var regVersion = key?.GetValue("EngineVersion") as string;
-        if (!string.IsNullOrWhiteSpace(regVersion))
-            return Task.FromResult<string?>(regVersion);
-
-        // 3. Fallback: file version
-        const string exePath = @"C:\Program Files\Huorong\Sysdiag\bin\HipsTray.exe";
-        if (File.Exists(exePath))
-        {
-            var fvi = FileVersionInfo.GetVersionInfo(exePath);
-            return Task.FromResult(fvi.ProductVersion);
-        }
-
-        return Task.FromResult<string?>("installed");
-    }
-}
-```
-
-### ESET — `EsetDetector.cs`
-
-Detection approach:
-1. Check if the `ekrn` service (ESET Kernel Service) exists and is running
-2. Read product version from `HKLM\SOFTWARE\ESET\ESET Security\CurrentVersion\Info` → `ProductVersion`
-3. Fallback: file version from `C:\Program Files\ESET\ESET Security\ekrn.exe`
-
-```csharp
-using System.Diagnostics;
-using System.ServiceProcess;
-using Microsoft.Win32;
-
-namespace AvBench.Core.Detection.Detectors;
-
-public sealed class EsetDetector : IAvDetectorStrategy
-{
-    public string ProductName => "ESET Security";
-
-    public Task<string?> DetectVersionAsync()
-    {
-        // 1. Check ekrn service
-        try
-        {
-            using var sc = new ServiceController("ekrn");
-            if (sc.Status != ServiceControllerStatus.Running)
-                return Task.FromResult<string?>(null);
-        }
-        catch (InvalidOperationException)
-        {
-            return Task.FromResult<string?>(null);
-        }
-
-        // 2. Try registry
-        using var key = Registry.LocalMachine.OpenSubKey(
-            @"SOFTWARE\ESET\ESET Security\CurrentVersion\Info");
-        var regVersion = key?.GetValue("ProductVersion") as string;
-        if (!string.IsNullOrWhiteSpace(regVersion))
-            return Task.FromResult<string?>(regVersion);
-
-        // 3. Fallback: file version
-        const string exePath = @"C:\Program Files\ESET\ESET Security\ekrn.exe";
-        if (File.Exists(exePath))
-        {
-            var fvi = FileVersionInfo.GetVersionInfo(exePath);
-            return Task.FromResult(fvi.ProductVersion);
-        }
-
-        return Task.FromResult<string?>("installed");
-    }
-}
-```
-
-### Bitdefender — `BitdefenderDetector.cs`
-
-Detection approach:
-1. Check if the `bdservicehost` service exists and is running (or `VSSERV` for older versions)
-2. Read product version from `HKLM\SOFTWARE\Bitdefender\Bitdefender Security\About` → `ProductVersion`
-3. Fallback: file version from `C:\Program Files\Bitdefender\Bitdefender Security\bdservicehost.exe`
-
-```csharp
-using System.Diagnostics;
-using System.ServiceProcess;
-using Microsoft.Win32;
-
-namespace AvBench.Core.Detection.Detectors;
-
-public sealed class BitdefenderDetector : IAvDetectorStrategy
-{
-    private static readonly string[] ServiceNames = ["bdservicehost", "VSSERV"];
-
-    public string ProductName => "Bitdefender";
-
-    public Task<string?> DetectVersionAsync()
-    {
-        // 1. Check known services
-        bool serviceFound = false;
-        foreach (var name in ServiceNames)
-        {
-            try
-            {
-                using var sc = new ServiceController(name);
-                if (sc.Status == ServiceControllerStatus.Running)
-                {
-                    serviceFound = true;
-                    break;
-                }
-            }
-            catch (InvalidOperationException) { }
-        }
-
-        if (!serviceFound)
-            return Task.FromResult<string?>(null);
-
-        // 2. Try registry
-        using var key = Registry.LocalMachine.OpenSubKey(
-            @"SOFTWARE\Bitdefender\Bitdefender Security\About");
-        var regVersion = key?.GetValue("ProductVersion") as string;
-        if (!string.IsNullOrWhiteSpace(regVersion))
-            return Task.FromResult<string?>(regVersion);
-
-        // 3. Fallback: file version
-        const string exePath = @"C:\Program Files\Bitdefender\Bitdefender Security\bdservicehost.exe";
-        if (File.Exists(exePath))
-        {
-            var fvi = FileVersionInfo.GetVersionInfo(exePath);
-            return Task.FromResult(fvi.ProductVersion);
-        }
-
-        return Task.FromResult<string?>("installed");
-    }
-}
-```
-
-### TrendMicro — `TrendMicroDetector.cs`
-
-Detection approach:
-1. Check if the `Ntrtscan` service (TrendMicro Real-Time Scan) or `PccNTUpd` (update service) exists and is running
-2. Read product version from `HKLM\SOFTWARE\TrendMicro\PC-cillinNTCorp\CurrentVersion` → `EngineVersion`
-3. Fallback: file version from common install paths
-
-```csharp
-using System.Diagnostics;
-using System.ServiceProcess;
-using Microsoft.Win32;
-
-namespace AvBench.Core.Detection.Detectors;
-
-public sealed class TrendMicroDetector : IAvDetectorStrategy
-{
-    private static readonly string[] ServiceNames = ["Ntrtscan", "PccNTUpd", "TmListen"];
-
-    public string ProductName => "Trend Micro";
-
-    public Task<string?> DetectVersionAsync()
-    {
-        // 1. Check known services
-        bool serviceFound = false;
-        foreach (var name in ServiceNames)
-        {
-            try
-            {
-                using var sc = new ServiceController(name);
-                if (sc.Status == ServiceControllerStatus.Running)
-                {
-                    serviceFound = true;
-                    break;
-                }
-            }
-            catch (InvalidOperationException) { }
-        }
-
-        if (!serviceFound)
-            return Task.FromResult<string?>(null);
-
-        // 2. Try registry
-        using var key = Registry.LocalMachine.OpenSubKey(
-            @"SOFTWARE\TrendMicro\PC-cillinNTCorp\CurrentVersion");
-        var regVersion = key?.GetValue("EngineVersion") as string;
-        if (!string.IsNullOrWhiteSpace(regVersion))
-            return Task.FromResult<string?>(regVersion);
-
-        // 3. Fallback: file version
-        string[] searchPaths =
-        [
-            @"C:\Program Files\Trend Micro\Security Agent\Ntrtscan.exe",
-            @"C:\Program Files (x86)\Trend Micro\OfficeScan Client\Ntrtscan.exe"
-        ];
-
-        foreach (var path in searchPaths)
-        {
-            if (File.Exists(path))
-            {
-                var fvi = FileVersionInfo.GetVersionInfo(path);
-                return Task.FromResult(fvi.ProductVersion);
-            }
-        }
-
-        return Task.FromResult<string?>("installed");
-    }
-}
-```
-
-## WMI fallback — `SecurityCenter2`
-
-On **client** editions of Windows (Windows 10/11), `root\SecurityCenter2\AntiVirusProduct` provides a generic list of registered AV products. This is used as a secondary signal when none of the per-product detectors match.
-
-> **Note:** `SecurityCenter2` is **not available** on Windows Server editions. The per-product service/registry checks above work on both client and server.
-
-```csharp
 using System.Management;
-
-namespace AvBench.Core.Detection;
-
-internal static class WmiAvQuery
-{
-    /// <summary>
-    /// Query WMI SecurityCenter2 for registered AV products.
-    /// Returns list of (displayName, pathToSignedProductExe) tuples.
-    /// Returns empty list on Server editions where SecurityCenter2 is unavailable.
-    /// </summary>
-    public static List<(string DisplayName, string ExePath)> QueryRegisteredProducts()
-    {
-        var results = new List<(string, string)>();
-
-        try
-        {
-            using var searcher = new ManagementObjectSearcher(
-                @"root\SecurityCenter2",
-                "SELECT displayName, pathToSignedProductExe FROM AntiVirusProduct");
-
-            foreach (var obj in searcher.Get())
-            {
-                var name = obj["displayName"]?.ToString() ?? "";
-                var path = obj["pathToSignedProductExe"]?.ToString() ?? "";
-                if (!string.IsNullOrWhiteSpace(name))
-                    results.Add((name, path));
-            }
-        }
-        catch (ManagementException)
-        {
-            // SecurityCenter2 not available (e.g., Windows Server)
-        }
-
-        return results;
-    }
-}
-```
-
-## Public API — `AvDetector.cs`
-
-Orchestrates all per-product detectors and the WMI fallback. Returns the first successful match.
-
-```csharp
-using AvBench.Core.Detection.Detectors;
 
 namespace AvBench.Core.Detection;
 
 public static class AvDetector
 {
-    private static readonly IAvDetectorStrategy[] Detectors =
-    [
-        new DefenderDetector(),
-        new HuorongDetector(),
-        new EsetDetector(),
-        new BitdefenderDetector(),
-        new TrendMicroDetector()
-    ];
-
     /// <summary>
-    /// Auto-detect the installed AV product and version.
-    /// Returns AvInfo with product name and version, or ("unknown", "unknown") if undetected.
+    /// Query Windows Security Center for the registered AV product.
+    /// Prefers third-party AV over Defender (Defender stays registered as a
+    /// fallback even when third-party AV is active).
     /// </summary>
-    public static async Task<AvInfo> DetectAsync()
+    public static AvInfo Detect()
     {
-        // 1. Try each known detector
-        foreach (var detector in Detectors)
+        List<WscProduct> products;
+
+        try
         {
-            var version = await detector.DetectVersionAsync();
-            if (version is not null)
-            {
-                Console.WriteLine($"[detect] Found: {detector.ProductName} v{version}");
-                return new AvInfo(detector.ProductName, version);
-            }
+            products = QuerySecurityCenter2();
+        }
+        catch (ManagementException ex)
+        {
+            Console.WriteLine($"[detect] WSC query failed: {ex.Message}");
+            return new AvInfo("unknown", "unknown");
         }
 
-        // 2. Fallback: WMI SecurityCenter2 (client OS only)
-        var wmiProducts = WmiAvQuery.QueryRegisteredProducts();
-        if (wmiProducts.Count > 0)
+        if (products.Count == 0)
         {
-            // Use the first non-Windows-Defender entry, or the first entry if only Defender
-            var product = wmiProducts.FirstOrDefault(p =>
-                !p.DisplayName.Contains("Windows Defender", StringComparison.OrdinalIgnoreCase));
-
-            if (product == default)
-                product = wmiProducts[0];
-
-            Console.WriteLine($"[detect] WMI found: {product.DisplayName}");
-
-            // Try to get version from the EXE path
-            string version = "unknown";
-            if (!string.IsNullOrWhiteSpace(product.ExePath) && File.Exists(product.ExePath))
-            {
-                var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(product.ExePath);
-                if (!string.IsNullOrWhiteSpace(fvi.ProductVersion))
-                    version = fvi.ProductVersion;
-            }
-
-            return new AvInfo(product.DisplayName, version);
+            Console.WriteLine("[detect] No AV product registered with Windows Security Center");
+            return new AvInfo("unknown", "unknown");
         }
 
-        Console.WriteLine("[detect] No AV product detected");
-        return new AvInfo("unknown", "unknown");
+        // Prefer third-party AV over Defender
+        var pick = products.FirstOrDefault(p =>
+            !p.DisplayName.Contains("Windows Defender", StringComparison.OrdinalIgnoreCase)
+            && !p.DisplayName.Contains("Microsoft Defender", StringComparison.OrdinalIgnoreCase));
+
+        if (pick is null)
+            pick = products[0];
+
+        var version = GetFileVersion(pick.ReportingExePath)
+                   ?? GetFileVersion(pick.ProductExePath)
+                   ?? "unknown";
+
+        Console.WriteLine($"[detect] {pick.DisplayName} v{version}");
+        return new AvInfo(pick.DisplayName, version);
+    }
+
+    private sealed record WscProduct(string DisplayName, string ProductExePath, string ReportingExePath);
+
+    private static List<WscProduct> QuerySecurityCenter2()
+    {
+        var results = new List<WscProduct>();
+
+        using var searcher = new ManagementObjectSearcher(
+            @"root\SecurityCenter2",
+            "SELECT displayName, pathToSignedProductExe, pathToSignedReportingExe FROM AntiVirusProduct");
+
+        foreach (var obj in searcher.Get())
+        {
+            var name = obj["displayName"]?.ToString() ?? "";
+            var productExe = obj["pathToSignedProductExe"]?.ToString() ?? "";
+            var reportingExe = obj["pathToSignedReportingExe"]?.ToString() ?? "";
+            if (!string.IsNullOrWhiteSpace(name))
+                results.Add(new WscProduct(name, productExe, reportingExe));
+        }
+
+        return results;
+    }
+
+    private static string? GetFileVersion(string exePath)
+    {
+        if (string.IsNullOrWhiteSpace(exePath))
+            return null;
+
+        // Expand %ProgramFiles% etc., and skip protocol handlers like "windowsdefender://"
+        var expanded = Environment.ExpandEnvironmentVariables(exePath);
+        if (!File.Exists(expanded))
+            return null;
+
+        var fvi = FileVersionInfo.GetVersionInfo(expanded);
+        return !string.IsNullOrWhiteSpace(fvi.ProductVersion)
+            ? fvi.ProductVersion
+            : null;
     }
 }
 ```
@@ -518,43 +186,37 @@ public static class AvDetector
 
 ### New options on `RunCommand`
 
-Add `--av-name` and `--av-version` as optional string options:
-
 ```csharp
-var avNameOption = new Option<string?>("--av-name",
-    "Override detected AV product name (e.g., \"ESET Security\")")
+var avProductOption = new Option<string?>("--av-product",
+    "Override detected AV product name")
 {
     IsRequired = false
 };
 
 var avVersionOption = new Option<string?>("--av-version",
-    "Override detected AV product version (e.g., \"10.1.2152.0\")")
+    "Override detected AV product version")
 {
     IsRequired = false
 };
 
-runCommand.Add(avNameOption);
+runCommand.Add(avProductOption);
 runCommand.Add(avVersionOption);
 ```
 
 ### Usage in `RunCommand.SetAction`
 
-After parsing CLI args, detect AV and apply overrides:
-
 ```csharp
 // Auto-detect AV (or use CLI overrides)
-var detected = await AvDetector.DetectAsync();
-string avProduct = parseResult.GetValue(avNameOption) ?? detected.ProductName;
+var detected = AvDetector.Detect();
+string avProduct = parseResult.GetValue(avProductOption) ?? detected.ProductName;
 string avVersion = parseResult.GetValue(avVersionOption) ?? detected.ProductVersion;
 
 Console.WriteLine($"[run] AV: {avProduct} v{avVersion}");
-
-// Pass to ScenarioRunner (avProduct and avVersion stamped on every RunResult)
 ```
 
 ### Updated ScenarioRunner
 
-`ScenarioRunner` now receives `avProduct` and `avVersion` in addition to `avName` and stamps them on every `RunResult`:
+`ScenarioRunner` receives `avProduct` and `avVersion` and stamps them on every `RunResult`:
 
 ```csharp
 private RunResult RunOnce(ScenarioDefinition scenario)
@@ -565,8 +227,8 @@ private RunResult RunOnce(ScenarioDefinition scenario)
     {
         ScenarioId = scenario.Id,
         AvName = _avName,
-        AvProduct = _avProduct,   // NEW
-        AvVersion = _avVersion,   // NEW
+        AvProduct = _avProduct,
+        AvVersion = _avVersion,
         Repetition = rep,
         // ... remaining fields ...
     };
@@ -575,19 +237,11 @@ private RunResult RunOnce(ScenarioDefinition scenario)
 
 ## NuGet dependency
 
-Add `System.Management` package for WMI queries:
-
 ```xml
 <PackageReference Include="System.Management" Version="8.0.0" />
 ```
 
-This package is only used by `WmiAvQuery.cs` and is already included in the Windows targeting pack.
-
-## Test commands
-
-### Updated `CompareCsvWriter.cs` and `CompareEngine.cs`
-
-`avbench-compare` needs to propagate `av_product` and `av_version` into comparison output so the report shows which AV products (not just configuration labels) were compared.
+## Updated `CompareCsvWriter.cs` and `CompareEngine.cs`
 
 Add `av_product` and `av_version` columns to `CompareCsvWriter.Headers` after `av_name`:
 
@@ -612,7 +266,6 @@ In `CompareEngine.Compare()`, populate from the first run in each group:
 
 ```csharp
 var firstRun = scenarioRuns[0];
-// ...
 rows.Add(new ComparisonRow
 {
     ScenarioId = scenarioId,
@@ -635,68 +288,56 @@ sb.AppendLine($"## {nameGroup.Key} ({nameGroup.First().AvProduct} v{nameGroup.Fi
 # Auto-detect AV (no overrides)
 avbench run --name defender-default --bench-dir C:\bench --output results -n 1
 
-# Expected console output:
-# [detect] Found: Microsoft Defender Antivirus v4.18.24090.11
-# [run] AV: Microsoft Defender Antivirus v4.18.24090.11
-
-# Check run.json includes av_product and av_version
-Get-Content results\ripgrep-clean\rep-01\run.json | ConvertFrom-Json | Select-Object av_product, av_version
-# av_product: Microsoft Defender Antivirus
-# av_version: 4.18.24090.11
+# Expected:
+# [detect] Microsoft Defender Antivirus v4.18.24090.11
+# run.json → av_product: "Microsoft Defender Antivirus", av_version: "4.18.24090.11"
 ```
 
 ```powershell
-# Override detection manually
-avbench run --name custom-av --bench-dir C:\bench --output results -n 1 --av-name "Custom AV" --av-version "1.0.0"
+# Override detection
+avbench run --name custom --bench-dir C:\bench --output results -n 1 \
+    --av-product "Custom AV" --av-version "1.0.0"
 
-# Expected console output:
-# [detect] Found: Microsoft Defender Antivirus v4.18.24090.11
+# Expected:
+# [detect] Microsoft Defender Antivirus v4.18.24090.11
 # [run] AV: Custom AV v1.0.0   (overrides applied)
 ```
 
 ```powershell
-# Baseline (no AV) - auto-detect returns unknown
+# Baseline (AV disabled/uninstalled)
 avbench run --name baseline-os --bench-dir C:\bench --output results -n 1
 
-# Expected console output:
-# [detect] No AV product detected
-# [run] AV: unknown vunknown
+# Expected:
+# [detect] No AV product registered with Windows Security Center
+# run.json → av_product: "unknown", av_version: "unknown"
 ```
 
 ## Implementation steps (ordered)
 
-### Step 1: Data model additions
+### Step 1: Data model
 
-Add `AvProduct` and `AvVersion` properties to `RunResult`. Add `AvInfo` record. Update `CsvResultWriter` headers.
+Add `AvProduct` and `AvVersion` to `RunResult`. Add `AvInfo` record. Update `CsvResultWriter` headers.
 
-### Step 2: Detection interface and per-product detectors
+### Step 2: AvDetector
 
-Create `IAvDetectorStrategy` and all five detector implementations (`DefenderDetector`, `HuorongDetector`, `EsetDetector`, `BitdefenderDetector`, `TrendMicroDetector`).
+Create `AvDetector.cs` — single WSC query + file version. Test on a VM with Defender, and on a VM with third-party AV.
 
-Test each detector individually on VMs with the corresponding AV installed. On VMs without that AV, `DetectVersionAsync()` should return `null`.
+### Step 3: CLI integration
 
-### Step 3: WMI fallback
+Add `--av-product` and `--av-version` options. Wire `AvDetector.Detect()` into `RunCommand`. Apply overrides.
 
-Create `WmiAvQuery.cs`. Test on a Windows 10/11 client (should return registered AV products) and on Windows Server (should return empty list without errors).
+### Step 4: Compare output
 
-### Step 4: AvDetector orchestrator
+Update `ComparisonRow`, `CompareCsvWriter`, `SummaryRenderer` with `av_product`/`av_version` fields.
 
-Create `AvDetector.cs` with the prioritized detection chain. Test on each target AV VM.
+### Step 5: End-to-end test
 
-### Step 5: CLI integration
-
-Add `--av-name` and `--av-version` options to `RunCommand`. Wire up `AvDetector.DetectAsync()` in the run action. Apply overrides when present.
-
-### Step 6: End-to-end test
-
-Run `avbench run` on each target VM and verify `run.json` contains correct `av_product` and `av_version` values. Test override behavior with `--av-name` and `--av-version`.
+Verify `run.json` and `compare.csv` contain correct values across Defender, third-party AV, and baseline (no AV) VMs.
 
 ## Risks
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Registry paths vary across AV versions | Wrong version or false negative | File version fallback; log which detection method succeeded |
-| Service names change in future AV releases | Detection miss | WMI SecurityCenter2 as catch-all on client OS |
-| WMI unavailable on Server editions | No fallback | Per-product service/registry checks work on all editions |
-| PowerShell cmdlet (Defender) slow | Startup delay ~1-2s | Only runs if WinDefend service is detected first |
-| Multiple AVs installed simultaneously | Ambiguous detection | First match wins; use `--av-name` override if needed |
+| AV product doesn't register with WSC | `unknown` in output | Use `--av-product` / `--av-version` CLI overrides |
+| `pathToSignedProductExe` is empty or missing | Version shows "unknown" | Product name still detected via `displayName`; version is secondary |
+| Multiple AV products registered | Wrong one picked | Prefer non-Defender entry; log all found products for debugging |
