@@ -153,7 +153,7 @@ Scenarios:
 
 Large C# / WinUI 3 desktop app (modern file manager, 43k stars). Exercises WindowsApp SDK 1.8, XAML compilation, CsWin32 source generator for Win32 P/Invoke, WinUI custom controls, packaged-app build pipeline, and C++ native helper projects. 97% C# — the heaviest Windows-native C# workload in the suite.
 
-The current Files build guide requires Visual Studio 2022 17.13+ with Windows 11 SDK `10.0.26100.0`, .NET 10 SDK `10.0.102`, MSVC v145 build tools, and C++ ATL for the latest v145 toolset, plus Windows App SDK 1.8. For `avbench setup`, we automate the equivalent Visual Studio Build Tools/MSBuild prerequisites.
+The current Files build guide requires Visual Studio 2022 17.13+ with Windows 11 SDK `10.0.26100.0`, .NET 10 SDK `10.0.102`, MSVC v145 build tools, and C++ ATL for the latest v145 toolset, plus Windows App SDK 1.8. For `avbench setup`, we automate the equivalent Visual Studio Build Tools/MSBuild prerequisites, including the `Microsoft.VisualStudio.Component.VC.ATLMFC` payload that actually installs the ATL headers Files needs.
 
 ```
 msbuild Files.slnx /p:Configuration=Release /p:Platform=x64
@@ -439,7 +439,7 @@ After tools are installed:
    - Files: `msbuild Files.slnx /t:Restore /p:Configuration=Release /p:Platform=x64 /p:RestorePackagesConfig=true /nr:false`
 5. Write `suite-manifest.json` (repos, SHAs, tool versions).
 
-If Visual Studio installation leaves Windows in a pending-restart state, `avbench setup` should stop with a clear message telling the user to restart the PC and rerun setup.
+If Visual Studio installation leaves Windows in a real pending-restart state, `avbench setup` should stop with a clear message telling the user to restart the PC and rerun setup. Ignore the Visual Studio bootstrapper's own queued cleanup JSON delete under `C:\ProgramData\Microsoft\VisualStudio\Packages\_bootstrapper\`, because current VS 2026 installs can leave that behind even when `vswhere` reports `isRebootRequired=false`.
 
 `setup` must not silently upgrade toolchains once a campaign has started. Re-running `setup` after a campaign starts should detect and warn about version drift.
 
@@ -579,7 +579,7 @@ Simple, defensible rules for v1:
 ### Files (WinUI 3)
 
 - Current upstream docs require Visual Studio 2022 17.13+ with .NET 10 SDK `10.0.102`, Windows 11 SDK `10.0.26100.0`, MSVC v145, and C++ ATL, plus Windows App SDK 1.8.
-- `avbench setup` should automate the equivalent MSBuild/Build Tools prerequisites and must stop for a reboot if Visual Studio install requests one.
+- `avbench setup` should automate the equivalent MSBuild/Build Tools prerequisites and must stop for a reboot if Visual Studio install requests one. Use the ATL/MFC Build Tools component (`Microsoft.VisualStudio.Component.VC.ATLMFC`) so `atlmfc\include\atlbase.h` is present for the native helper projects.
 - Most prerequisites overlap with LLVM (MSVC, Win SDK) and Roslyn (.NET SDK, VS Build Tools). The incremental cost is the WinUI workload component and .NET 10 SDK.
 - Solution is `Files.slnx` — build with `msbuild Files.slnx /p:Configuration=Release /p:Platform=x64`.
 - Run `msbuild /t:Restore /p:RestorePackagesConfig=true /nr:false` as untimed setup before the timed build.

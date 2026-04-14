@@ -86,13 +86,14 @@ Visual Studio/MSBuild is the heaviest install. Live verification against the cur
 - `Microsoft.VisualStudio.Workload.UniversalBuildTools`
 - `Microsoft.VisualStudio.Component.Windows11SDK.26100`
 - `Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs`
-- `Microsoft.VisualStudio.Component.VC.ATL`
+- `Microsoft.VisualStudio.Component.VC.ATLMFC`
 
-Detection: `vswhere.exe -latest -products * -requires Microsoft.Component.MSBuild -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64`.
+Detection: `vswhere.exe -latest -products * -requires Microsoft.Component.MSBuild -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64`, plus file-level verification that `atlbase.h` and Windows SDK `10.0.26100.0` headers are present. Live testing showed version-only detection is not enough for Files.
 
 Important behavior:
 - If Windows already has a pending restart, setup should stop before attempting Visual Studio install.
-- If the installer prints a restart-required message or leaves pending restart state behind, `avbench setup` should stop and tell the user to restart Windows and rerun setup.
+- If the installer prints a restart-required message or leaves a real pending restart state behind, `avbench setup` should stop and tell the user to restart Windows and rerun setup.
+- Ignore the Visual Studio bootstrapper cleanup delete under `C:\ProgramData\Microsoft\VisualStudio\Packages\_bootstrapper\vs_setup_bootstrapper_*.json`; current VS 2026 installs can leave that queued in `PendingFileRenameOperations` even when `vswhere` reports `isRebootRequired=false`.
 
 ```csharp
 using System.Diagnostics;
@@ -137,7 +138,10 @@ public sealed class VsBuildToolsInstaller : ToolInstaller
             "--quiet", "--wait", "--norestart",
             "--add Microsoft.VisualStudio.Workload.VCTools",
             "--add Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools",
+            "--add Microsoft.VisualStudio.Workload.UniversalBuildTools",
+            "--add Microsoft.VisualStudio.Component.Windows11SDK.26100",
             "--add Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs",
+            "--add Microsoft.VisualStudio.Component.VC.ATLMFC",
             "--includeRecommended");
 
         var exitCode = RunProcess(tempPath, args);
@@ -519,7 +523,7 @@ public static void HydrateLlvm(string repoDir, string buildDir)
 
 ### Files
 
-The current Files build guide requires Visual Studio 2022 17.13+ with .NET 10.0.102, Windows 11 SDK 10.0.26100.0, MSVC v145, and C++ ATL, plus Windows App SDK 1.8. For `avbench setup` we automate the equivalent MSBuild/Build Tools prerequisites.
+The current Files build guide requires Visual Studio 2022 17.13+ with .NET 10.0.102, Windows 11 SDK 10.0.26100.0, MSVC v145, and C++ ATL, plus Windows App SDK 1.8. For `avbench setup` we automate the equivalent MSBuild/Build Tools prerequisites, and live verification showed that the working Build Tools payload is `Microsoft.VisualStudio.Component.VC.ATLMFC` because it installs `atlmfc\include\atlbase.h`.
 
 MSBuild restore is untimed setup and must include `RestorePackagesConfig=true`.
 
@@ -1206,7 +1210,7 @@ comparison/
 | LLVM clean build takes 30-60 minutes | Fewer repetitions practical | Use N=3 for LLVM; N=5 for faster workloads. Allow per-scenario rep count override. |
 | Files requires .NET 10 SDK (preview) | SDK availability may vary | Pin exact version in installer code. Use `dotnet-install.ps1` to fetch exact version. |
 | Files has C++ projects requiring MSVC | Incremental MSVC builds may create noise | Measure full solution build. The C++ projects are small (dialog helpers). |
-| Visual Studio install may require reboot | Setup cannot finish in one pass | Detect pending restart, tell the user to restart Windows, and rerun `avbench setup`. |
+| Visual Studio install may require reboot | Setup cannot finish in one pass | Detect real pending restart state, tell the user to restart Windows, and rerun `avbench setup`. Ignore the Visual Studio bootstrapper cleanup JSON delete that can remain queued after a successful install. |
 | MSBuild path varies by VS version | Scenario fails to find MSBuild | Use vswhere with `-find MSBuild\**\Bin\MSBuild.exe` to discover dynamically. |
 | Comparison across VMs with different hardware | Invalid slowdown numbers | `compare.csv` includes `machine` info from `run.json`. Document: all VMs must use identical hardware specs. |
 | LLVM clone is 1.5+ GB | Setup slow on limited bandwidth | Use `--depth 1` for shallow clone when not pinning specific SHA. Add `--filter=blob:none` for partial clone. |
