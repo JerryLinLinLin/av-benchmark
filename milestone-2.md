@@ -478,9 +478,18 @@ public sealed class DotNetSdkInstaller : ToolInstaller
 }
 ```
 
-## Repo Clone and Dependency Hydration
+## Repo Acquisition and Dependency Hydration
 
-Extend `RepoCloner` to support all three new repos. Each repo has specific hydration steps.
+Extend `RepoCloner` to acquire benchmark source trees without paying the full `git clone` cost for every workload. The current implementation should:
+
+- Prefer GitHub source archives over full clones
+- Resolve an exact commit SHA first, then download the matching archive
+- Use the latest release tag archive for ripgrep, LLVM, and Files
+- Use the default-branch head archive for Roslyn, because milestone 2 tracks current upstream build layout
+- Use a requested ripgrep ref by resolving it to an exact commit SHA and downloading that archive
+- Record source metadata in `suite-manifest.json` (`sha`, `source_kind`, `source_reference`, `archive_url`)
+
+Each repo still has specific hydration steps after source acquisition.
 
 ### Roslyn
 
@@ -1033,7 +1042,7 @@ public static class SummaryRenderer
 
 ## Extending `SetupCommand.cs`
 
-The M1 setup command is extended to install all M2 tools and clone all repos:
+The M1 setup command is extended to install all M2 tools and fetch all benchmark source trees:
 
 ```csharp
 command.SetAction(async parseResult =>
@@ -1052,21 +1061,21 @@ command.SetAction(async parseResult =>
 
     // M1 repos
     var rgDir = Path.Combine(benchDir.FullName, "ripgrep");
-    RepoCloner.CloneAndPin("https://github.com/BurntSushi/ripgrep", rgDir, pinnedSha: null);
+    await RepoCloner.CloneRipgrepAsync(benchDir.FullName, ripgrepRef, CancellationToken.None);
     RepoCloner.CargoFetch(rgDir);
 
     // M2 repos
     var roslynDir = Path.Combine(benchDir.FullName, "roslyn");
-    RepoCloner.CloneAndPin("https://github.com/dotnet/roslyn", roslynDir, pinnedSha: null);
+    await RepoCloner.CloneRoslynAsync(benchDir.FullName, CancellationToken.None);
     RepoCloner.HydrateRoslyn(roslynDir);
 
     var llvmDir = Path.Combine(benchDir.FullName, "llvm-project");
     var llvmBuildDir = Path.Combine(benchDir.FullName, "llvm-build");
-    RepoCloner.CloneAndPin("https://github.com/llvm/llvm-project", llvmDir, pinnedSha: null);
+    await RepoCloner.CloneLlvmAsync(benchDir.FullName, CancellationToken.None);
     RepoCloner.HydrateLlvm(llvmDir, llvmBuildDir);
 
     var filesDir = Path.Combine(benchDir.FullName, "Files");
-    RepoCloner.CloneAndPin("https://github.com/files-community/Files", filesDir, pinnedSha: null);
+    await RepoCloner.CloneFilesAsync(benchDir.FullName, CancellationToken.None);
     RepoCloner.HydrateFiles(filesDir);
 
     // Write suite-manifest.json
@@ -1154,7 +1163,7 @@ Test each scenario standalone:
 
 ### Step 6: Wire up extended setup/run commands
 
-Update `SetupCommand.cs` to install M2 tools and clone/hydrate all repos.
+Update `SetupCommand.cs` to install M2 tools and fetch/hydrate all benchmark source trees.
 Update `RunCommand.cs` to register all M2 scenarios.
 
 ### Step 7: Build `CompareEngine`
@@ -1213,14 +1222,14 @@ comparison/
 | Visual Studio install may require reboot | Setup cannot finish in one pass | Detect real pending restart state, tell the user to restart Windows, and rerun `avbench setup`. Ignore the Visual Studio bootstrapper cleanup JSON delete that can remain queued after a successful install. |
 | MSBuild path varies by VS version | Scenario fails to find MSBuild | Use vswhere with `-find MSBuild\**\Bin\MSBuild.exe` to discover dynamically. |
 | Comparison across VMs with different hardware | Invalid slowdown numbers | `compare.csv` includes `machine` info from `run.json`. Document: all VMs must use identical hardware specs. |
-| LLVM clone is 1.5+ GB | Setup slow on limited bandwidth | Use `--depth 1` for shallow clone when not pinning specific SHA. Add `--filter=blob:none` for partial clone. |
+| LLVM source tree is 1.5+ GB | Setup is slow on limited bandwidth | Prefer the latest GitHub release source archive over a full clone and cache by resolved commit SHA. |
 
 ## Testing Strategy
 
 Manual verification on test VMs:
 
 1. `avbench setup` on clean VM installs all tools (VS Build Tools, CMake, Ninja, .NET SDK, Git, Rust)
-2. All repos cloned and hydrated (Roslyn Restore.cmd, LLVM cmake configure, Files msbuild restore)
+2. All benchmark source trees fetched and hydrated (Roslyn Restore.cmd, LLVM cmake configure, Files msbuild restore)
 3. Each scenario produces valid `run.json` with non-zero metrics
 4. LLVM clean build produces clang binary
 5. Roslyn clean build produces compiler output in `artifacts/`

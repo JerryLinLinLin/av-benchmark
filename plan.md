@@ -9,7 +9,7 @@ Build a Windows VM benchmark suite in C# that answers two questions:
 
 The suite consists of two separate programs:
 
-1. **`avbench`** — runs inside each Windows VM. Handles environment setup (tool installation, repo cloning, dependency hydration) and benchmark execution. Each VM runs one AV configuration.
+1. **`avbench`** — runs inside each Windows VM. Handles environment setup (tool installation, source acquisition, dependency hydration) and benchmark execution. Each VM runs one AV configuration.
 2. **`avbench-compare`** — runs on any machine (host, workstation, CI). Collects result directories from multiple VMs and produces cross-configuration comparison output.
 
 This split exists because each VM runs in isolation with its own AV configuration and snapshot. The in-VM program can only see its own results. Cross-configuration comparison must happen outside.
@@ -390,7 +390,7 @@ One solution, three projects:
 
 ### `avbench` CLI commands (in-VM program)
 
-- `avbench setup` — install tools, clone repos, hydrate dependencies, write manifests
+- `avbench setup` — install tools, fetch benchmark source trees, hydrate dependencies, write manifests
 - `avbench run` — execute scenarios, collect metrics, write `run.json` and `runs.csv`. Requires `--name` to label this VM's AV configuration.
 
 ### `avbench-compare` CLI (host program)
@@ -399,9 +399,9 @@ One solution, three projects:
 
 ### `setup` — automated environment provisioning
 
-`avbench setup` takes a clean Windows VM (Server 2022, Windows 11, etc.) and makes it ready to run benchmarks. It installs all required tools, clones repos, and hydrates dependencies.
+`avbench setup` takes a clean Windows VM (Server 2022, Windows 11, etc.) and makes it ready to run benchmarks. It installs all required tools, fetches benchmark source trees, and hydrates dependencies.
 
-The setup is idempotent — re-running it skips already-installed tools and already-cloned repos.
+The setup is idempotent — re-running it skips already-installed tools and reuses existing source trees when their recorded commit SHA still matches the resolved source snapshot.
 
 #### Tool installation
 
@@ -420,24 +420,28 @@ Each tool is installed silently using its official unattended installer. The set
 | Windows App SDK 1.8 | NuGet restore (auto via `msbuild /t:Restore`) | Restored by build |
 | Windows ADK (optional) | Only if `--trace` support is wanted | `wpr -help` |
 
-#### Repo cloning and dependency hydration
+#### Repo acquisition and dependency hydration
 
 After tools are installed:
 
-1. Clone each repo to a pinned location (e.g., `C:\bench\<repo>`).
-2. Checkout pinned commit SHA.
-3. Read repo manifests where possible:
+1. Resolve an exact source snapshot for each repo and fetch it into a pinned location (e.g., `C:\bench\<repo>`).
+2. Prefer GitHub source archives over full `git clone`:
+   - ripgrep, LLVM, and Files use the latest release tag archive by default
+   - Roslyn uses the default branch head archive because milestone 2 tracks the current upstream build layout
+   - `--ripgrep-ref` resolves the requested ref to an exact commit SHA and downloads that archive
+3. Record the exact commit SHA plus source metadata (`source_kind`, `source_reference`, `archive_url`) in `suite-manifest.json`.
+4. Read repo manifests where possible:
    - `global.json` (Roslyn .NET SDK version)
    - `Cargo.toml` / `rust-toolchain.toml` (ripgrep Rust version)
    - `pyproject.toml` (Black Python requirements)
    - `CMakeLists.txt` (LLVM CMake version requirements)
-4. Hydrate dependencies (untimed):
+5. Hydrate dependencies (untimed):
    - Roslyn: `Restore.cmd`
    - ripgrep: `cargo fetch`
    - Black/Nuitka: `python -m venv` + `pip install`
    - LLVM: CMake configure in a VS developer shell (current upstream requires Python to be on PATH)
    - Files: `msbuild Files.slnx /t:Restore /p:Configuration=Release /p:Platform=x64 /p:RestorePackagesConfig=true /nr:false`
-5. Write `suite-manifest.json` (repos, SHAs, tool versions).
+6. Write `suite-manifest.json` (repos, SHAs, source metadata, tool versions).
 
 If Visual Studio installation leaves Windows in a real pending-restart state, `avbench setup` should stop with a clear message telling the user to restart the PC and rerun setup. Ignore the Visual Studio bootstrapper's own queued cleanup JSON delete under `C:\ProgramData\Microsoft\VisualStudio\Packages\_bootstrapper\`, because current VS 2026 installs can leave that behind even when `vswhere` reports `isRebootRequired=false`.
 
@@ -452,7 +456,7 @@ Optionally run `setup-test-vm.ps1` to disable Windows Update, Superfetch, search
 Responsibilities:
 
 1. Load suite manifest.
-2. Validate setup is complete (tools present, repos cloned, deps hydrated).
+2. Validate setup is complete (tools present, source trees fetched, deps hydrated).
 3. Idle check: refuse if system CPU > threshold.
 4. For each scenario block:
    a. Warmup run (discarded).
@@ -552,7 +556,7 @@ Simple, defensible rules for v1:
 - Treat `cmake` configure and `ninja` build as separate scenarios.
 - Keep generator (`Ninja`) and project set (`clang`, X86-only) fixed for the full campaign.
 - Store build dir outside the source tree for easy cleanup.
-- LLVM clone should use `git clone --config core.autocrlf=false` on Windows.
+- LLVM source acquisition should prefer the latest GitHub release archive over a full clone to reduce setup time and bandwidth.
 - LLVM + Clang Release build needs ~15-20 GB disk space.
 
 ### ripgrep
@@ -593,7 +597,7 @@ Simple, defensible rules for v1:
 
 Deliverables:
 
-- `avbench setup` — automated tool installation (Git, Rust) + ripgrep repo clone + `cargo fetch`
+- `avbench setup` — automated tool installation (Git, Rust) + ripgrep source fetch + `cargo fetch`
 - `avbench run` — ripgrep compile scenarios + one API microbench (`file-create-delete`)
 - Job object process-tree runner with default metrics
 - JSON output (`run.json`)
@@ -611,7 +615,7 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 - Extend `avbench setup` to install Visual Studio/MSBuild prerequisites, CMake, Ninja, Python, and the .NET SDKs needed by Roslyn and Files
 - Add Roslyn compile scenarios
 - Add LLVM compile scenarios
-- Add Files (WinUI 3) compile scenarios — clone repo, `msbuild /t:Restore`, then timed build
+- Add Files (WinUI 3) compile scenarios — fetch source, `msbuild /t:Restore`, then timed build
 - Build `avbench-compare` — reads results from multiple directories, produces `compare.csv` and `summary.md`
 
 ### Milestone 3

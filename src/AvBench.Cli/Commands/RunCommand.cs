@@ -1,4 +1,5 @@
 using System.CommandLine;
+using AvBench.Core;
 using AvBench.Core.Environment;
 using AvBench.Core.Models;
 using AvBench.Core.Output;
@@ -36,11 +37,19 @@ public static class RunCommand
             DefaultValueFactory = _ => new DirectoryInfo(Path.Combine(Directory.GetCurrentDirectory(), "results"))
         };
 
+        var workloadOption = new Option<string[]>("--workload", ["-w"])
+        {
+            Description = $"One or more workload ids to run. Defaults to all workloads present in the manifest plus {BenchmarkWorkloads.FileCreateDelete}: {BenchmarkWorkloads.HelpText}.",
+            AllowMultipleArgumentsPerToken = true,
+            DefaultValueFactory = _ => []
+        };
+
         var command = new Command("run", "Execute milestone 2 benchmark scenarios.");
         command.Options.Add(nameOption);
         command.Options.Add(benchDirOption);
         command.Options.Add(repetitionsOption);
         command.Options.Add(outputOption);
+        command.Options.Add(workloadOption);
 
         command.SetAction(async parseResult =>
         {
@@ -48,6 +57,7 @@ public static class RunCommand
             var benchDir = parseResult.GetValue(benchDirOption)!;
             var repetitions = parseResult.GetValue(repetitionsOption);
             var outputRoot = parseResult.GetValue(outputOption)!;
+            var selectedWorkloads = BenchmarkWorkloads.Normalize(parseResult.GetValue(workloadOption));
 
             var manifestPath = Path.Combine(benchDir.FullName, SetupService.SuiteManifestFileName);
             if (!File.Exists(manifestPath))
@@ -65,6 +75,8 @@ public static class RunCommand
                 AvBenchJsonContext.Default.SuiteManifest)
                 ?? throw new InvalidOperationException("Suite manifest could not be parsed.");
 
+            ValidateRequestedWorkloads(manifest, selectedWorkloads);
+
             Directory.CreateDirectory(outputRoot.FullName);
             var runDirectory = Path.Combine(outputRoot.FullName, DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"));
             Directory.CreateDirectory(runDirectory);
@@ -80,15 +92,33 @@ public static class RunCommand
                 SetupService.ComputeManifestSha(manifestPath));
 
             var scenarios = new List<ScenarioDefinition>();
-            scenarios.AddRange(RipgrepScenarioFactory.Create(manifest));
-            scenarios.AddRange(RoslynScenarioFactory.Create(manifest));
-            scenarios.AddRange(LlvmScenarioFactory.Create(manifest));
-            scenarios.AddRange(FilesScenarioFactory.Create(manifest));
+            if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Ripgrep))
+            {
+                scenarios.AddRange(RipgrepScenarioFactory.Create(manifest));
+            }
+
+            if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Roslyn))
+            {
+                scenarios.AddRange(RoslynScenarioFactory.Create(manifest));
+            }
+
+            if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Llvm))
+            {
+                scenarios.AddRange(LlvmScenarioFactory.Create(manifest));
+            }
+
+            if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Files))
+            {
+                scenarios.AddRange(FilesScenarioFactory.Create(manifest));
+            }
 
             var executablePath = Environment.ProcessPath
                 ?? throw new InvalidOperationException("Unable to resolve the current executable path.");
-            var fileMicrobench = FileMicrobenchScenarioFactory.Create(executablePath, benchDir.FullName);
-            scenarios.Add(fileMicrobench);
+            if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.FileCreateDelete))
+            {
+                var fileMicrobench = FileMicrobenchScenarioFactory.Create(executablePath, benchDir.FullName);
+                scenarios.Add(fileMicrobench);
+            }
 
             var results = new List<RunResult>();
             foreach (var scenario in scenarios)
@@ -104,5 +134,26 @@ public static class RunCommand
         });
 
         return command;
+    }
+
+    private static void ValidateRequestedWorkloads(SuiteManifest manifest, IReadOnlyCollection<string> selectedWorkloads)
+    {
+        var availableWorkloads = manifest.Workloads
+            .Select(workload => workload.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var workload in selectedWorkloads)
+        {
+            if (string.Equals(workload, BenchmarkWorkloads.FileCreateDelete, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (!availableWorkloads.Contains(workload))
+            {
+                throw new InvalidOperationException(
+                    $"The suite manifest does not contain workload '{workload}'. Run `avbench setup --workload {workload}` first, or rerun setup with a broader workload selection.");
+            }
+        }
     }
 }

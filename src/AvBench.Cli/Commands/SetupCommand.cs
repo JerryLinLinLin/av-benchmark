@@ -1,4 +1,5 @@
 using System.CommandLine;
+using AvBench.Core;
 using AvBench.Core.Setup;
 
 namespace AvBench.Cli.Commands;
@@ -18,19 +19,28 @@ public static class SetupCommand
             Description = "Optional ripgrep branch, tag, or SHA to check out before hydrating dependencies."
         };
 
-        var command = new Command("setup", "Install milestone 2 toolchains, clone benchmark repos, hydrate dependencies, and write suite-manifest.json.");
+        var workloadOption = new Option<string[]>("--workload", ["-w"])
+        {
+            Description = $"One or more workload ids to set up. Defaults to all: {BenchmarkWorkloads.HelpText}.",
+            AllowMultipleArgumentsPerToken = true,
+            DefaultValueFactory = _ => []
+        };
+
+        var command = new Command("setup", "Install toolchains, fetch selected benchmark source trees, hydrate dependencies, and write suite-manifest.json.");
         command.Options.Add(benchDirOption);
         command.Options.Add(ripgrepRefOption);
+        command.Options.Add(workloadOption);
 
         command.SetAction(async parseResult =>
         {
             var benchDir = parseResult.GetValue(benchDirOption)!;
             var ripgrepRef = parseResult.GetValue(ripgrepRefOption);
+            var workloads = BenchmarkWorkloads.Normalize(parseResult.GetValue(workloadOption));
 
             var service = new SetupService();
             try
             {
-                await service.ExecuteAsync(benchDir.FullName, ripgrepRef, CancellationToken.None);
+                await service.ExecuteAsync(benchDir.FullName, ripgrepRef, workloads, CancellationToken.None);
                 return 0;
             }
             catch (SetupRestartRequiredException ex)

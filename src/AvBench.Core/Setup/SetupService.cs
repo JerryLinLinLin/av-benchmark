@@ -13,97 +13,156 @@ public sealed class SetupService
     public const string SuiteManifestFileName = "suite-manifest.json";
     private static readonly Version MinimumVisualStudioVersion = new(18, 0, 0);
 
-    public async Task<SuiteManifest> ExecuteAsync(string benchDirectory, string? ripgrepRevision, CancellationToken cancellationToken)
+    public async Task<SuiteManifest> ExecuteAsync(
+        string benchDirectory,
+        string? ripgrepRevision,
+        IReadOnlyCollection<string> selectedWorkloads,
+        CancellationToken cancellationToken)
     {
         KnownToolPaths.EnsureCommonToolPaths();
         Directory.CreateDirectory(benchDirectory);
 
-        var gitVersion = await new GitInstaller().EnsureInstalledAsync(cancellationToken);
-        var rustVersion = await new RustInstaller().EnsureInstalledAsync(cancellationToken);
-
-        var ripgrep = await RepoCloner.CloneRipgrepAsync(benchDirectory, ripgrepRevision, cancellationToken);
-        var roslyn = await RepoCloner.CloneRoslynAsync(benchDirectory, cancellationToken);
-        var llvm = await RepoCloner.CloneLlvmAsync(benchDirectory, cancellationToken);
-        var files = await RepoCloner.CloneFilesAsync(benchDirectory, cancellationToken);
+        RepoEntry? ripgrep = null;
+        RepoEntry? roslyn = null;
+        RepoEntry? llvm = null;
+        RepoEntry? files = null;
 
         var llvmBuildDirectory = Path.Combine(benchDirectory, "llvm-build");
-        var requiredVsVersion = DetermineRequiredVisualStudioVersion(RepoCloner.ResolveVisualStudioVersion(roslyn.LocalPath));
+        var repos = new List<RepoEntry>();
+        var workloads = new List<WorkloadEntry>();
+        var tools = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        var vsVersion = await new VsBuildToolsInstaller(requiredVsVersion).EnsureInstalledAsync(cancellationToken);
-        if (WindowsRestartDetector.IsRestartPending())
+        if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Ripgrep))
         {
-            throw SetupRestartRequiredException.PendingVisualStudioFinalize();
+            ripgrep = await RepoCloner.CloneRipgrepAsync(benchDirectory, ripgrepRevision, cancellationToken);
+            repos.Add(ripgrep);
         }
 
-        var cmakeVersion = await new CmakeInstaller().EnsureInstalledAsync(cancellationToken);
-        var ninjaVersion = await new NinjaInstaller().EnsureInstalledAsync(cancellationToken);
-        var pythonVersion = await new PythonInstaller().EnsureInstalledAsync(cancellationToken);
-        var dotnetInstaller = new DotNetSdkInstaller(
-        [
-            RepoCloner.ResolveDotNetSdkVersion(roslyn.LocalPath),
-            RepoCloner.ResolveDotNetSdkVersion(files.LocalPath)
-        ]);
-        var dotnetSdkVersions = await dotnetInstaller.EnsureInstalledAsync(cancellationToken);
+        if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Roslyn))
+        {
+            roslyn = await RepoCloner.CloneRoslynAsync(benchDirectory, cancellationToken);
+            repos.Add(roslyn);
+        }
 
-        await RepoCloner.CargoFetchAsync(ripgrep.LocalPath, cancellationToken);
-        await RepoCloner.HydrateRoslynAsync(roslyn.LocalPath, cancellationToken);
-        await RepoCloner.HydrateLlvmAsync(llvm.LocalPath, llvmBuildDirectory, cancellationToken);
-        await RepoCloner.HydrateFilesAsync(files.LocalPath, cancellationToken);
+        if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Llvm))
+        {
+            llvm = await RepoCloner.CloneLlvmAsync(benchDirectory, cancellationToken);
+            repos.Add(llvm);
+        }
+
+        if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Files))
+        {
+            files = await RepoCloner.CloneFilesAsync(benchDirectory, cancellationToken);
+            repos.Add(files);
+        }
+
+        if (BenchmarkWorkloads.RequiresRust(selectedWorkloads))
+        {
+            tools["rustc"] = await new RustInstaller().EnsureInstalledAsync(cancellationToken);
+        }
+
+        if (BenchmarkWorkloads.RequiresVisualStudio(selectedWorkloads))
+        {
+            var roslynVersion = roslyn is null ? null : RepoCloner.ResolveVisualStudioVersion(roslyn.LocalPath);
+            tools["visual_studio"] = await new VsBuildToolsInstaller(DetermineRequiredVisualStudioVersion(roslynVersion))
+                .EnsureInstalledAsync(cancellationToken);
+
+            if (WindowsRestartDetector.IsRestartPending())
+            {
+                throw SetupRestartRequiredException.PendingVisualStudioFinalize();
+            }
+        }
+
+        if (BenchmarkWorkloads.RequiresCmake(selectedWorkloads))
+        {
+            tools["cmake"] = await new CmakeInstaller().EnsureInstalledAsync(cancellationToken);
+        }
+
+        if (BenchmarkWorkloads.RequiresNinja(selectedWorkloads))
+        {
+            tools["ninja"] = await new NinjaInstaller().EnsureInstalledAsync(cancellationToken);
+        }
+
+        if (BenchmarkWorkloads.RequiresPython(selectedWorkloads))
+        {
+            tools["python"] = await new PythonInstaller().EnsureInstalledAsync(cancellationToken);
+        }
+
+        if (BenchmarkWorkloads.RequiresDotNetSdk(selectedWorkloads))
+        {
+            var sdkVersions = new List<string>();
+            if (roslyn is not null)
+            {
+                sdkVersions.Add(RepoCloner.ResolveDotNetSdkVersion(roslyn.LocalPath));
+            }
+
+            if (files is not null)
+            {
+                sdkVersions.Add(RepoCloner.ResolveDotNetSdkVersion(files.LocalPath));
+            }
+
+            tools["dotnet_sdks"] = await new DotNetSdkInstaller(
+                    sdkVersions.Distinct(StringComparer.OrdinalIgnoreCase).ToArray())
+                .EnsureInstalledAsync(cancellationToken);
+        }
+
+        if (ripgrep is not null)
+        {
+            await RepoCloner.CargoFetchAsync(ripgrep.LocalPath, cancellationToken);
+            workloads.Add(new WorkloadEntry
+            {
+                Name = BenchmarkWorkloads.Ripgrep,
+                RepoName = ripgrep.Name,
+                WorkingDirectory = ripgrep.LocalPath,
+                IncrementalTouchPath = RepoCloner.ResolveRipgrepTouchPath(ripgrep.LocalPath)
+            });
+        }
+
+        if (roslyn is not null)
+        {
+            await RepoCloner.HydrateRoslynAsync(roslyn.LocalPath, cancellationToken);
+            workloads.Add(new WorkloadEntry
+            {
+                Name = BenchmarkWorkloads.Roslyn,
+                RepoName = roslyn.Name,
+                WorkingDirectory = roslyn.LocalPath,
+                IncrementalTouchPath = RepoCloner.ResolveRoslynTouchPath(roslyn.LocalPath)
+            });
+        }
+
+        if (llvm is not null)
+        {
+            await RepoCloner.HydrateLlvmAsync(llvm.LocalPath, llvmBuildDirectory, cancellationToken);
+            workloads.Add(new WorkloadEntry
+            {
+                Name = BenchmarkWorkloads.Llvm,
+                RepoName = llvm.Name,
+                WorkingDirectory = llvm.LocalPath,
+                BuildDirectory = llvmBuildDirectory,
+                IncrementalTouchPath = RepoCloner.ResolveLlvmTouchPath(llvm.LocalPath)
+            });
+        }
+
+        if (files is not null)
+        {
+            await RepoCloner.HydrateFilesAsync(files.LocalPath, cancellationToken);
+            workloads.Add(new WorkloadEntry
+            {
+                Name = BenchmarkWorkloads.Files,
+                RepoName = files.Name,
+                WorkingDirectory = files.LocalPath,
+                IncrementalTouchPath = RepoCloner.ResolveFilesTouchPath(files.LocalPath)
+            });
+        }
 
         var manifest = new SuiteManifest
         {
             CreatedUtc = DateTime.UtcNow,
             BenchDirectory = benchDirectory,
             RunnerVersion = SystemInfoProvider.GetRunnerVersion(),
-            Repos =
-            [
-                ripgrep,
-                roslyn,
-                llvm,
-                files
-            ],
-            Workloads =
-            [
-                new WorkloadEntry
-                {
-                    Name = "ripgrep",
-                    RepoName = ripgrep.Name,
-                    WorkingDirectory = ripgrep.LocalPath,
-                    IncrementalTouchPath = RepoCloner.ResolveRipgrepTouchPath(ripgrep.LocalPath)
-                },
-                new WorkloadEntry
-                {
-                    Name = "roslyn",
-                    RepoName = roslyn.Name,
-                    WorkingDirectory = roslyn.LocalPath,
-                    IncrementalTouchPath = RepoCloner.ResolveRoslynTouchPath(roslyn.LocalPath)
-                },
-                new WorkloadEntry
-                {
-                    Name = "llvm",
-                    RepoName = llvm.Name,
-                    WorkingDirectory = llvm.LocalPath,
-                    BuildDirectory = llvmBuildDirectory,
-                    IncrementalTouchPath = RepoCloner.ResolveLlvmTouchPath(llvm.LocalPath)
-                },
-                new WorkloadEntry
-                {
-                    Name = "files",
-                    RepoName = files.Name,
-                    WorkingDirectory = files.LocalPath,
-                    IncrementalTouchPath = RepoCloner.ResolveFilesTouchPath(files.LocalPath)
-                }
-            ],
-            Tools = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["git"] = gitVersion,
-                ["rustc"] = rustVersion,
-                ["visual_studio"] = vsVersion,
-                ["cmake"] = cmakeVersion,
-                ["ninja"] = ninjaVersion,
-                ["python"] = pythonVersion,
-                ["dotnet_sdks"] = dotnetSdkVersions
-            }
+            Repos = repos,
+            Workloads = workloads,
+            Tools = tools
         };
 
         var manifestPath = Path.Combine(benchDirectory, SuiteManifestFileName);

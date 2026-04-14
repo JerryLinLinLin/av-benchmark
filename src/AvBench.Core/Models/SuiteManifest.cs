@@ -46,6 +46,18 @@ public sealed class RepoEntry
     [JsonPropertyName("sha")]
     public string Sha { get; set; } = string.Empty;
 
+    [JsonPropertyName("source_kind")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? SourceKind { get; set; }
+
+    [JsonPropertyName("source_reference")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? SourceReference { get; set; }
+
+    [JsonPropertyName("archive_url")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ArchiveUrl { get; set; }
+
     [JsonPropertyName("local_path")]
     public string LocalPath { get; set; } = string.Empty;
 }
