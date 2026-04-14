@@ -116,13 +116,13 @@ Split by behavior, not collapsed into one mega-loop.
 
 First families:
 
-- `file-create-delete` — create and delete small temp files
-- `file-open-close` — open/close an existing file repeatedly
-- `dir-enumerate` — enumerate a directory tree
-- `copy-rename-move` — copy/rename/move small files
-- `process-create-wait` — `CreateProcess` + `WaitForSingleObject`
-- `registry-open-query` — open and query registry keys
-- `dll-load-unload` — `LoadLibrary` / `FreeLibrary`
+- `file-create-delete` — create and delete small temp files (M1)
+- `archive-extract` — extract ~2K-file zip with mixed extensions/sizes (simulates NuGet/npm/pip restore)
+- `ext-sensitivity` — create+write+delete with .exe / .dll / .js / .ps1 extensions (same content)
+- `process-create-wait` — spawn an unsigned noop.exe (forces full AV scan, no trust-cache)
+- `dll-load-unique` — copy system DLL to unique temp path then load (bypasses section cache)
+- `file-write-content` — create→write→close→delete with pool of unique-hash unsigned PEs (forces full AV content inspection every iteration)
+- `motw` — copy + execute real unsigned exe, with vs without Zone.Identifier ADS (ZoneId=3 Internet origin)
 
 Later additions (not in v1):
 
@@ -161,9 +161,8 @@ Every compile workload is measured in these phases:
 For each scenario + configuration combination:
 
 1. Idle check (refuse to start if CPU > threshold)
-2. One warmup run (discarded — primes AV cache and disk cache)
-3. N timed repetitions (default N=5)
-4. Quick validation (check exit code and expected output artifacts)
+2. N timed repetitions (default N=5)
+3. Quick validation (check exit code and expected output artifacts)
 
 Within one repetition for compile workloads:
 
@@ -227,9 +226,8 @@ Per benchmark family:
 | Total operations | Across all batches |
 | Ops/sec | Total operations / wall time |
 | Mean latency (us) | Wall time / total operations |
+| p50 / p95 / p99 / max latency (us) | Per-op QPC recording via `LatencyHistogram`, sorted percentiles |
 | Total wall time (ms) | End-to-end |
-
-Latency percentiles (p50/p95/p99) are deferred to a later version. Ops/sec and mean latency are sufficient for v1.
 
 ## What To Output
 
@@ -239,15 +237,13 @@ Each VM produces a results directory that can be copied to shared storage.
 
 ```
 results/
-  <campaign-timestamp>/
-    suite-manifest.json
-    <scenario>/
-      rep-01/
-        run.json
-        stdout.log
-        stderr.log
-        combined.log       (merged stdout/stderr for easier manual inspection)
-        counters.csv       (opt-in)
+  suite-manifest.json
+  <scenario>/
+    rep-01/
+      run.json
+      stdout.log
+      stderr.log
+      counters.csv       (opt-in)
 ```
 
 The AV configuration name is recorded inside each `run.json`, not as a directory level, since each VM runs only one configuration.
@@ -262,6 +258,8 @@ Also produces:
 {
   "scenario_id": "ripgrep-clean-build",
   "av_name": "defender-default",
+  "av_product": "Microsoft Defender Antivirus",
+  "av_version": "4.18.24090.11",
   "repetition": 1,
   "timestamp_utc": "2026-04-13T15:30:00Z",
   "command": "cargo build --release",
@@ -276,6 +274,10 @@ Also produces:
   "io_read_ops": 84000,
   "io_write_ops": 51000,
   "total_processes": 47,
+  "p50_us": null,
+  "p95_us": null,
+  "p99_us": null,
+  "max_us": null,
   "machine": {
     "os": "Windows Server 2022",
     "cpu": "4 vCPU",
@@ -310,6 +312,8 @@ avbench-compare ^
 |---|---|
 | `scenario_id` | e.g., `ripgrep-clean-build` |
 | `av_name` | e.g., `defender-default` |
+| `av_product` | e.g., `Microsoft Defender Antivirus` (auto-detected or overridden, M4) |
+| `av_version` | e.g., `4.18.24090.11` (auto-detected or overridden, M4) |
 | `baseline_name` | e.g., `baseline-os` |
 | `repetitions` | Number of measured runs |
 | `mean_wall_ms` | Mean wall-clock time |
@@ -367,7 +371,7 @@ Each tool is installed silently using its official unattended installer. The set
 | Git for Windows | `Git-*-64-bit.exe /VERYSILENT /NORESTART` | `git --version` |
 | Visual Studio Build Tools / MSBuild | `winget install Microsoft.VisualStudio.BuildTools` with VCTools, managed desktop build tools, WinUI/Windows SDK, and C++ ATL components | `vswhere -products *` |
 | .NET SDK | `dotnet-sdk-*-win-x64.exe /quiet /norestart` | `dotnet --list-sdks` |
-| Rust (rustup) | `rustup-init.exe -y --default-toolchain stable` | `rustc --version` |
+| Rust (rustup) | `rustup-init.exe -y --default-toolchain 1.85.0` | `rustc --version` |
 
 #### Repo acquisition and dependency hydration
 
@@ -403,8 +407,7 @@ Responsibilities:
 2. Validate setup is complete (tools present, source trees fetched, deps hydrated).
 3. Idle check: refuse if system CPU > threshold.
 4. For each scenario block:
-   a. Warmup run (discarded).
-   b. For each repetition:
+   a. For each repetition:
       - Create Windows Job object (`CreateJobObject`).
       - Launch workload process, assign to Job (`AssignProcessToJobObject`).
       - Stream stdout/stderr to log files.
@@ -434,25 +437,23 @@ Key Win32 APIs via P/Invoke:
 
 - `CreateJobObject` — create the job
 - `SetInformationJobObject` — configure `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`
-- `CreateProcess` with `CREATE_SUSPENDED` — create the child
-- `AssignProcessToJobObject` — attach child to job before it runs
-- `ResumeThread` — let the child start
-- `WaitForSingleObject` — wait for child exit
+- `Process.Start()` — create the child (no `CREATE_SUSPENDED`; the window between start and job assignment is negligible for multi-second compile workloads)
+- `AssignProcessToJobObject` — attach child to job immediately after start
+- `WaitForExit` — wait for child exit
 - `QueryInformationJobObject` with `JobObjectBasicAndIoAccountingInformation` and `JobObjectExtendedLimitInformation` — get CPU, I/O, memory metrics
 
 Child processes inherit the job assignment by default (nested jobs work on Windows 8+/Server 2012+), so the entire build process tree is captured.
 
 ### API microbench worker
 
-A dedicated C# console app launched by the runner. The same Job object measurement wraps it.
+In-process static methods called directly within the `avbench.exe` process. Each bench family is a `static Execute()` method that uses `Stopwatch` (QPC) for wall-time measurement and returns a `RunResult`. Job object CPU/IO accounting is not used for microbenchs — the per-operation granularity is too fine for scheduler-tick-based CPU charging.
 
 Behavior:
 
-- One benchmark family per invocation.
-- Explicit warmup period (discarded).
+- One benchmark family per `Execute()` call.
 - Fixed-iteration measurement window.
-- Batch timing to reduce per-op harness noise.
-- Writes results to stdout as JSON, captured by the runner.
+- Per-op QPC recording for latency percentiles (p50/p95/p99/max).
+- Returns `RunResult` directly (no stdout/JSON round-trip).
 
 ### Collector layer
 
@@ -485,7 +486,7 @@ Create separate snapshots for:
 
 Simple, defensible rules for v1:
 
-- One warmup run per scenario block (discarded).
+- No warmup runs — every repetition is measured. AV cache priming from a discarded warmup would hide the real cold-path overhead that developers experience on first build, package restore, or branch switch.
 - At least 5 measured repetitions per scenario.
 - Report mean, median, stdev, and coefficient of variation (CV).
 - Mark a scenario as `noisy` if CV > 10%.
@@ -551,8 +552,5 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 - `JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION`: https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_and_io_accounting_information
 - `JOBOBJECT_BASIC_ACCOUNTING_INFORMATION`: https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_accounting_information
 - `typeperf`: https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/typeperf
-- LLVM Visual Studio guide: https://github.com/llvm/llvm-project/blob/main/llvm/docs/GettingStartedVS.rst
 - ripgrep README: https://github.com/BurntSushi/ripgrep/blob/master/README.md
 - Roslyn Windows build guide: https://github.com/dotnet/roslyn/blob/main/docs/contributing/Building%2C%20Debugging%2C%20and%20Testing%20on%20Windows.md
-- Nuitka user manual: https://nuitka.net/doc/user-manual.html
-- Black README: https://github.com/psf/black/blob/main/README.md

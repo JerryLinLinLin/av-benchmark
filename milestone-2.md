@@ -74,7 +74,7 @@ dotnet add package System.CommandLine --version 2.0.5
 
 ### `VsBuildToolsInstaller.cs`
 
-Visual Studio/MSBuild is the heaviest install. Live verification against the current Roslyn and LLVM repos showed that milestone 2 needs:
+Visual Studio/MSBuild is the heaviest install. Live verification against the current Roslyn repo showed that milestone 2 needs:
 - `Microsoft.VisualStudio.Workload.VCTools`
 - `Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools`
 - `Microsoft.VisualStudio.Workload.UniversalBuildTools`
@@ -323,7 +323,7 @@ Extend `RepoCloner` to acquire benchmark source trees without paying the full `g
 
 - Prefer GitHub source archives over full clones
 - Resolve an exact commit SHA first, then download the matching archive
-- Use the latest release tag archive for ripgrep and LLVM
+- Use the latest release tag archive for ripgrep
 - Use the default-branch head archive for Roslyn, because milestone 2 tracks current upstream build layout
 - Use a requested ripgrep ref by resolving it to an exact commit SHA and downloading that archive
 - Record source metadata in `suite-manifest.json` (`sha`, `source_kind`, `source_reference`, `archive_url`)
@@ -370,16 +370,16 @@ public static class RoslynScenario
             new ScenarioDefinition
             {
                 Id = "roslyn-incremental-build",
-                FileName = "cmd.exe",
-                Arguments = $"/c \"{buildCmd}\"",
+                FileName = "dotnet",
+                Arguments = $"build \"{solutionPath}\" -c Release /m /nr:false",
                 WorkingDirectory = repoDir,
                 PreActions = [TouchFileCommand(repoDir)]
             },
             new ScenarioDefinition
             {
                 Id = "roslyn-noop-build",
-                FileName = "cmd.exe",
-                Arguments = $"/c \"{buildCmd}\"",
+                FileName = "dotnet",
+                Arguments = $"build \"{solutionPath}\" -c Release /m /nr:false",
                 WorkingDirectory = repoDir,
                 PreActions = []
             }

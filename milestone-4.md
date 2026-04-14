@@ -557,7 +557,7 @@ Console.WriteLine($"[run] AV: {avProduct} v{avVersion}");
 `ScenarioRunner` now receives `avProduct` and `avVersion` in addition to `avName` and stamps them on every `RunResult`:
 
 ```csharp
-private RunResult RunOnce(ScenarioDefinition scenario, bool isWarmup)
+private RunResult RunOnce(ScenarioDefinition scenario)
 {
     // ... existing Job Object measurement code ...
 
@@ -582,6 +582,52 @@ Add `System.Management` package for WMI queries:
 ```
 
 This package is only used by `WmiAvQuery.cs` and is already included in the Windows targeting pack.
+
+## Test commands
+
+### Updated `CompareCsvWriter.cs` and `CompareEngine.cs`
+
+`avbench-compare` needs to propagate `av_product` and `av_version` into comparison output so the report shows which AV products (not just configuration labels) were compared.
+
+Add `av_product` and `av_version` columns to `CompareCsvWriter.Headers` after `av_name`:
+
+```csharp
+private static readonly string[] Headers =
+[
+    "scenario_id", "av_name", "av_product", "av_version", "baseline_name", "repetitions",
+    "mean_wall_ms", "median_wall_ms", "mean_cpu_ms",
+    "kernel_cpu_pct", "baseline_kernel_cpu_pct", "kernel_cpu_slowdown_pct",
+    "peak_memory_mb", "slowdown_pct", "cv_pct", "status"
+];
+```
+
+Add matching fields to `ComparisonRow`:
+
+```csharp
+public string AvProduct { get; init; } = "";
+public string AvVersion { get; init; } = "";
+```
+
+In `CompareEngine.Compare()`, populate from the first run in each group:
+
+```csharp
+var firstRun = scenarioRuns[0];
+// ...
+rows.Add(new ComparisonRow
+{
+    ScenarioId = scenarioId,
+    AvName = avName,
+    AvProduct = firstRun.AvProduct ?? "",
+    AvVersion = firstRun.AvVersion ?? "",
+    // ... existing fields ...
+});
+```
+
+Update `SummaryRenderer` section header to include product info:
+
+```csharp
+sb.AppendLine($"## {nameGroup.Key} ({nameGroup.First().AvProduct} v{nameGroup.First().AvVersion}) vs {nameGroup.First().BaselineName}");
+```
 
 ## Test commands
 
