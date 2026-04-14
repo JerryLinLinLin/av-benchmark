@@ -2,18 +2,15 @@
 
 ## Scope
 
-- Extend `avbench setup` to install Python 3.x and Nuitka
-- Add Black + Nuitka compile scenarios (`nuitka-standalone`, `nuitka-onefile`)
 - Add remaining API microbench families
-- Add `--trace` (WPR) opt-in collector
 - Add `--counters` (typeperf) opt-in collector
 
 ## Prerequisites from Milestone 1–2
 
 All M1/M2 components are assumed working:
 
-- Full tool installer chain (Git, Rust, VS Build Tools, CMake, Ninja, .NET SDK)
-- All compile scenarios (ripgrep, Roslyn, LLVM, Files)
+- Full tool installer chain (Git, Rust, VS Build Tools, .NET SDK)
+- All compile scenarios (ripgrep, Roslyn)
 - Job object runner, output writers
 - `avbench-compare` with CSV and markdown output
 
@@ -21,437 +18,164 @@ All M1/M2 components are assumed working:
 
 ```
 AvBench.Core/
-  Setup/
-    PythonInstaller.cs         ← NEW
-    NuitkaInstaller.cs         ← NEW
   Scenarios/
-    BlackNuitkaScenario.cs     ← NEW
-    FileOpenCloseBench.cs      ← NEW
-    DirEnumerateBench.cs       ← NEW
-    CopyRenameMoveBench.cs     ← NEW
-    ProcessCreateBench.cs      ← NEW
-    RegistryBench.cs           ← NEW
-    DllLoadBench.cs            ← NEW
+    LatencyHistogram.cs            ← NEW  (shared percentile helper)
+    ArchiveExtractBench.cs         ← NEW
+    ProcessCreateBench.cs          ← NEW
+    ExtensionSensitivityBench.cs   ← NEW  (replaces RegistryBench)
+    DllLoadBench.cs                ← NEW
+    FileWriteContentBench.cs       ← NEW
+    MotwBench.cs                   ← NEW
   Collectors/
-    WprCollector.cs            ← NEW
-    TypeperfCollector.cs       ← NEW
-```
-
-## Tool Installation
-
-### `PythonInstaller.cs`
-
-Python 3.x installation on Windows. The legacy full installer (deprecated as of 3.14, but still available for 3.12/3.13 LTS) supports silent unattended install via `/quiet` with property flags.
-
-For Windows Server VMs where MSIX may not work, use the legacy installer:
-
-```csharp
-using System.Diagnostics;
-using System.Net.Http;
-
-namespace AvBench.Core.Setup;
-
-public sealed class PythonInstaller : ToolInstaller
-{
-    public override string Name => "Python";
-
-    // Pin a specific Python version — 3.12.x LTS is safer for Nuitka compatibility
-    private const string DefaultUrl =
-        "https://www.python.org/ftp/python/3.12.8/python-3.12.8-amd64.exe";
-
-    public override string? Detect()
-    {
-        return RunAndCapture("python", "--version");
-    }
-
-    public override async Task InstallAsync(CancellationToken ct = default)
-    {
-        var tempPath = Path.Combine(Path.GetTempPath(), "python-installer.exe");
-        await DownloadFileAsync(DefaultUrl, tempPath, ct);
-
-        // Silent install flags (legacy installer, not the new Install Manager):
-        // /quiet           — no UI
-        // InstallAllUsers=1 — system-wide install
-        // PrependPath=1     — add Python to PATH
-        // Include_test=0    — skip test suite (saves space)
-        // Include_tcltk=0   — skip Tcl/Tk (don't need GUI)
-        var exitCode = RunProcess(tempPath,
-            "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0 Include_tcltk=0");
-
-        if (exitCode != 0)
-            throw new InvalidOperationException($"Python installer exited with code {exitCode}");
-
-        // Python installs to C:\Program Files\Python3xx — add to PATH
-        var pythonDir = FindPythonDir();
-        if (pythonDir is not null)
-        {
-            var scriptsDir = Path.Combine(pythonDir, "Scripts");
-            var currentPath = Environment.GetEnvironmentVariable("PATH") ?? "";
-            Environment.SetEnvironmentVariable("PATH",
-                $"{pythonDir};{scriptsDir};{currentPath}");
-        }
-    }
-
-    private static string? FindPythonDir()
-    {
-        // Check common install locations
-        var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        foreach (var dir in Directory.GetDirectories(programFiles, "Python*"))
-        {
-            if (File.Exists(Path.Combine(dir, "python.exe")))
-                return dir;
-        }
-        return null;
-    }
-
-    private static async Task DownloadFileAsync(string url, string dest, CancellationToken ct)
-    {
-        using var http = new HttpClient();
-        using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
-        response.EnsureSuccessStatusCode();
-        await using var fs = File.Create(dest);
-        await response.Content.CopyToAsync(fs, ct);
-    }
-
-    private static int RunProcess(string fileName, string arguments)
-    {
-        var psi = new ProcessStartInfo(fileName, arguments)
-        {
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        var proc = Process.Start(psi)!;
-        proc.WaitForExit();
-        return proc.ExitCode;
-    }
-
-    private static string? RunAndCapture(string fileName, string arguments)
-    {
-        try
-        {
-            var psi = new ProcessStartInfo(fileName, arguments)
-            {
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            var proc = Process.Start(psi);
-            if (proc is null) return null;
-            var output = proc.StandardOutput.ReadToEnd().Trim();
-            proc.WaitForExit();
-            return proc.ExitCode == 0 ? output : null;
-        }
-        catch { return null; }
-    }
-}
-```
-
-### `NuitkaInstaller.cs`
-
-Nuitka installs via pip. Requires Python to be installed first.
-
-```csharp
-using System.Diagnostics;
-
-namespace AvBench.Core.Setup;
-
-public sealed class NuitkaInstaller : ToolInstaller
-{
-    public override string Name => "Nuitka";
-
-    public override string? Detect()
-    {
-        return RunAndCapture("python", "-m nuitka --version");
-    }
-
-    public override Task InstallAsync(CancellationToken ct = default)
-    {
-        // Install Nuitka and its recommended dependency (ordered-set)
-        var exitCode = RunProcess("python",
-            "-m pip install nuitka ordered-set --quiet");
-
-        if (exitCode != 0)
-            throw new InvalidOperationException($"pip install nuitka exited with code {exitCode}");
-
-        return Task.CompletedTask;
-    }
-
-    private static int RunProcess(string fileName, string arguments)
-    {
-        var psi = new ProcessStartInfo(fileName, arguments)
-        {
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        var proc = Process.Start(psi)!;
-        proc.WaitForExit();
-        return proc.ExitCode;
-    }
-
-    private static string? RunAndCapture(string fileName, string arguments)
-    {
-        try
-        {
-            var psi = new ProcessStartInfo(fileName, arguments)
-            {
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            var proc = Process.Start(psi);
-            if (proc is null) return null;
-            var output = proc.StandardOutput.ReadToEnd().Trim();
-            proc.WaitForExit();
-            return proc.ExitCode == 0 ? output : null;
-        }
-        catch { return null; }
-    }
-}
-```
-
-## Repo Setup for Black
-
-```csharp
-public static void HydrateBlack(string benchDir)
-{
-    var blackDir = Path.Combine(benchDir, "black");
-    RepoCloner.CloneAndPin("https://github.com/psf/black", blackDir, pinnedSha: null);
-
-    // Create a venv for isolation
-    var venvDir = Path.Combine(blackDir, ".venv");
-    Console.WriteLine($"[setup] Creating Python venv in {venvDir}");
-    RunProcess("python", $"-m venv \"{venvDir}\"");
-
-    // Install Black into the venv
-    var pip = Path.Combine(venvDir, "Scripts", "pip.exe");
-    RunProcess(pip, $"install -e \"{blackDir}\" --quiet");
-
-    // Create black_entry.py wrapper for Nuitka
-    var entryPath = Path.Combine(blackDir, "black_entry.py");
-    if (!File.Exists(entryPath))
-    {
-        File.WriteAllText(entryPath, """
-            import sys
-            from black import patched_main
-            patched_main()
-            """);
-        Console.WriteLine($"[setup] Created {entryPath}");
-    }
-}
-```
-
-## Scenario Definitions
-
-### `BlackNuitkaScenario.cs`
-
-```csharp
-namespace AvBench.Core.Scenarios;
-
-public static class BlackNuitkaScenario
-{
-    public static List<ScenarioDefinition> Create(string blackDir)
-    {
-        var venvPython = Path.Combine(blackDir, ".venv", "Scripts", "python.exe");
-        var entryPoint = Path.Combine(blackDir, "black_entry.py");
-        var outputDir = Path.Combine(blackDir, "nuitka_output");
-
-        return
-        [
-            new ScenarioDefinition
-            {
-                Id = "nuitka-standalone",
-                FileName = venvPython,
-                Arguments = $"-m nuitka --standalone " +
-                            $"--output-dir=\"{outputDir}\" " +
-                            $"\"{entryPoint}\"",
-                WorkingDirectory = blackDir,
-                PreActions =
-                [
-                    // Clean previous build output
-                    $"if exist \"{outputDir}\" rmdir /s /q \"{outputDir}\""
-                ],
-                PostActions =
-                [
-                    // Smoke test: run the compiled binary
-                    $"\"{Path.Combine(outputDir, "black_entry.dist", "black_entry.exe")}\" --version"
-                ]
-            },
-            new ScenarioDefinition
-            {
-                Id = "nuitka-onefile",
-                FileName = venvPython,
-                Arguments = $"-m nuitka --onefile " +
-                            $"--output-dir=\"{outputDir}\" " +
-                            $"\"{entryPoint}\"",
-                WorkingDirectory = blackDir,
-                PreActions =
-                [
-                    $"if exist \"{outputDir}\" rmdir /s /q \"{outputDir}\""
-                ],
-                PostActions =
-                [
-                    $"\"{Path.Combine(outputDir, "black_entry.exe")}\" --version"
-                ]
-            }
-        ];
-    }
-}
+    TypeperfCollector.cs           ← NEW
 ```
 
 ## Remaining API Microbench Families
 
-All microbench families follow the same pattern as `FileMicrobenchScenario` from M1: warmup, fixed-iteration measurement, batch timing. Each is an in-process benchmark wrapped in a `ProcessTreeRunner` Job for consistent measurement.
+All microbench families follow the same pattern as `FileMicrobenchScenario` from M1: fixed-iteration measurement, batch timing. No warmup run is performed — every iteration is measured cold, because AV cache priming from a discarded warmup would hide the real overhead that developers experience on first build, package restore, or branch switch. Each is an in-process benchmark wrapped in a `ProcessTreeRunner` Job for consistent measurement.
 
-### `FileOpenCloseBench.cs`
+All microbench timing uses `Stopwatch` (QPC-based, sub-microsecond resolution) for wall time measurements. Job object CPU accounting (~15.625ms granularity) is too coarse for individual operations but the aggregate wall time over thousands of ops yields reliable ops/sec and mean latency figures.
+
+Every bench records per-operation QPC ticks in a pre-allocated `long[]` and computes **p50 / p95 / p99 / max** latency percentiles at the end. This captures AV-induced tail latency that mean alone would hide. The shared `LatencyHistogram` helper handles recording and percentile computation.
+
+### `LatencyHistogram.cs` (shared helper)
 
 ```csharp
 using System.Diagnostics;
-using AvBench.Core.Models;
 
 namespace AvBench.Core.Scenarios;
 
-public static class FileOpenCloseBench
+/// <summary>
+/// Pre-allocated array for per-op latency recording. Computes percentiles after the run.
+/// Overhead: one Stopwatch.GetTimestamp() call per op (~10–20 ns), negligible for μs-scale operations.
+/// </summary>
+public sealed class LatencyHistogram
 {
-    public static RunResult Execute(string tempRoot, int totalOps, string avName)
+    private readonly long[] _ticks;
+    private int _count;
+
+    public LatencyHistogram(int capacity) => _ticks = new long[capacity];
+
+    /// <summary>Record one operation's elapsed Stopwatch ticks.</summary>
+    public void Record(long elapsedTicks) => _ticks[_count++] = elapsedTicks;
+
+    /// <summary>Sort and return p50/p95/p99/max in microseconds.</summary>
+    public string Summarize()
     {
-        // Create one target file to repeatedly open/close
-        Directory.CreateDirectory(tempRoot);
-        var targetPath = Path.Combine(tempRoot, "bench_target.tmp");
-        File.WriteAllBytes(targetPath, new byte[64]);
-
-        // Warmup
-        for (int i = 0; i < 100; i++)
-        {
-            using var fs = File.OpenRead(targetPath);
-        }
-
-        var sw = Stopwatch.StartNew();
-        for (int i = 0; i < totalOps; i++)
-        {
-            using var fs = File.OpenRead(targetPath);
-        }
-        sw.Stop();
-
-        double opsPerSec = totalOps / sw.Elapsed.TotalSeconds;
-        double meanLatencyUs = sw.Elapsed.TotalMicroseconds / totalOps;
-
-        File.Delete(targetPath);
-
-        return new RunResult
-        {
-            ScenarioId = "file-open-close",
-            AvName = avName,
-            TimestampUtc = DateTime.UtcNow,
-            Command = $"file-open-close ops={totalOps} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1}",
-            WorkingDir = tempRoot,
-            ExitCode = 0,
-            WallMs = sw.ElapsedMilliseconds
-        };
+        var span = _ticks.AsSpan(0, _count);
+        span.Sort();
+        double freq = Stopwatch.Frequency;
+        P50Us = span[(int)(span.Length * 0.50)] / freq * 1_000_000;
+        P95Us = span[(int)(span.Length * 0.95)] / freq * 1_000_000;
+        P99Us = span[(int)(span.Length * 0.99)] / freq * 1_000_000;
+        MaxUs = span[^1] / freq * 1_000_000;
+        return $"p50_us={P50Us:F1} p95_us={P95Us:F1} p99_us={P99Us:F1} max_us={MaxUs:F1}";
     }
+
+    public double P50Us { get; private set; }
+    public double P95Us { get; private set; }
+    public double P99Us { get; private set; }
+    public double MaxUs { get; private set; }
 }
 ```
 
-### `DirEnumerateBench.cs`
+### `ArchiveExtractBench.cs`
+
+The single highest-impact AV operation for developers. `npm install` extracts 10,000–50,000 files into `node_modules`, `NuGet restore` extracts hundreds of `.nupkg` (zip) packages, `pip install` extracts wheels. ClamAV’s own docs note that on-access scanning during package installation can cause **1000× slowdowns**. Chromium’s build docs explicitly recommend excluding build directories from antivirus. AV-Comparatives’ performance methodology includes archiving/unarchiving as a distinct test category.
+
+This bench extracts a pre-built zip containing ~2,000 heterogeneous files (mixed .cs/.js/.dll/.json/.xml/.exe at varying sizes from 64B to 64KB) into a temp directory, then deletes the tree. Each file triggers `IRP_MJ_CREATE` + `IRP_MJ_WRITE` + content scan + extension-based dispatch — a burst workload that AV can’t cache.
 
 ```csharp
 using System.Diagnostics;
+using System.IO.Compression;
 using AvBench.Core.Models;
 
 namespace AvBench.Core.Scenarios;
 
-public static class DirEnumerateBench
+public static class ArchiveExtractBench
 {
-    public static RunResult Execute(string targetDir, int iterations, string avName)
+    /// <summary>
+    /// One-time setup: create a zip archive with ~2,000 heterogeneous files.
+    /// File mix simulates a developer package restore (NuGet, npm, pip).
+    /// </summary>
+    public static string Setup(string tempRoot)
     {
-        // targetDir should be a sizable directory tree (e.g., a cloned repo)
-        if (!Directory.Exists(targetDir))
-            throw new DirectoryNotFoundException($"Target dir not found: {targetDir}");
+        var stageDir = Path.Combine(tempRoot, "archive_stage");
+        Directory.CreateDirectory(stageDir);
 
-        // Warmup
-        _ = Directory.EnumerateFileSystemEntries(targetDir, "*", SearchOption.AllDirectories).Count();
+        var rng = new Random(42); // deterministic for reproducibility
+        string[] extensions = [".cs", ".js", ".json", ".xml", ".dll", ".exe", ".txt", ".md"];
+        int[] sizes = [64, 256, 1024, 4096, 16384, 65536];
 
+        for (int i = 0; i < 2000; i++)
+        {
+            string ext = extensions[i % extensions.Length];
+            int size = sizes[i % sizes.Length];
+            string subDir = Path.Combine(stageDir, $"pkg_{i / 100}");
+            Directory.CreateDirectory(subDir);
+
+            var content = new byte[size];
+            rng.NextBytes(content);
+
+            // DLL/EXE files get MZ header to trigger PE content scanning
+            if ((ext == ".dll" || ext == ".exe") && size >= 2)
+            {
+                content[0] = 0x4D; // 'M'
+                content[1] = 0x5A; // 'Z'
+            }
+
+            File.WriteAllBytes(Path.Combine(subDir, $"file_{i}{ext}"), content);
+        }
+
+        var zipPath = Path.Combine(tempRoot, "bench_archive.zip");
+        if (File.Exists(zipPath)) File.Delete(zipPath);
+        ZipFile.CreateFromDirectory(stageDir, zipPath);
+
+        // Clean up staging dir
+        Directory.Delete(stageDir, recursive: true);
+        return zipPath;
+    }
+
+    public static RunResult Execute(string tempRoot, string zipPath, int iterations, string avName)
+    {
+        var hist = new LatencyHistogram(iterations);
         var sw = Stopwatch.StartNew();
-        long totalEntries = 0;
         for (int i = 0; i < iterations; i++)
         {
-            totalEntries += Directory.EnumerateFileSystemEntries(
-                targetDir, "*", SearchOption.AllDirectories).Count();
+            var extractDir = Path.Combine(tempRoot, $"archive_run_{i}");
+            long t0 = Stopwatch.GetTimestamp();
+            ZipFile.ExtractToDirectory(zipPath, extractDir);
+            Directory.Delete(extractDir, recursive: true);
+            hist.Record(Stopwatch.GetTimestamp() - t0);
         }
         sw.Stop();
 
         double opsPerSec = iterations / sw.Elapsed.TotalSeconds;
+        double meanLatencyMs = sw.Elapsed.TotalMilliseconds / iterations;
 
         return new RunResult
         {
-            ScenarioId = "dir-enumerate",
+            ScenarioId = "archive-extract",
             AvName = avName,
             TimestampUtc = DateTime.UtcNow,
-            Command = $"dir-enumerate iters={iterations} entries_per_iter={totalEntries / iterations} ops_sec={opsPerSec:F1}",
-            WorkingDir = targetDir,
-            ExitCode = 0,
-            WallMs = sw.ElapsedMilliseconds
-        };
-    }
-}
-```
-
-### `CopyRenameMoveBench.cs`
-
-```csharp
-using System.Diagnostics;
-using AvBench.Core.Models;
-
-namespace AvBench.Core.Scenarios;
-
-public static class CopyRenameMoveBench
-{
-    public static RunResult Execute(string tempRoot, int totalOps, string avName)
-    {
-        Directory.CreateDirectory(tempRoot);
-        var sourceData = new byte[1024]; // 1KB files
-
-        // Warmup
-        RunBatch(tempRoot, sourceData, 50);
-
-        var sw = Stopwatch.StartNew();
-        RunBatch(tempRoot, sourceData, totalOps);
-        sw.Stop();
-
-        double opsPerSec = totalOps / sw.Elapsed.TotalSeconds;
-        double meanLatencyUs = sw.Elapsed.TotalMicroseconds / totalOps;
-
-        return new RunResult
-        {
-            ScenarioId = "copy-rename-move",
-            AvName = avName,
-            TimestampUtc = DateTime.UtcNow,
-            Command = $"copy-rename-move ops={totalOps} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1}",
+            Command = $"archive-extract iters={iterations} files_per_iter=2000 ops_sec={opsPerSec:F2} mean_latency_ms={meanLatencyMs:F0} {hist.Summarize()}",
             WorkingDir = tempRoot,
             ExitCode = 0,
-            WallMs = sw.ElapsedMilliseconds
+            WallMs = sw.ElapsedMilliseconds,
+            P50Us = hist.P50Us,
+            P95Us = hist.P95Us,
+            P99Us = hist.P99Us,
+            MaxUs = hist.MaxUs
         };
-    }
-
-    private static void RunBatch(string tempRoot, byte[] data, int count)
-    {
-        for (int i = 0; i < count; i++)
-        {
-            var src = Path.Combine(tempRoot, $"src_{i}.tmp");
-            var dst = Path.Combine(tempRoot, $"dst_{i}.tmp");
-            var moved = Path.Combine(tempRoot, $"moved_{i}.tmp");
-
-            File.WriteAllBytes(src, data);
-            File.Copy(src, dst, overwrite: true);
-            File.Move(dst, moved, overwrite: true);
-
-            File.Delete(src);
-            File.Delete(moved);
-        }
     }
 }
 ```
 
 ### `ProcessCreateBench.cs`
+
+Spawns an **unsigned** noop.exe instead of `cmd.exe`. AV trust-caches skip scanning for Microsoft-signed binaries; an unsigned exe forces a full on-execute scan every time — revealing the true AV overhead for process creation.
+
+A one-time `Setup()` call compiles a trivial `return 0;` console app via `dotnet build`. The resulting apphost exe is unsigned (no Authenticode signature).
 
 ```csharp
 using System.Diagnostics;
@@ -461,15 +185,52 @@ namespace AvBench.Core.Scenarios;
 
 public static class ProcessCreateBench
 {
-    public static RunResult Execute(int totalOps, string avName)
+    /// <summary>
+    /// One-time setup: build a trivial unsigned exe via `dotnet build`.
+    /// Returns the path to the built noop.exe.
+    /// </summary>
+    public static string Setup(string tempRoot)
     {
-        // Warmup
-        for (int i = 0; i < 10; i++)
-            RunCmd();
+        var projDir = Path.Combine(tempRoot, "procbench");
+        Directory.CreateDirectory(projDir);
+        File.WriteAllText(Path.Combine(projDir, "Program.cs"), "return 0;");
+        File.WriteAllText(Path.Combine(projDir, "noop.csproj"),
+            """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <OutputType>Exe</OutputType>
+                <TargetFramework>net8.0</TargetFramework>
+              </PropertyGroup>
+            </Project>
+            """);
 
+        var psi = new ProcessStartInfo("dotnet", "build -c Release -o .")
+        {
+            WorkingDirectory = projDir,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        using var build = Process.Start(psi)!;
+        build.WaitForExit();
+
+        if (build.ExitCode != 0)
+            throw new InvalidOperationException("Failed to build unsigned noop.exe for ProcessCreateBench");
+
+        return Path.Combine(projDir, "noop.exe");
+    }
+
+    public static RunResult Execute(string unsignedExePath, int totalOps, string avName)
+    {
+        var hist = new LatencyHistogram(totalOps);
         var sw = Stopwatch.StartNew();
         for (int i = 0; i < totalOps; i++)
-            RunCmd();
+        {
+            long t0 = Stopwatch.GetTimestamp();
+            RunExe(unsignedExePath);
+            hist.Record(Stopwatch.GetTimestamp() - t0);
+        }
         sw.Stop();
 
         double opsPerSec = totalOps / sw.Elapsed.TotalSeconds;
@@ -480,16 +241,20 @@ public static class ProcessCreateBench
             ScenarioId = "process-create-wait",
             AvName = avName,
             TimestampUtc = DateTime.UtcNow,
-            Command = $"process-create-wait ops={totalOps} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1}",
-            WorkingDir = Environment.CurrentDirectory,
+            Command = $"process-create-wait ops={totalOps} unsigned_exe ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1} {hist.Summarize()}",
+            WorkingDir = Path.GetDirectoryName(unsignedExePath)!,
             ExitCode = 0,
-            WallMs = sw.ElapsedMilliseconds
+            WallMs = sw.ElapsedMilliseconds,
+            P50Us = hist.P50Us,
+            P95Us = hist.P95Us,
+            P99Us = hist.P99Us,
+            MaxUs = hist.MaxUs
         };
     }
 
-    private static void RunCmd()
+    private static void RunExe(string exePath)
     {
-        var psi = new ProcessStartInfo("cmd.exe", "/c echo.")
+        var psi = new ProcessStartInfo(exePath)
         {
             UseShellExecute = false,
             CreateNoWindow = true,
@@ -502,55 +267,68 @@ public static class ProcessCreateBench
 }
 ```
 
-### `RegistryBench.cs`
+### `ExtensionSensitivityBench.cs`
+
+Replaces `RegistryBench` (registry monitoring is EDR/HIPS, not standard AV minifilter — low signal for AV benchmarking).
+
+AV products use file extensions for dispatch: `.exe`/`.dll` trigger PE header parsing and signature checks, `.js` triggers script-content heuristic scanning, `.ps1` triggers heuristic scanning for malicious PowerShell patterns. (Note: AMSI integration fires when a script *engine* executes a script, not on file write — this bench measures the minifilter-level extension dispatch cost, not AMSI.) This bench creates+writes+deletes files with **identical random content** across four extensions, isolating the extension-based dispatch cost.
 
 ```csharp
 using System.Diagnostics;
-using Microsoft.Win32;
 using AvBench.Core.Models;
 
 namespace AvBench.Core.Scenarios;
 
-public static class RegistryBench
+/// <summary>
+/// Measures AV extension-based dispatch cost: same random content,
+/// different file extensions (.exe, .dll, .js, .ps1).
+/// </summary>
+public static class ExtensionSensitivityBench
 {
-    public static RunResult Execute(int totalOps, string avName)
+    public static RunResult Execute(string tempRoot, int opsPerExtension, string ext, string avName)
     {
-        // Open and query a well-known readonly registry key
-        const string keyPath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion";
+        Directory.CreateDirectory(tempRoot);
+        var content = new byte[4096]; // 4KB — above typical AV content-scan threshold
+        Random.Shared.NextBytes(content);
 
-        // Warmup
-        for (int i = 0; i < 100; i++)
-            QueryRegistry(keyPath);
-
+        var hist = new LatencyHistogram(opsPerExtension);
         var sw = Stopwatch.StartNew();
-        for (int i = 0; i < totalOps; i++)
-            QueryRegistry(keyPath);
+        for (int i = 0; i < opsPerExtension; i++)
+        {
+            var p = Path.Combine(tempRoot, $"bench_{i}{ext}");
+            long t0 = Stopwatch.GetTimestamp();
+            File.WriteAllBytes(p, content);
+            File.Delete(p);
+            hist.Record(Stopwatch.GetTimestamp() - t0);
+        }
         sw.Stop();
 
-        double opsPerSec = totalOps / sw.Elapsed.TotalSeconds;
-        double meanLatencyUs = sw.Elapsed.TotalMicroseconds / totalOps;
+        double opsPerSec = opsPerExtension / sw.Elapsed.TotalSeconds;
+        double meanLatencyUs = sw.Elapsed.TotalMicroseconds / opsPerExtension;
 
         return new RunResult
         {
-            ScenarioId = "registry-open-query",
+            ScenarioId = $"ext-sensitivity-{ext.TrimStart('.')}",
             AvName = avName,
             TimestampUtc = DateTime.UtcNow,
-            Command = $"registry-open-query ops={totalOps} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1}",
-            WorkingDir = Environment.CurrentDirectory,
+            Command = $"ext-sensitivity ext={ext} ops={opsPerExtension} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1} {hist.Summarize()}",
+            WorkingDir = tempRoot,
             ExitCode = 0,
-            WallMs = sw.ElapsedMilliseconds
+            WallMs = sw.ElapsedMilliseconds,
+            P50Us = hist.P50Us,
+            P95Us = hist.P95Us,
+            P99Us = hist.P99Us,
+            MaxUs = hist.MaxUs
         };
-    }
-
-    private static void QueryRegistry(string keyPath)
-    {
-        using var key = Registry.LocalMachine.OpenSubKey(keyPath);
-        _ = key?.GetValue("ProductName");
     }
 }
 ```
 
 ### `DllLoadBench.cs`
+
+Copies a system DLL to a unique temp path each iteration, then loads and unloads it. This bypasses the Windows section cache, forcing AV to scan each copy as a "new" DLL — one of the strongest AV signals for developer workloads that generate fresh binaries.
+
+The cached variant (`dll-load-cached`) was removed because it only measures the OS loader fast-path after AV has already cached the verdict — no unique AV signal.
 
 ```csharp
 using System.Diagnostics;
@@ -569,18 +347,28 @@ public static class DllLoadBench
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool FreeLibrary(IntPtr hModule);
 
-    public static RunResult Execute(int totalOps, string avName)
+    /// <summary>
+    /// Copy a system DLL to a unique temp path each iteration, then load/unload.
+    /// Forces AV to scan each copy (no section-cache hit).
+    /// </summary>
+    public static RunResult Execute(string tempRoot, int totalOps, string avName)
     {
-        // Use a DLL that's always present on Windows
-        const string dllName = "urlmon.dll";
+        Directory.CreateDirectory(tempRoot);
+        var systemDir = Environment.GetFolderPath(Environment.SpecialFolder.System);
+        var sourceDll = Path.Combine(systemDir, "urlmon.dll");
 
-        // Warmup
-        for (int i = 0; i < 10; i++)
-            LoadUnload(dllName);
-
+        var hist = new LatencyHistogram(totalOps);
         var sw = Stopwatch.StartNew();
         for (int i = 0; i < totalOps; i++)
-            LoadUnload(dllName);
+        {
+            var uniquePath = Path.Combine(tempRoot, $"bench_{i}.dll");
+
+            long t0 = Stopwatch.GetTimestamp();
+            File.Copy(sourceDll, uniquePath, overwrite: true);
+            LoadUnload(uniquePath);
+            File.Delete(uniquePath);
+            hist.Record(Stopwatch.GetTimestamp() - t0);
+        }
         sw.Stop();
 
         double opsPerSec = totalOps / sw.Elapsed.TotalSeconds;
@@ -588,21 +376,177 @@ public static class DllLoadBench
 
         return new RunResult
         {
-            ScenarioId = "dll-load-unload",
+            ScenarioId = "dll-load-unique",
             AvName = avName,
             TimestampUtc = DateTime.UtcNow,
-            Command = $"dll-load-unload ops={totalOps} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1}",
-            WorkingDir = Environment.CurrentDirectory,
+            Command = $"dll-load-unique ops={totalOps} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1} {hist.Summarize()}",
+            WorkingDir = tempRoot,
             ExitCode = 0,
-            WallMs = sw.ElapsedMilliseconds
+            WallMs = sw.ElapsedMilliseconds,
+            P50Us = hist.P50Us,
+            P95Us = hist.P95Us,
+            P99Us = hist.P99Us,
+            MaxUs = hist.MaxUs
         };
     }
 
-    private static void LoadUnload(string dllName)
+    private static void LoadUnload(string dllPath)
     {
-        var handle = LoadLibrary(dllName);
+        var handle = LoadLibrary(dllPath);
         if (handle != IntPtr.Zero)
             FreeLibrary(handle);
+    }
+}
+```
+
+### `FileWriteContentBench.cs`
+
+Measures AV **content-inspection cost** by writing **real, unique-hash unsigned PE files** and deleting them. Each iteration clones the unsigned `noop.exe` template (read once at setup) and patches 4 bytes in the DOS stub padding area (offsets `0x40`–`0x43`) with the loop counter. This produces a structurally valid PE with a **unique file hash on every single write** — the AV engine cannot cache a verdict and must perform full PE inspection (header validation, section enumeration, hash computation, unsigned-signature check) every time. The ~1 μs cost of a 65 KB `Buffer.BlockCopy` + 4-byte patch is <1% of the AV file-write overhead (typically 100–10,000 μs), so the measurement noise is negligible.
+
+Alternates `.exe` and `.dll` extensions across iterations to exercise both PE extension paths.
+
+```csharp
+using System.Diagnostics;
+using AvBench.Core.Models;
+
+namespace AvBench.Core.Scenarios;
+
+/// <summary>
+/// Create→write→close→delete with real unsigned PE content.
+/// Clones + patches 4 bytes in-loop so every iteration writes a unique-hash
+/// unsigned PE that the AV engine has never seen. Alternates .exe/.dll extensions.
+/// </summary>
+public static class FileWriteContentBench
+{
+    public static RunResult Execute(
+        string tempRoot, string noopExePath, int totalOps, string avName)
+    {
+        Directory.CreateDirectory(tempRoot);
+        var template = File.ReadAllBytes(noopExePath);
+        var content = new byte[template.Length];
+        string[] extensions = [".exe", ".dll"];
+
+        var hist = new LatencyHistogram(totalOps);
+        var sw = Stopwatch.StartNew();
+        for (int i = 0; i < totalOps; i++)
+        {
+            // Clone template and patch 4 bytes → unique hash every iteration
+            Buffer.BlockCopy(template, 0, content, 0, template.Length);
+            content[0x40] = (byte)(i);
+            content[0x41] = (byte)(i >> 8);
+            content[0x42] = (byte)(i >> 16);
+            content[0x43] = (byte)(i >> 24);
+
+            var ext = extensions[i % extensions.Length];
+            var p = Path.Combine(tempRoot, $"bench_{i}{ext}");
+            long t0 = Stopwatch.GetTimestamp();
+            File.WriteAllBytes(p, content);
+            File.Delete(p);
+            hist.Record(Stopwatch.GetTimestamp() - t0);
+        }
+        sw.Stop();
+
+        double opsPerSec = totalOps / sw.Elapsed.TotalSeconds;
+        double meanLatencyUs = sw.Elapsed.TotalMicroseconds / totalOps;
+
+        return new RunResult
+        {
+            ScenarioId = "file-write-pe",
+            AvName = avName,
+            TimestampUtc = DateTime.UtcNow,
+            Command = $"file-write-pe ops={totalOps} pe_size={template.Length} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1} {hist.Summarize()}",
+            WorkingDir = tempRoot,
+            ExitCode = 0,
+            WallMs = sw.ElapsedMilliseconds,
+            P50Us = hist.P50Us,
+            P95Us = hist.P95Us,
+            P99Us = hist.P99Us,
+            MaxUs = hist.MaxUs
+        };
+    }
+}
+```
+
+### `MotwBench.cs`
+
+Measures the AV cost of **Mark of the Web** (`Zone.Identifier` NTFS alternate data stream) on **actual process execution**. The real MOTW escalation — SmartScreen reputation lookup, cloud query, AMSI scan, signature verification — fires when you **execute** a MOTW-tagged binary, not merely when you create it. Writing a fake `.exe` only tests the minifilter file-create path, which ExtensionSensitivityBench already covers.
+
+This bench reuses the real unsigned `noop.exe` from `ProcessCreateBench.Setup()`. Each iteration copies it to a unique temp path, optionally stamps `Zone.Identifier` ADS (`ZoneId=3`, Internet), then **launches and waits for it**. The delta between no-motw and motw-zone3 isolates the full AV execution-time overhead for downloaded binaries — exactly what happens when developers run tools pulled from CI, NuGet native packages, or GitHub Releases.
+
+```csharp
+using System.Diagnostics;
+using AvBench.Core.Models;
+
+namespace AvBench.Core.Scenarios;
+
+/// <summary>
+/// Measures AV overhead from executing a MOTW-tagged binary.
+/// Two variants:
+///   no-motw  — copy + execute unsigned noop.exe (locally-built binary)
+///   motw-zone3 — copy + stamp Zone.Identifier ZoneId=3 + execute (downloaded binary)
+/// The exe is real (built by ProcessCreateBench.Setup), not a fake MZ stub.
+/// </summary>
+public static class MotwBench
+{
+    /// <param name="unsignedExePath">Path to the real unsigned noop.exe built by ProcessCreateBench.Setup().</param>
+    public static RunResult Execute(
+        string tempRoot, string unsignedExePath, int totalOps, bool applyMotw, string avName)
+    {
+        Directory.CreateDirectory(tempRoot);
+        string variant = applyMotw ? "motw-zone3" : "no-motw";
+
+        var hist = new LatencyHistogram(totalOps);
+        var sw = Stopwatch.StartNew();
+        for (int i = 0; i < totalOps; i++)
+        {
+            var copyPath = Path.Combine(tempRoot, $"bench_{i}.exe");
+            long t0 = Stopwatch.GetTimestamp();
+            CopyAndRun(unsignedExePath, copyPath, applyMotw);
+            hist.Record(Stopwatch.GetTimestamp() - t0);
+        }
+        sw.Stop();
+
+        double opsPerSec = totalOps / sw.Elapsed.TotalSeconds;
+        double meanLatencyUs = sw.Elapsed.TotalMicroseconds / totalOps;
+
+        return new RunResult
+        {
+            ScenarioId = $"motw-exe-{variant}",
+            AvName = avName,
+            TimestampUtc = DateTime.UtcNow,
+            Command = $"motw-exe variant={variant} ops={totalOps} ops_sec={opsPerSec:F0} mean_latency_us={meanLatencyUs:F1} {hist.Summarize()}",
+            WorkingDir = tempRoot,
+            ExitCode = 0,
+            WallMs = sw.ElapsedMilliseconds,
+            P50Us = hist.P50Us,
+            P95Us = hist.P95Us,
+            P99Us = hist.P99Us,
+            MaxUs = hist.MaxUs
+        };
+    }
+
+    private static void CopyAndRun(string srcExe, string destExe, bool applyMotw)
+    {
+        File.Copy(srcExe, destExe, overwrite: true);
+
+        if (applyMotw)
+        {
+            File.WriteAllText(
+                destExe + ":Zone.Identifier",
+                "[ZoneTransfer]\r\nZoneId=3\r\n");
+        }
+
+        var psi = new ProcessStartInfo(destExe)
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true
+        };
+        using var proc = Process.Start(psi)!;
+        proc.StandardOutput.ReadToEnd();
+        proc.WaitForExit();
+
+        File.Delete(destExe);
     }
 }
 ```
@@ -626,98 +570,6 @@ public interface IOptInCollector : IDisposable
 
     /// <summary>Stop collecting after the workload completes.</summary>
     void Stop();
-}
-```
-
-### `WprCollector.cs`
-
-Windows Performance Recorder (WPR) captures ETW traces. Requires Windows ADK or built-in WPR on Windows 10+.
-
-Key commands:
-- `wpr -start GeneralProfile` — start recording with built-in GeneralProfile (verbose, memory mode)
-- `wpr -stop <file.etl>` — stop and save trace
-- `wpr -cancel` — cancel without saving
-
-```csharp
-using System.Diagnostics;
-
-namespace AvBench.Core.Collectors;
-
-public sealed class WprCollector : IOptInCollector
-{
-    private string _outputPath = "";
-    private bool _started;
-
-    /// <summary>
-    /// Start WPR recording with the GeneralProfile in memory mode.
-    /// Memory mode records to a circular buffer; file mode records unbounded.
-    /// Memory mode is preferred for benchmarks — it captures the last N seconds
-    /// without unbounded disk I/O that would perturb the measurement.
-    /// </summary>
-    public void Start(string outputDir)
-    {
-        _outputPath = Path.Combine(outputDir, "trace.etl");
-
-        // Cancel any existing session first (safe if none running)
-        RunWpr("-cancel");
-
-        // Start: GeneralProfile captures CPU sampling, disk I/O, memory
-        // .verbose gives full detail (vs .light which is lower overhead)
-        var exitCode = RunWpr("-start GeneralProfile.Verbose");
-        if (exitCode != 0)
-        {
-            Console.WriteLine($"[trace] WARNING: wpr -start failed with code {exitCode}");
-            return;
-        }
-
-        _started = true;
-        Console.WriteLine("[trace] WPR recording started (GeneralProfile.Verbose)");
-    }
-
-    public void Stop()
-    {
-        if (!_started) return;
-
-        var exitCode = RunWpr($"-stop \"{_outputPath}\"");
-        _started = false;
-
-        if (exitCode != 0)
-            Console.WriteLine($"[trace] WARNING: wpr -stop failed with code {exitCode}");
-        else
-            Console.WriteLine($"[trace] Trace saved: {_outputPath}");
-    }
-
-    public void Dispose()
-    {
-        if (_started)
-        {
-            // Cancel if stop wasn't called
-            RunWpr("-cancel");
-            _started = false;
-        }
-    }
-
-    private static int RunWpr(string arguments)
-    {
-        try
-        {
-            var psi = new ProcessStartInfo("wpr", arguments)
-            {
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardError = true
-            };
-            var proc = Process.Start(psi);
-            if (proc is null) return -1;
-            proc.WaitForExit(TimeSpan.FromMinutes(5));
-            return proc.ExitCode;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[trace] WPR not available: {ex.Message}");
-            return -1;
-        }
-    }
 }
 ```
 
@@ -819,25 +671,19 @@ Extend `ScenarioRunner` to accept opt-in collectors via CLI flags.
 
 ```csharp
 // In RunCommand.cs
-var traceOption = new Option<bool>("--trace")
-{
-    Description = "Enable WPR ETL trace capture (opt-in)",
-    DefaultValueFactory = _ => false
-};
 var countersOption = new Option<bool>("--counters")
 {
     Description = "Enable typeperf performance counter sampling (opt-in)",
     DefaultValueFactory = _ => false
 };
 
-command.Options.Add(traceOption);
 command.Options.Add(countersOption);
 ```
 
 ### Updated `ScenarioRunner.RunOnce()`
 
 ```csharp
-private RunResult RunOnce(ScenarioDefinition scenario, bool isWarmup, string repDir)
+private RunResult RunOnce(ScenarioDefinition scenario, string repDir)
 {
     foreach (var action in scenario.PreActions)
         RunShell(action, scenario.WorkingDirectory);
@@ -847,13 +693,7 @@ private RunResult RunOnce(ScenarioDefinition scenario, bool isWarmup, string rep
 
     // Start opt-in collectors
     var collectors = new List<IOptInCollector>();
-    if (_enableTrace && !isWarmup)
-    {
-        var wpr = new WprCollector();
-        wpr.Start(repDir);
-        collectors.Add(wpr);
-    }
-    if (_enableCounters && !isWarmup)
+    if (_enableCounters)
     {
         var typeperf = new TypeperfCollector();
         typeperf.Start(repDir);
@@ -881,101 +721,74 @@ private RunResult RunOnce(ScenarioDefinition scenario, bool isWarmup, string rep
 
 ## Extending SetupCommand
 
-```csharp
-// After M2 tools...
-
-// M3 tools
-await new PythonInstaller().EnsureInstalledAsync();
-await new NuitkaInstaller().EnsureInstalledAsync();
-
-// M3 repos
-RepoCloner.HydrateBlack(benchDir.FullName);
-```
+No additional tool installation needed for M3. Setup is unchanged from M2.
 
 ## Extending RunCommand
 
 ```csharp
-// M3 scenarios
-var blackDir = Path.Combine(benchDir, "black");
-scenarios.AddRange(BlackNuitkaScenario.Create(blackDir));
-
 // M3 API microbench — run after compile scenarios
 var tempMicro = Path.Combine(benchDir, "microbench_temp");
-microbenchResults.Add(FileOpenCloseBench.Execute(tempMicro, totalOps: 50_000, avName));
-microbenchResults.Add(DirEnumerateBench.Execute(rgDir, iterations: 20, avName));
-microbenchResults.Add(CopyRenameMoveBench.Execute(tempMicro, totalOps: 5_000, avName));
-microbenchResults.Add(ProcessCreateBench.Execute(totalOps: 500, avName));
-microbenchResults.Add(RegistryBench.Execute(totalOps: 100_000, avName));
-microbenchResults.Add(DllLoadBench.Execute(totalOps: 10_000, avName));
+
+// Archive extraction (highest-impact AV operation for developers)
+var benchZip = ArchiveExtractBench.Setup(tempMicro);
+microbenchResults.Add(ArchiveExtractBench.Execute(tempMicro, benchZip, iterations: 10, avName));
+
+// Process creation with unsigned exe (forces full AV scan)
+var unsignedExe = ProcessCreateBench.Setup(tempMicro);
+microbenchResults.Add(ProcessCreateBench.Execute(unsignedExe, totalOps: 500, avName));
+
+// Extension sensitivity — same content, different extensions
+foreach (string ext in new[] { ".exe", ".dll", ".js", ".ps1" })
+    microbenchResults.Add(ExtensionSensitivityBench.Execute(tempMicro, opsPerExtension: 10_000, ext, avName));
+
+// DLL load: copy to unique temp path each iteration (bypasses section cache)
+microbenchResults.Add(DllLoadBench.Execute(tempMicro, totalOps: 2_000, avName));
+
+// File-write content: in-loop clone+patch of noop.exe → unique-hash PE every iteration
+microbenchResults.Add(FileWriteContentBench.Execute(tempMicro, unsignedExe, totalOps: 10_000, avName));
+
+// MOTW (Mark of the Web): copy + execute real unsigned exe, no-motw vs Zone.Identifier ZoneId=3
+// Reuses the same unsigned noop.exe built above by ProcessCreateBench.Setup()
+microbenchResults.Add(MotwBench.Execute(tempMicro, unsignedExe, totalOps: 500, applyMotw: false, avName));
+microbenchResults.Add(MotwBench.Execute(tempMicro, unsignedExe, totalOps: 500, applyMotw: true, avName));
 ```
 
 ## Implementation Steps (ordered)
 
-### Step 1: Build Python and Nuitka installers
+### Step 1: Build LatencyHistogram helper and remaining API microbench families
 
-Create `PythonInstaller.cs` and `NuitkaInstaller.cs`.
+Create `LatencyHistogram.cs` (shared percentile helper), then each bench file. Test individually:
+- `archive-extract`: setup creates ~2K-file zip, 10 extract iterations, verify all files extracted, verify cleanup
+- `process-create-wait`: build unsigned noop.exe via `dotnet build`, 500 spawns, verify total time
+- `ext-sensitivity`: 10K ops per extension (.exe/.dll/.js/.ps1), verify measurable latency difference across extensions
+- `dll-load-unique`: 2K loads of copied DLL with unique paths, verify no leaked temp files
+- `file-write-content`: 10K ops, each writes a unique-hash unsigned PE (clone+patch noop.exe in-loop), alternating .exe/.dll, verify each file deleted
+- `motw`: 500 ops no-motw vs motw-zone3, copy+execute real unsigned noop.exe, verify NTFS ADS written correctly, verify measurable latency difference
 
-Test on a clean VM:
-1. `PythonInstaller.EnsureInstalledAsync()` → `python --version` works
-2. `NuitkaInstaller.EnsureInstalledAsync()` → `python -m nuitka --version` works
-
-### Step 2: Build Black repo hydration
-
-Add `HydrateBlack()` to `RepoCloner`. Test:
-- venv created, Black installed, `black_entry.py` exists
-
-### Step 3: Build Nuitka scenario definitions
-
-Create `BlackNuitkaScenario.cs`. Test both scenarios standalone:
-- `nuitka-standalone` produces `black_entry.dist/black_entry.exe`
-- `nuitka-onefile` produces `black_entry.exe`
-- Smoke test: compiled binary runs `black --version` successfully
-
-### Step 4: Build remaining API microbench families
-
-Create each bench file. Test individually:
-- `file-open-close`: opsPerSec in plausible range (100K+)
-- `dir-enumerate`: measure a repo dir (~10K entries), completes in seconds
-- `copy-rename-move`: 5K ops completes without leftover temp files
-- `process-create-wait`: 500 `cmd.exe` spawns, verify total time
-- `registry-open-query`: 100K queries, verify no exceptions
-- `dll-load-unload`: 10K loads of urlmon.dll, verify handle cleanup
-
-### Step 5: Build `IOptInCollector` interface
+### Step 2: Build `IOptInCollector` interface
 
 Create the interface in `AvBench.Core/Collectors/`.
 
-### Step 6: Build WPR collector
-
-Create `WprCollector.cs`. Test:
-1. Verify `wpr -start GeneralProfile.Verbose` succeeds
-2. Run a short workload
-3. `wpr -stop trace.etl` saves file
-4. File is valid (open in WPA to verify)
-
-Note: WPR requires Windows ADK or is built-in on Windows 10/11. For Server 2022, install ADK separately.
-
-### Step 7: Build typeperf collector
+### Step 3: Build typeperf collector
 
 Create `TypeperfCollector.cs`. Test:
 1. Start typeperf, wait 5 seconds, stop
 2. Verify `counters.csv` has header row + data rows
 3. Verify all 6 counter columns present
 
-### Step 8: Integrate collectors into ScenarioRunner
+### Step 4: Integrate collector into ScenarioRunner
 
-Update `ScenarioRunner` to accept `--trace` and `--counters` flags. Wire collectors into `RunOnce()`.
+Update `ScenarioRunner` to accept `--counters` flag. Wire collector into `RunOnce()`.
 
-### Step 9: Wire up extended setup/run commands
+### Step 5: Wire up extended run command
 
-Update `SetupCommand.cs` to install Python, Nuitka, and hydrate Black.
-Update `RunCommand.cs` to add `--trace` and `--counters` options and register M3 scenarios.
+Update `RunCommand.cs` to add `--counters` option and register M3 microbench scenarios.
 
-### Step 10: End-to-end test
+### Step 6: End-to-end test
 
 ```powershell
-# Full run with opt-in collectors
-avbench run --name defender-default --bench-dir C:\bench --output results -n 3 --trace --counters
+# Full run with opt-in counter collector
+avbench run --name defender-default --bench-dir C:\bench --output results -n 3 --counters
 ```
 
 Expected additional output per rep:
@@ -986,7 +799,6 @@ results/
       run.json
       stdout.log
       stderr.log
-      trace.etl        ← from --trace
       counters.csv     ← from --counters
 ```
 
@@ -994,24 +806,25 @@ results/
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Python installer version pinned to 3.12.x | Newer Nuitka may require newer Python | Pin compatible versions in installer constants. Test compatibility. |
-| Nuitka standalone build is slow (5-15 min) | Fewer repetitions practical | Use N=3 for Nuitka scenarios, same as LLVM. |
-| Nuitka requires MSVC compiler (via VS Build Tools) | Already installed in M2 | Verify Nuitka can find MSVC. Set `CC` env var if needed. |
-| WPR not available on Windows Server without ADK | `--trace` fails silently | Print clear warning. Add Windows ADK to optional install table. |
-| WPR trace adds disk I/O overhead | Perturbs measurement | Use memory mode (default). Document: `--trace` runs should not be used for timing comparisons, only root-cause analysis. |
 | typeperf counter names may differ by Windows version | Missing columns in CSV | Use well-known counters (`\Processor(_Total)\% Processor Time` etc.) that exist on all Windows versions. |
 | `urlmon.dll` for DLL load bench may not exist on Server Core | Bench fails | Fallback to `ntdll.dll` or `kernel32.dll` which are always loaded. |
-| Legacy Python installer deprecated in 3.14+ | Must use older installer or new Install Manager | Pin Python 3.12.x LTS. For future, add Install Manager support via `winget install 9NQ7512CXL7T`. |
+| `dotnet build` for unsigned noop.exe fails or is slow | ProcessCreateBench setup fails | Detect failure early, skip bench with warning. Build happens once per run, not per-op. |
+| Archive zip creation fills disk | Setup creates ~50MB zip + ~100MB staging dir | Stage dir is deleted after zip creation. Total temp space ~150MB. |
+| `.exe` extension files trigger Windows SmartScreen prompts | ExtensionSensitivity bench hangs | ExtensionSensitivity uses `File.WriteAllBytes` (not `Process.Start`), so SmartScreen is not invoked. MotwBench uses `UseShellExecute = false` which bypasses Explorer-level SmartScreen UI. |
+| MotwBench execution slower than expected | 500 ops × process spawn is several minutes | 500 ops is intentionally lower than other benches. Copy+execute+delete per op is ~10–100ms, so total is ~5–50s. |
+| Zone.Identifier ADS not supported on non-NTFS volumes | MotwBench fails silently | Bench temp dir is always on the system drive (NTFS). Log a warning if ADS write throws. |
 
 ## Testing Strategy
 
 Manual verification:
 
-1. `avbench setup` installs Python + Nuitka on clean VM
-2. Black venv created, `black_entry.py` exists
-3. `nuitka-standalone` and `nuitka-onefile` produce working binaries
-4. All 7 API microbench families produce plausible ops/sec values
-5. `--trace` produces valid `.etl` file (can be opened in WPA)
-6. `--counters` produces `counters.csv` with 6 counter columns
-7. Collectors don't perturb timing by more than ~2% (compare runs with/without `--counters`)
-8. Full suite run completes end-to-end with all scenarios active
+1. All API microbench families produce plausible ops/sec values and p50/p95/p99/max latency percentiles
+2. Archive extraction shows measurable slowdown with AV enabled; ~2K files extracted per iteration with mixed extensions and sizes
+3. Extension sensitivity shows measurable latency difference between `.exe`/`.dll` (PE dispatch) and `.js`/`.ps1` (script dispatch)
+4. `dll-load-unique` latency is measurably higher than baseline filesystem copy (AV scans each fresh DLL)
+5. `file-write-content` with real unique-hash unsigned PEs shows higher latency than same-size random-content file creation (AV performs full PE inspection on every write)
+6. ProcessCreateBench unsigned exe produces higher latency than a cached signed-exe baseline
+7. MOTW bench: `motw-exe-motw-zone3` shows higher latency than `motw-exe-no-motw`; the real unsigned exe actually executes (exit code 0) in both variants
+8. `--counters` produces `counters.csv` with 6 counter columns
+9. Collector doesn't perturb timing by more than ~2% (compare runs with/without `--counters`)
+10. Full suite run completes end-to-end with all scenarios active

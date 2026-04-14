@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.5" />
+    <ProjectReference Include="..\AvBench.Core\AvBench.Core.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AssemblyName>avbench-compare</AssemblyName>
+    <RootNamespace>AvBench.Compare</RootNamespace>
+  </PropertyGroup>
+
+</Project>

@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvBench.Cli", "AvBench.Cli\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvBench.Core", "AvBench.Core\AvBench.Core.csproj", "{24782F3F-56AB-44C0-8E4E-AF86AF7AFE80}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvBench.Compare", "AvBench.Compare\AvBench.Compare.csproj", "{AB3158A3-4F2A-41F3-AC83-1D6CE98E3B9A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{24782F3F-56AB-44C0-8E4E-AF86AF7AFE80}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24782F3F-56AB-44C0-8E4E-AF86AF7AFE80}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24782F3F-56AB-44C0-8E4E-AF86AF7AFE80}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB3158A3-4F2A-41F3-AC83-1D6CE98E3B9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB3158A3-4F2A-41F3-AC83-1D6CE98E3B9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB3158A3-4F2A-41F3-AC83-1D6CE98E3B9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB3158A3-4F2A-41F3-AC83-1D6CE98E3B9A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

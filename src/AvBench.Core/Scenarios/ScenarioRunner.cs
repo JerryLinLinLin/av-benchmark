@@ -2,6 +2,7 @@ using AvBench.Core.Environment;
 using AvBench.Core.Models;
 using AvBench.Core.Output;
 using AvBench.Core.Runner;
+using AvBench.Core.Internal;
 
 namespace AvBench.Core.Scenarios;
 
@@ -11,6 +12,7 @@ public sealed class ScenarioRunner
     private readonly string _outputRoot;
     private readonly string _runnerVersion;
     private readonly string _suiteManifestSha;
+    private readonly AvInfo _avInfo;
 
     public ScenarioRunner(string avName, string outputRoot, string runnerVersion, string suiteManifestSha)
     {
@@ -18,6 +20,7 @@ public sealed class ScenarioRunner
         _outputRoot = outputRoot;
         _runnerVersion = runnerVersion;
         _suiteManifestSha = suiteManifestSha;
+        _avInfo = SystemInfoProvider.CollectAvInfo();
     }
 
     public async Task<List<RunResult>> ExecuteScenarioAsync(
@@ -25,8 +28,7 @@ public sealed class ScenarioRunner
         int repetitions,
         CancellationToken cancellationToken)
     {
-        Console.WriteLine($"[run] Warmup: {scenario.Id}");
-        await RunOnceAsync(scenario, null, cancellationToken);
+        FileSystemUtil.DeletePathIfExists(Path.Combine(_outputRoot, scenario.Id));
 
         var results = new List<RunResult>(repetitions);
         for (var repetition = 1; repetition <= repetitions; repetition++)
@@ -65,9 +67,6 @@ public sealed class ScenarioRunner
         var stderrPath = outputDirectory is null
             ? Path.Combine(Path.GetTempPath(), "avbench", $"{Guid.NewGuid():N}.stderr.log")
             : Path.Combine(outputDirectory, "stderr.log");
-        var combinedPath = outputDirectory is null
-            ? null
-            : Path.Combine(outputDirectory, "combined.log");
 
         Directory.CreateDirectory(Path.GetDirectoryName(stdoutPath)!);
         Directory.CreateDirectory(Path.GetDirectoryName(stderrPath)!);
@@ -85,6 +84,8 @@ public sealed class ScenarioRunner
         {
             ScenarioId = scenario.Id,
             AvName = _avName,
+            AvProduct = _avInfo.Product,
+            AvVersion = _avInfo.Version,
             TimestampUtc = DateTime.UtcNow,
             Command = string.IsNullOrWhiteSpace(scenario.Arguments) ? scenario.FileName : $"{scenario.FileName} {scenario.Arguments}",
             WorkingDir = scenario.WorkingDirectory,
@@ -105,11 +106,6 @@ public sealed class ScenarioRunner
 
         scenario.EnrichResultFromLogs?.Invoke(result, stdoutPath, stderrPath);
 
-        if (combinedPath is not null)
-        {
-            await WriteCombinedLogAsync(stdoutPath, stderrPath, combinedPath, cancellationToken);
-        }
-
         if (outputDirectory is null)
         {
             TryDelete(stdoutPath);
@@ -117,37 +113,6 @@ public sealed class ScenarioRunner
         }
 
         return result;
-    }
-
-    private static async Task WriteCombinedLogAsync(
-        string stdoutPath,
-        string stderrPath,
-        string combinedPath,
-        CancellationToken cancellationToken)
-    {
-        var stdout = await File.ReadAllTextAsync(stdoutPath, cancellationToken);
-        var stderr = await File.ReadAllTextAsync(stderrPath, cancellationToken);
-
-        await using var writer = new StreamWriter(combinedPath, append: false);
-        await writer.WriteLineAsync("===== stdout.log =====");
-        if (!string.IsNullOrEmpty(stdout))
-        {
-            await writer.WriteAsync(stdout);
-            if (!stdout.EndsWith(System.Environment.NewLine, StringComparison.Ordinal))
-            {
-                await writer.WriteLineAsync();
-            }
-        }
-
-        await writer.WriteLineAsync("===== stderr.log =====");
-        if (!string.IsNullOrEmpty(stderr))
-        {
-            await writer.WriteAsync(stderr);
-            if (!stderr.EndsWith(System.Environment.NewLine, StringComparison.Ordinal))
-            {
-                await writer.WriteLineAsync();
-            }
-        }
     }
 
     private static void TryDelete(string path)
@@ -161,7 +126,7 @@ public sealed class ScenarioRunner
         }
         catch
         {
-            // Warmup cleanup is best effort.
+            // Temp log cleanup is best effort.
         }
     }
 }

@@ -2,10 +2,13 @@ namespace AvBench.Core.Setup;
 
 public static class KnownToolPaths
 {
+    public const string DotNetInstallDirectory = @"C:\Program Files\dotnet";
+
     public static void EnsureCommonToolPaths()
     {
         EnsureGitOnPath();
         EnsureCargoOnPath();
+        EnsureDotNetOnPath();
     }
 
     public static void EnsureGitOnPath()
@@ -21,6 +24,11 @@ public static class KnownToolPaths
             "bin");
 
         AddToPathIfExists(cargoPath);
+    }
+
+    public static void EnsureDotNetOnPath()
+    {
+        AddToPathIfExists(DotNetInstallDirectory);
     }
 
     private static void AddToPathIfExists(string path)

@@ -2,10 +2,8 @@
 
 ## Scope
 
-- Extend `avbench setup` to install VS Build Tools, CMake, Ninja, .NET SDK
+- Extend `avbench setup` to install Visual Studio/MSBuild prerequisites and .NET SDKs
 - Add Roslyn compile scenarios (clean/incremental/noop)
-- Add LLVM compile scenarios (configure, clean/incremental/noop)
-- Add Files (WinUI 3) compile scenarios (clean/incremental/noop)
 - Build `avbench-compare` — reads results from multiple VMs, produces `compare.csv` and `summary.md`
 
 ## Prerequisites from Milestone 1
@@ -28,13 +26,9 @@ av-benchmark/
     AvBench.Core/         (extended)
       Setup/
         VsBuildToolsInstaller.cs    ← NEW
-        CmakeInstaller.cs           ← NEW
-        NinjaInstaller.cs            ← NEW
         DotNetSdkInstaller.cs        ← NEW
       Scenarios/
         RoslynScenario.cs            ← NEW
-        LlvmScenario.cs             ← NEW
-        FilesScenario.cs             ← NEW
     AvBench.Compare/       ← NEW project
       AvBench.Compare.csproj
       Program.cs
@@ -80,16 +74,18 @@ dotnet add package System.CommandLine --version 2.0.5
 
 ### `VsBuildToolsInstaller.cs`
 
-VS Build Tools is the heaviest install. It requires the `vs_buildtools.exe` bootstrapper with `--quiet --wait` and workload IDs.
+Visual Studio/MSBuild is the heaviest install. Live verification against the current Roslyn repo showed that milestone 2 needs:
+- `Microsoft.VisualStudio.Workload.VCTools`
+- `Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools`
+- `Microsoft.VisualStudio.Workload.UniversalBuildTools`
+- `Microsoft.VisualStudio.Component.Windows11SDK.26100`
 
-Workloads needed:
-- `Microsoft.VisualStudio.Workload.VCTools` — C++ desktop build tools (MSVC, Windows SDK) — for LLVM and Files native projects
-- `Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools` — .NET desktop build tools — for Roslyn
-- `Microsoft.VisualStudio.ComponentGroup.UWP.BuildTools` — UWP build tools
-- `Microsoft.VisualStudio.Workload.UniversalBuildTools` — Universal Windows Platform build tools
-- Individual component: `Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs` — WinUI/WinAppSDK for Files
+Detection: `vswhere.exe -latest -products * -requires Microsoft.Component.MSBuild -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64`, plus file-level verification that Windows SDK `10.0.26100.0` headers are present.
 
-Detection: `vswhere.exe -products * -property installationPath` — vswhere ships with the VS Installer at `%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe`.
+Important behavior:
+- If Windows already has a pending restart, setup should stop before attempting Visual Studio install.
+- If the installer prints a restart-required message or leaves a real pending restart state behind, `avbench setup` should stop and tell the user to restart Windows and rerun setup.
+- Ignore the Visual Studio bootstrapper cleanup delete under `C:\ProgramData\Microsoft\VisualStudio\Packages\_bootstrapper\vs_setup_bootstrapper_*.json`; current VS 2026 installs can leave that queued in `PendingFileRenameOperations` even when `vswhere` reports `isRebootRequired=false`.
 
 ```csharp
 using System.Diagnostics;
@@ -134,7 +130,8 @@ public sealed class VsBuildToolsInstaller : ToolInstaller
             "--quiet", "--wait", "--norestart",
             "--add Microsoft.VisualStudio.Workload.VCTools",
             "--add Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools",
-            "--add Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs",
+            "--add Microsoft.VisualStudio.Workload.UniversalBuildTools",
+            "--add Microsoft.VisualStudio.Component.Windows11SDK.26100",
             "--includeRecommended");
 
         var exitCode = RunProcess(tempPath, args);
@@ -209,162 +206,11 @@ public sealed class VsBuildToolsInstaller : ToolInstaller
 }
 ```
 
-### `CmakeInstaller.cs`
-
-CMake ships with VS Build Tools via the "C++ CMake tools" component, but we can also install standalone for a guaranteed version.
-
-```csharp
-using System.Diagnostics;
-using System.Net.Http;
-
-namespace AvBench.Core.Setup;
-
-public sealed class CmakeInstaller : ToolInstaller
-{
-    public override string Name => "CMake";
-
-    // CMake MSI installer URL — pin a specific version
-    private const string DefaultUrl =
-        "https://github.com/Kitware/CMake/releases/download/v3.31.4/cmake-3.31.4-windows-x86_64.msi";
-
-    public override string? Detect()
-    {
-        return RunAndCapture("cmake", "--version");
-    }
-
-    public override async Task InstallAsync(CancellationToken ct = default)
-    {
-        var tempPath = Path.Combine(Path.GetTempPath(), "cmake-installer.msi");
-        await DownloadFileAsync(DefaultUrl, tempPath, ct);
-
-        // MSI silent install with PATH update
-        var exitCode = RunProcess("msiexec.exe",
-            $"/i \"{tempPath}\" /quiet /norestart ADD_CMAKE_TO_PATH=System");
-
-        if (exitCode != 0)
-            throw new InvalidOperationException($"CMake MSI install exited with code {exitCode}");
-
-        // Add to PATH for current process
-        var cmakePath = @"C:\Program Files\CMake\bin";
-        if (Directory.Exists(cmakePath))
-            Environment.SetEnvironmentVariable("PATH",
-                cmakePath + ";" + Environment.GetEnvironmentVariable("PATH"));
-    }
-
-    private static async Task DownloadFileAsync(string url, string dest, CancellationToken ct)
-    {
-        using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
-        using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
-        response.EnsureSuccessStatusCode();
-        await using var fs = File.Create(dest);
-        await response.Content.CopyToAsync(fs, ct);
-    }
-
-    private static int RunProcess(string fileName, string arguments)
-    {
-        var psi = new ProcessStartInfo(fileName, arguments)
-        {
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        var proc = Process.Start(psi)!;
-        proc.WaitForExit();
-        return proc.ExitCode;
-    }
-
-    private static string? RunAndCapture(string fileName, string arguments)
-    {
-        try
-        {
-            var psi = new ProcessStartInfo(fileName, arguments)
-            {
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            var proc = Process.Start(psi);
-            if (proc is null) return null;
-            var output = proc.StandardOutput.ReadToEnd().Trim();
-            proc.WaitForExit();
-            return proc.ExitCode == 0 ? output : null;
-        }
-        catch { return null; }
-    }
-}
-```
-
-### `NinjaInstaller.cs`
-
-Ninja is a single-binary download — no installer needed.
-
-```csharp
-using System.IO.Compression;
-using System.Net.Http;
-
-namespace AvBench.Core.Setup;
-
-public sealed class NinjaInstaller : ToolInstaller
-{
-    public override string Name => "Ninja";
-
-    private const string DefaultUrl =
-        "https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip";
-
-    // Install to a known location on PATH
-    private static readonly string InstallDir = @"C:\Tools\ninja";
-
-    public override string? Detect()
-    {
-        return RunAndCapture("ninja", "--version");
-    }
-
-    public override async Task InstallAsync(CancellationToken ct = default)
-    {
-        var tempZip = Path.Combine(Path.GetTempPath(), "ninja-win.zip");
-
-        using var http = new HttpClient();
-        using var response = await http.GetAsync(DefaultUrl, HttpCompletionOption.ResponseHeadersRead, ct);
-        response.EnsureSuccessStatusCode();
-        await using var fs = File.Create(tempZip);
-        await response.Content.CopyToAsync(fs, ct);
-        fs.Close();
-
-        Directory.CreateDirectory(InstallDir);
-        ZipFile.ExtractToDirectory(tempZip, InstallDir, overwriteFiles: true);
-
-        // Add to PATH for current process
-        Environment.SetEnvironmentVariable("PATH",
-            InstallDir + ";" + Environment.GetEnvironmentVariable("PATH"));
-    }
-
-    private static string? RunAndCapture(string fileName, string arguments)
-    {
-        try
-        {
-            var psi = new ProcessStartInfo(fileName, arguments)
-            {
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            var proc = Process.Start(psi);
-            if (proc is null) return null;
-            var output = proc.StandardOutput.ReadToEnd().Trim();
-            proc.WaitForExit();
-            return proc.ExitCode == 0 ? output : null;
-        }
-        catch { return null; }
-    }
-}
-```
-
 ### `DotNetSdkInstaller.cs`
 
-Installs .NET SDK. We need two SDK versions:
-- .NET 8 SDK (for Roslyn, matching its `global.json`)
-- .NET 10 SDK 10.0.102 (for Files, matching its `global.json`)
+Installs .NET SDK. Milestone 2 needs the version pinned by Roslyn's `global.json`.
 
-The installer handles side-by-side SDK installs. Use the official `dotnet-install.ps1` script for each version.
+The installer handles one or more pinned SDK installs. Use the official `dotnet-install.ps1` script for each version.
 
 ```csharp
 using System.Diagnostics;
@@ -377,7 +223,7 @@ public sealed class DotNetSdkInstaller : ToolInstaller
     public override string Name => ".NET SDK";
 
     // Versions to install — pin to match each project's global.json
-    private static readonly string[] RequiredVersions = ["8.0.404", "10.0.102"];
+    private static readonly string[] RequiredVersions = ["8.0.404"];
 
     private const string InstallScriptUrl =
         "https://dot.net/v1/dotnet-install.ps1";
@@ -471,80 +317,28 @@ public sealed class DotNetSdkInstaller : ToolInstaller
 }
 ```
 
-## Repo Clone and Dependency Hydration
+## Repo Acquisition and Dependency Hydration
 
-Extend `RepoCloner` to support all three new repos. Each repo has specific hydration steps.
+Extend `RepoCloner` to acquire benchmark source trees without paying the full `git clone` cost for every workload. The current implementation should:
+
+- Prefer GitHub source archives over full clones
+- Resolve an exact commit SHA first, then download the matching archive
+- Use the latest release tag archive for ripgrep
+- Use the default-branch head archive for Roslyn, because milestone 2 tracks current upstream build layout
+- Use a requested ripgrep ref by resolving it to an exact commit SHA and downloading that archive
+- Record source metadata in `suite-manifest.json` (`sha`, `source_kind`, `source_reference`, `archive_url`)
+
+Each repo still has specific hydration steps after source acquisition.
 
 ### Roslyn
 
-```csharp
-public static void HydrateRoslyn(string repoDir)
-{
-    Console.WriteLine($"[setup] Running Restore.cmd in {repoDir}");
-    var psi = new ProcessStartInfo("cmd.exe", "/c Restore.cmd")
-    {
-        WorkingDirectory = repoDir,
-        UseShellExecute = false
-    };
-    var proc = Process.Start(psi)!;
-    proc.WaitForExit();
-    if (proc.ExitCode != 0)
-        throw new InvalidOperationException($"Roslyn Restore.cmd failed: exit {proc.ExitCode}");
-}
+Hydration remains `Restore.cmd`, but the timed benchmark command is not `Build.cmd` anymore. Live verification showed current Roslyn builds reliably with:
+
+```powershell
+dotnet build Roslyn.slnx -c Release /m /nr:false
 ```
 
-### LLVM
-
-CMake configure is untimed setup. It generates Ninja build files.
-
-```csharp
-public static void HydrateLlvm(string repoDir, string buildDir)
-{
-    Directory.CreateDirectory(buildDir);
-    Console.WriteLine($"[setup] CMake configure LLVM → {buildDir}");
-
-    var args = string.Join(" ",
-        $"-S \"{Path.Combine(repoDir, "llvm", "llvm")}\"",
-        $"-B \"{buildDir}\"",
-        "-G Ninja",
-        "-DLLVM_ENABLE_PROJECTS=clang",
-        "-DLLVM_TARGETS_TO_BUILD=X86",
-        "-DCMAKE_BUILD_TYPE=Release");
-
-    var psi = new ProcessStartInfo("cmake", args)
-    {
-        UseShellExecute = false
-    };
-    var proc = Process.Start(psi)!;
-    proc.WaitForExit();
-    if (proc.ExitCode != 0)
-        throw new InvalidOperationException($"CMake configure failed: exit {proc.ExitCode}");
-}
-```
-
-### Files
-
-MSBuild restore is untimed setup.
-
-```csharp
-public static void HydrateFiles(string repoDir)
-{
-    var msbuild = VsBuildToolsInstaller.FindMsBuildPath()
-        ?? throw new InvalidOperationException("MSBuild not found — install VS Build Tools first");
-
-    Console.WriteLine($"[setup] MSBuild restore in {repoDir}");
-    var psi = new ProcessStartInfo(msbuild,
-        $"Files.slnx /t:Restore /p:Platform=x64 /p:Configuration=Release")
-    {
-        WorkingDirectory = repoDir,
-        UseShellExecute = false
-    };
-    var proc = Process.Start(psi)!;
-    proc.WaitForExit();
-    if (proc.ExitCode != 0)
-        throw new InvalidOperationException($"MSBuild restore failed: exit {proc.ExitCode}");
-}
-```
+This avoids current `Build.cmd`/MSBuild runtime mismatches on newer repos.
 
 ## Scenario Definitions
 
@@ -557,17 +351,15 @@ public static class RoslynScenario
 {
     public static List<ScenarioDefinition> Create(string repoDir)
     {
-        // Roslyn builds via Build.cmd which uses msbuild internally
-        // Build.cmd is in the repo root
-        var buildCmd = Path.Combine(repoDir, "Build.cmd");
+        var solutionPath = Path.Combine(repoDir, "Roslyn.slnx");
 
         return
         [
             new ScenarioDefinition
             {
                 Id = "roslyn-clean-build",
-                FileName = "cmd.exe",
-                Arguments = $"/c \"{buildCmd}\"",
+                FileName = "dotnet",
+                Arguments = $"build \"{solutionPath}\" -c Release /m /nr:false",
                 WorkingDirectory = repoDir,
                 PreActions =
                 [
@@ -578,16 +370,16 @@ public static class RoslynScenario
             new ScenarioDefinition
             {
                 Id = "roslyn-incremental-build",
-                FileName = "cmd.exe",
-                Arguments = $"/c \"{buildCmd}\"",
+                FileName = "dotnet",
+                Arguments = $"build \"{solutionPath}\" -c Release /m /nr:false",
                 WorkingDirectory = repoDir,
                 PreActions = [TouchFileCommand(repoDir)]
             },
             new ScenarioDefinition
             {
                 Id = "roslyn-noop-build",
-                FileName = "cmd.exe",
-                Arguments = $"/c \"{buildCmd}\"",
+                FileName = "dotnet",
+                Arguments = $"build \"{solutionPath}\" -c Release /m /nr:false",
                 WorkingDirectory = repoDir,
                 PreActions = []
             }
@@ -601,115 +393,6 @@ public static class RoslynScenario
         var target = Path.Combine(repoDir,
             "src", "Compilers", "CSharp", "Portable",
             "CSharpResources.Designer.cs");
-        return $"copy /b \"{target}\"+,, \"{target}\"";
-    }
-}
-```
-
-### `LlvmScenario.cs`
-
-```csharp
-namespace AvBench.Core.Scenarios;
-
-public static class LlvmScenario
-{
-    public static List<ScenarioDefinition> Create(string repoDir, string buildDir)
-    {
-        return
-        [
-            new ScenarioDefinition
-            {
-                Id = "llvm-clean-build",
-                FileName = "ninja",
-                Arguments = $"-C \"{buildDir}\"",
-                WorkingDirectory = buildDir,
-                PreActions =
-                [
-                    // Clean: ninja clean removes build artifacts but keeps build.ninja
-                    $"ninja -C \"{buildDir}\" clean"
-                ]
-            },
-            new ScenarioDefinition
-            {
-                Id = "llvm-incremental-build",
-                FileName = "ninja",
-                Arguments = $"-C \"{buildDir}\"",
-                WorkingDirectory = buildDir,
-                PreActions = [TouchFileCommand(repoDir)]
-            },
-            new ScenarioDefinition
-            {
-                Id = "llvm-noop-build",
-                FileName = "ninja",
-                Arguments = $"-C \"{buildDir}\"",
-                WorkingDirectory = buildDir,
-                PreActions = []
-            }
-        ];
-    }
-
-    private static string TouchFileCommand(string repoDir)
-    {
-        // Touch a Clang source file to trigger incremental rebuild
-        var target = Path.Combine(repoDir,
-            "llvm", "clang", "lib", "Basic", "Version.cpp");
-        return $"copy /b \"{target}\"+,, \"{target}\"";
-    }
-}
-```
-
-### `FilesScenario.cs`
-
-```csharp
-namespace AvBench.Core.Scenarios;
-
-public static class FilesScenario
-{
-    public static List<ScenarioDefinition> Create(string repoDir)
-    {
-        var msbuild = VsBuildToolsInstaller.FindMsBuildPath()
-            ?? throw new InvalidOperationException("MSBuild not found");
-
-        return
-        [
-            new ScenarioDefinition
-            {
-                Id = "files-clean-build",
-                FileName = msbuild,
-                Arguments = "Files.slnx /t:Build /p:Configuration=Release /p:Platform=x64 /m",
-                WorkingDirectory = repoDir,
-                PreActions =
-                [
-                    // Clean: delete bin/obj/AppPackages across all projects
-                    $"for /d /r \"{Path.Combine(repoDir, "src")}\" %d in (bin obj) do @if exist \"%d\" rmdir /s /q \"%d\"",
-                    $"if exist \"{Path.Combine(repoDir, "tests")}\" for /d /r \"{Path.Combine(repoDir, "tests")}\" %d in (bin obj) do @if exist \"%d\" rmdir /s /q \"%d\""
-                ]
-            },
-            new ScenarioDefinition
-            {
-                Id = "files-incremental-build",
-                FileName = msbuild,
-                Arguments = "Files.slnx /t:Build /p:Configuration=Release /p:Platform=x64 /m",
-                WorkingDirectory = repoDir,
-                PreActions = [TouchFileCommand(repoDir)]
-            },
-            new ScenarioDefinition
-            {
-                Id = "files-noop-build",
-                FileName = msbuild,
-                Arguments = "Files.slnx /t:Build /p:Configuration=Release /p:Platform=x64 /m",
-                WorkingDirectory = repoDir,
-                PreActions = []
-            }
-        ];
-    }
-
-    private static string TouchFileCommand(string repoDir)
-    {
-        // Touch a ViewModel file in Files.App to trigger incremental rebuild
-        // This exercises XAML compilation + C# compilation
-        var target = Path.Combine(repoDir,
-            "src", "Files.App", "App.xaml.cs");
         return $"copy /b \"{target}\"+,, \"{target}\"";
     }
 }
@@ -832,6 +515,9 @@ public sealed class ComparisonRow
     public double MeanWallMs { get; init; }
     public double MedianWallMs { get; init; }
     public double MeanCpuMs { get; init; }
+    public double KernelCpuPct { get; init; }
+    public double BaselineKernelCpuPct { get; init; }
+    public double KernelCpuSlowdownPct { get; init; }
     public double PeakMemoryMb { get; init; }
     public double SlowdownPct { get; init; }
     public double CvPct { get; init; }
@@ -877,6 +563,12 @@ public static class CompareEngine
                     ? StdDev(wallTimes) / meanWall * 100
                     : 0;
 
+                // Kernel/user CPU ratio — AV minifilter overhead lands in kernel mode
+                var kernelTimes = scenarioRuns.Select(r => (double)r.KernelCpuMs).ToList();
+                var meanKernel = kernelTimes.Average();
+                var kernelCpuPct = meanCpu > 0 ? meanKernel / meanCpu * 100 : 0;
+
+                double baselineKernelCpuPct = 0;
                 double slowdown = 0;
                 if (baselineByScenario.TryGetValue(scenarioId, out var baseRuns))
                 {
@@ -884,6 +576,10 @@ public static class CompareEngine
                     slowdown = baselineMean > 0
                         ? (meanWall - baselineMean) / baselineMean * 100
                         : 0;
+
+                    var baseKernelMs = baseRuns.Average(r => (double)r.KernelCpuMs);
+                    var baseCpuMs = baseRuns.Average(r => (double)(r.UserCpuMs + r.KernelCpuMs));
+                    baselineKernelCpuPct = baseCpuMs > 0 ? baseKernelMs / baseCpuMs * 100 : 0;
                 }
 
                 var status = scenarioRuns.Any(r => r.ExitCode != 0) ? "failed"
@@ -899,6 +595,9 @@ public static class CompareEngine
                     MeanWallMs = Math.Round(meanWall, 1),
                     MedianWallMs = Math.Round(medianWall, 1),
                     MeanCpuMs = Math.Round(meanCpu, 1),
+                    KernelCpuPct = Math.Round(kernelCpuPct, 1),
+                    BaselineKernelCpuPct = Math.Round(baselineKernelCpuPct, 1),
+                    KernelCpuSlowdownPct = Math.Round(kernelCpuPct - baselineKernelCpuPct, 1),
                     PeakMemoryMb = peakMem,
                     SlowdownPct = Math.Round(slowdown, 1),
                     CvPct = Math.Round(cv, 1),
@@ -942,8 +641,9 @@ public static class CompareCsvWriter
     private static readonly string[] Headers =
     [
         "scenario_id", "av_name", "baseline_name", "repetitions",
-        "mean_wall_ms", "median_wall_ms", "mean_cpu_ms", "peak_memory_mb",
-        "slowdown_pct", "cv_pct", "status"
+        "mean_wall_ms", "median_wall_ms", "mean_cpu_ms",
+        "kernel_cpu_pct", "baseline_kernel_cpu_pct", "kernel_cpu_slowdown_pct",
+        "peak_memory_mb", "slowdown_pct", "cv_pct", "status"
     ];
 
     public static void Write(IReadOnlyList<ComparisonRow> rows, string path)
@@ -961,6 +661,9 @@ public static class CompareCsvWriter
                 r.MeanWallMs.ToString("F1", CultureInfo.InvariantCulture),
                 r.MedianWallMs.ToString("F1", CultureInfo.InvariantCulture),
                 r.MeanCpuMs.ToString("F1", CultureInfo.InvariantCulture),
+                r.KernelCpuPct.ToString("F1", CultureInfo.InvariantCulture),
+                r.BaselineKernelCpuPct.ToString("F1", CultureInfo.InvariantCulture),
+                r.KernelCpuSlowdownPct.ToString("F1", CultureInfo.InvariantCulture),
                 r.PeakMemoryMb.ToString(CultureInfo.InvariantCulture),
                 r.SlowdownPct.ToString("F1", CultureInfo.InvariantCulture),
                 r.CvPct.ToString("F1", CultureInfo.InvariantCulture),
@@ -997,15 +700,18 @@ public static class SummaryRenderer
         {
             sb.AppendLine($"## {nameGroup.Key} vs {nameGroup.First().BaselineName}");
             sb.AppendLine();
-            sb.AppendLine("| Scenario | Mean Wall (ms) | Slowdown | CV% | Status |");
-            sb.AppendLine("|---|---:|---:|---:|---|");
+            sb.AppendLine("| Scenario | Mean Wall (ms) | Slowdown | Kernel CPU % | Baseline Kernel % | Kernel Shift | CV% | Status |");
+            sb.AppendLine("|---|---:|---:|---:|---:|---:|---:|---|");
 
             foreach (var row in nameGroup.OrderBy(r => r.ScenarioId))
             {
                 var slowdownStr = row.SlowdownPct >= 0
                     ? $"+{row.SlowdownPct:F1}%"
                     : $"{row.SlowdownPct:F1}%";
-                sb.AppendLine($"| {row.ScenarioId} | {row.MeanWallMs:F0} | {slowdownStr} | {row.CvPct:F1}% | {row.Status} |");
+                var kernelShift = row.KernelCpuSlowdownPct >= 0
+                    ? $"+{row.KernelCpuSlowdownPct:F1}pp"
+                    : $"{row.KernelCpuSlowdownPct:F1}pp";
+                sb.AppendLine($"| {row.ScenarioId} | {row.MeanWallMs:F0} | {slowdownStr} | {row.KernelCpuPct:F1}% | {row.BaselineKernelCpuPct:F1}% | {kernelShift} | {row.CvPct:F1}% | {row.Status} |");
             }
 
             sb.AppendLine();
@@ -1015,6 +721,11 @@ public static class SummaryRenderer
                 .OrderByDescending(r => r.SlowdownPct).FirstOrDefault();
             if (worst is not null)
                 sb.AppendLine($"**Highest slowdown**: {worst.ScenarioId} at +{worst.SlowdownPct:F1}%");
+
+            var worstKernel = nameGroup.Where(r => r.Status == "ok")
+                .OrderByDescending(r => r.KernelCpuSlowdownPct).FirstOrDefault();
+            if (worstKernel is not null && worstKernel.KernelCpuSlowdownPct > 0)
+                sb.AppendLine($"**Largest kernel CPU shift**: {worstKernel.ScenarioId} at +{worstKernel.KernelCpuSlowdownPct:F1}pp ({worstKernel.BaselineKernelCpuPct:F1}% → {worstKernel.KernelCpuPct:F1}%)");
 
             var noisy = nameGroup.Where(r => r.Status == "noisy").ToList();
             if (noisy.Count > 0)
@@ -1034,7 +745,7 @@ public static class SummaryRenderer
 
 ## Extending `SetupCommand.cs`
 
-The M1 setup command is extended to install all M2 tools and clone all repos:
+The M1 setup command is extended to install all M2 tools and fetch all benchmark source trees:
 
 ```csharp
 command.SetAction(async parseResult =>
@@ -1047,28 +758,17 @@ command.SetAction(async parseResult =>
 
     // M2 tools
     await new VsBuildToolsInstaller().EnsureInstalledAsync();
-    await new CmakeInstaller().EnsureInstalledAsync();
-    await new NinjaInstaller().EnsureInstalledAsync();
     await new DotNetSdkInstaller().EnsureInstalledAsync();
 
     // M1 repos
     var rgDir = Path.Combine(benchDir.FullName, "ripgrep");
-    RepoCloner.CloneAndPin("https://github.com/BurntSushi/ripgrep", rgDir, pinnedSha: null);
+    await RepoCloner.CloneRipgrepAsync(benchDir.FullName, ripgrepRef, CancellationToken.None);
     RepoCloner.CargoFetch(rgDir);
 
     // M2 repos
     var roslynDir = Path.Combine(benchDir.FullName, "roslyn");
-    RepoCloner.CloneAndPin("https://github.com/dotnet/roslyn", roslynDir, pinnedSha: null);
+    await RepoCloner.CloneRoslynAsync(benchDir.FullName, CancellationToken.None);
     RepoCloner.HydrateRoslyn(roslynDir);
-
-    var llvmDir = Path.Combine(benchDir.FullName, "llvm-project");
-    var llvmBuildDir = Path.Combine(benchDir.FullName, "llvm-build");
-    RepoCloner.CloneAndPin("https://github.com/llvm/llvm-project", llvmDir, pinnedSha: null);
-    RepoCloner.HydrateLlvm(llvmDir, llvmBuildDir);
-
-    var filesDir = Path.Combine(benchDir.FullName, "Files");
-    RepoCloner.CloneAndPin("https://github.com/files-community/Files", filesDir, pinnedSha: null);
-    RepoCloner.HydrateFiles(filesDir);
 
     // Write suite-manifest.json
     // ...
@@ -1090,8 +790,6 @@ scenarios.AddRange(RipgrepScenario.Create(rgDir));
 
 // M2 scenarios
 scenarios.AddRange(RoslynScenario.Create(roslynDir));
-scenarios.AddRange(LlvmScenario.Create(llvmDir, llvmBuildDir));
-scenarios.AddRange(FilesScenario.Create(filesDir));
 
 // API microbench (M1)
 // file-create-delete handled separately...
@@ -1121,41 +819,35 @@ dotnet add package System.CommandLine --version 2.0.5
 
 ### Step 2: Build new tool installers
 
-Create `VsBuildToolsInstaller.cs`, `CmakeInstaller.cs`, `NinjaInstaller.cs`, `DotNetSdkInstaller.cs` in `AvBench.Core/Setup/`.
+Create `VsBuildToolsInstaller.cs`, `DotNetSdkInstaller.cs` in `AvBench.Core/Setup/`.
 
 Test each on a clean VM:
-1. `VsBuildToolsInstaller.EnsureInstalledAsync()` → `vswhere` detects install
-2. `CmakeInstaller.EnsureInstalledAsync()` → `cmake --version` works
-3. `NinjaInstaller.EnsureInstalledAsync()` → `ninja --version` works
-4. `DotNetSdkInstaller.EnsureInstalledAsync()` → `dotnet --list-sdks` shows both versions
+1. `VsBuildToolsInstaller.EnsureInstalledAsync()` → `vswhere` detects install or setup exits with a restart-required message
+2. `DotNetSdkInstaller.EnsureInstalledAsync()` → `dotnet --list-sdks` shows both versions
 
 Note: VS Build Tools install takes 10-30 minutes. Plan accordingly.
 
 ### Step 3: Add MSBuild path helper
 
-Add `VsBuildToolsInstaller.FindMsBuildPath()` — uses vswhere to locate MSBuild.exe. This is used by Files and Roslyn scenarios.
+Add `VsBuildToolsInstaller.FindMsBuildPath()` — uses vswhere to locate MSBuild.exe for installer verification.
 
 ### Step 4: Add repo hydration methods
 
-Extend `RepoCloner` with `HydrateRoslyn()`, `HydrateLlvm()`, `HydrateFiles()`.
+Extend `RepoCloner` with `HydrateRoslyn()`.
 
 Test:
 - Roslyn: `Restore.cmd` completes without errors
-- LLVM: `cmake` configure generates `build.ninja` in build dir
-- Files: `msbuild /t:Restore` restores NuGet packages
 
 ### Step 5: Build scenario definitions
 
-Create `RoslynScenario.cs`, `LlvmScenario.cs`, `FilesScenario.cs`.
+Create `RoslynScenario.cs`.
 
 Test each scenario standalone:
-- Roslyn clean build via `Build.cmd` produces output in `artifacts/`
-- LLVM clean build via `ninja` produces clang binary
-- Files clean build via `msbuild` produces output in `src/Files.App/bin/`
+- Roslyn clean build via `dotnet build Roslyn.slnx -c Release /m /nr:false` produces output in `artifacts/`
 
 ### Step 6: Wire up extended setup/run commands
 
-Update `SetupCommand.cs` to install M2 tools and clone/hydrate all repos.
+Update `SetupCommand.cs` to install M2 tools and fetch/hydrate all benchmark source trees.
 Update `RunCommand.cs` to register all M2 scenarios.
 
 ### Step 7: Build `CompareEngine`
@@ -1208,23 +900,17 @@ comparison/
 | Risk | Impact | Mitigation |
 |---|---|---|
 | VS Build Tools install takes 30+ minutes | Setup is very slow | Install once per VM snapshot. Document expected time. |
-| LLVM clean build takes 30-60 minutes | Fewer repetitions practical | Use N=3 for LLVM; N=5 for faster workloads. Allow per-scenario rep count override. |
-| Files requires .NET 10 SDK (preview) | SDK availability may vary | Pin exact version in installer code. Use `dotnet-install.ps1` to fetch exact version. |
-| Files has C++ projects requiring MSVC | Incremental MSVC builds may create noise | Measure full solution build. The C++ projects are small (dialog helpers). |
-| `Roslyn Restore.cmd` may be renamed | Hydration fails | Pin Roslyn to a specific SHA. Validate `Restore.cmd` exists in `setup`. |
+| Visual Studio install may require reboot | Setup cannot finish in one pass | Detect real pending restart state, tell the user to restart Windows, and rerun `avbench setup`. Ignore the Visual Studio bootstrapper cleanup JSON delete that can remain queued after a successful install. |
 | MSBuild path varies by VS version | Scenario fails to find MSBuild | Use vswhere with `-find MSBuild\**\Bin\MSBuild.exe` to discover dynamically. |
 | Comparison across VMs with different hardware | Invalid slowdown numbers | `compare.csv` includes `machine` info from `run.json`. Document: all VMs must use identical hardware specs. |
-| LLVM clone is 1.5+ GB | Setup slow on limited bandwidth | Use `--depth 1` for shallow clone when not pinning specific SHA. Add `--filter=blob:none` for partial clone. |
 
 ## Testing Strategy
 
 Manual verification on test VMs:
 
-1. `avbench setup` on clean VM installs all tools (VS Build Tools, CMake, Ninja, .NET SDK, Git, Rust)
-2. All repos cloned and hydrated (Roslyn Restore.cmd, LLVM cmake configure, Files msbuild restore)
+1. `avbench setup` on clean VM installs all tools (VS Build Tools, .NET SDK, Git, Rust)
+2. All benchmark source trees fetched and hydrated (Roslyn Restore.cmd)
 3. Each scenario produces valid `run.json` with non-zero metrics
-4. LLVM clean build produces clang binary
-5. Roslyn clean build produces compiler output in `artifacts/`
-6. Files clean build produces output in respective `bin/` dirs
-7. `avbench-compare` produces `compare.csv` with correct columns and plausible slowdown values
-8. `summary.md` renders correctly and identifies highest-slowdown scenarios
+4. Roslyn clean build produces compiler output in `artifacts/`
+5. `avbench-compare` produces `compare.csv` with correct columns and plausible slowdown values
+6. `summary.md` renders correctly and identifies highest-slowdown scenarios

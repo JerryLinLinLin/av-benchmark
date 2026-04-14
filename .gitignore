@@ -10,3 +10,5 @@ results/
 *.csv
 *.tmp
 bench/
+artifacts/
+tmp/

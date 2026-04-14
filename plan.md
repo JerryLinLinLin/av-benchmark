@@ -9,7 +9,7 @@ Build a Windows VM benchmark suite in C# that answers two questions:
 
 The suite consists of two separate programs:
 
-1. **`avbench`** — runs inside each Windows VM. Handles environment setup (tool installation, repo cloning, dependency hydration) and benchmark execution. Each VM runs one AV configuration.
+1. **`avbench`** — runs inside each Windows VM. Handles environment setup (tool installation, source acquisition, dependency hydration) and benchmark execution. Each VM runs one AV configuration.
 2. **`avbench-compare`** — runs on any machine (host, workstation, CI). Collects result directories from multiple VMs and produces cross-configuration comparison output.
 
 This split exists because each VM runs in isolation with its own AV configuration and snapshot. The in-VM program can only see its own results. Cross-configuration comparison must happen outside.
@@ -19,13 +19,13 @@ This split exists because each VM runs in isolation with its own AV configuratio
 - Use C# for both programs.
 - Keep the benchmark core vendor-neutral. Do not depend on Defender-only tooling.
 - Use Windows Job objects via P/Invoke for process-tree accounting (CPU, I/O, memory) as the primary measurement layer.
-- Use `WPR` (Windows Performance Recorder) as an opt-in detailed trace layer for root-cause investigation.
+- Use `typeperf` as an opt-in system counter sampling layer for resource utilization analysis.
 - Compare AV products with VM snapshots, not by uninstalling and reinstalling on the same image.
 - `avbench setup` automates everything from tool installation to dependency hydration on a clean Windows VM.
 - Separate untimed setup from timed benchmark execution.
 - Pin repo SHAs and toolchain versions for each test campaign.
 - Default metrics are kept lean: wall time, CPU time, I/O bytes, peak memory. Everything else is opt-in.
-- `avbench` always runs as Administrator. Tool installation and WPR tracing require elevation. Rather than scattering privilege checks, the program validates elevation at startup and exits immediately if not elevated.
+- `avbench` always runs as Administrator. Tool installation requires elevation. Rather than scattering privilege checks, the program validates elevation at startup and exits immediately if not elevated.
 
 ## Why C#
 
@@ -73,29 +73,6 @@ PowerShell remains a helper only (e.g., `setup-test-vm.ps1` for reducing Windows
 
 ### Compile workloads
 
-#### `llvm/llvm-project`
-
-Heavy C/C++ workload. Large source tree, high compile volume, high file churn.
-
-Use on Windows with Visual Studio Build Tools + Ninja + CMake:
-
-```
-cmake -S llvm\llvm -B build -G Ninja ^
-  -DLLVM_ENABLE_PROJECTS=clang ^
-  -DLLVM_TARGETS_TO_BUILD=X86 ^
-  -DCMAKE_BUILD_TYPE=Release
-ninja -C build
-```
-
-Keep the build scope fixed (LLVM + Clang, X86 target only). Building LLVM + Clang in Release mode needs ~15-20 GB disk. An SSD-backed VM is assumed.
-
-Scenarios:
-
-- `configure` (CMake generation, separate from compile)
-- `clean-build` (`ninja -C build`)
-- `incremental-build` (touch one `.cpp`, rebuild)
-- `noop-build` (rebuild with no changes)
-
 #### `BurntSushi/ripgrep`
 
 Medium Rust workload. Simple build entry point, fast iteration.
@@ -116,56 +93,22 @@ Scenarios:
 
 Heavy C# workload. Real-world Microsoft compiler repo.
 
-Build on Windows with Visual Studio 2022 + .NET SDK matching `global.json` `sdk.version`:
+Build on Windows with Visual Studio 2022 17.13+ and the .NET SDK matching `global.json` `sdk.version`:
 
 ```
 Restore.cmd   (untimed, during suite setup)
-Build.cmd     (timed)
+dotnet build Roslyn.slnx -c Release /m /nr:false   (timed)
 ```
 
-Roslyn uses `Roslyn.slnx` as of recent commits. Requires .NET Framework 4.7.2 minimum.
+Roslyn uses `Roslyn.slnx` as of recent commits. The current repo also builds cleanly with `dotnet build Roslyn.slnx` even when `Build.cmd` expects a newer Visual Studio/MSBuild pairing. Requires .NET Framework 4.7.2 minimum.
 
 Scenarios:
 
-- `clean-build` (`Build.cmd`)
+- `clean-build` (`dotnet build Roslyn.slnx -c Release /m /nr:false`)
 - `incremental-build` (touch one stable `.cs` file, rebuild)
 - `noop-build`
 
 Restore is always untimed and belongs in suite setup.
-
-#### `psf/black` with Nuitka
-
-Python-to-native packaging workload. Real CLI app.
-
-```
-python -m nuitka --standalone black_entry.py
-python -m nuitka --onefile black_entry.py
-```
-
-Where `black_entry.py` is a small wrapper calling Black's CLI entry point. Keep `standalone` and `onefile` as separate scenarios. Smoke-test the produced binary after each build.
-
-Scenarios:
-
-- `nuitka-standalone`
-- `nuitka-onefile`
-
-#### `files-community/Files`
-
-Large C# / WinUI 3 desktop app (modern file manager, 43k stars). Exercises WindowsApp SDK 1.8, XAML compilation, CsWin32 source generator for Win32 P/Invoke, WinUI custom controls, packaged-app build pipeline, and C++ native helper projects. 97% C# — the heaviest Windows-native C# workload in the suite.
-
-Build requires Visual Studio Build Tools with WinUI workload, .NET 10 SDK (per `global.json` `10.0.102`), Windows 11 SDK `10.0.26100.0`, Windows App SDK 1.8, and MSVC v145 C++ tools (already needed for LLVM).
-
-```
-msbuild Files.slnx /p:Configuration=Release /p:Platform=x64
-```
-
-The solution contains ~15 projects (C# app, server, storage, controls, source generators, C++ dialog helpers, background tasks, tests). Produces a packaged WinUI 3 desktop app.
-
-Scenarios:
-
-- `clean-build` (delete `bin`/`obj`/`AppPackages` dirs, then `msbuild /t:Build`)
-- `incremental-build` (touch one `.cs` file in `src/Files.App/`, rebuild)
-- `noop-build` (rebuild with no changes)
 
 ### API microbench workloads
 
@@ -173,13 +116,13 @@ Split by behavior, not collapsed into one mega-loop.
 
 First families:
 
-- `file-create-delete` — create and delete small temp files
-- `file-open-close` — open/close an existing file repeatedly
-- `dir-enumerate` — enumerate a directory tree
-- `copy-rename-move` — copy/rename/move small files
-- `process-create-wait` — `CreateProcess` + `WaitForSingleObject`
-- `registry-open-query` — open and query registry keys
-- `dll-load-unload` — `LoadLibrary` / `FreeLibrary`
+- `file-create-delete` — create and delete small temp files (M1)
+- `archive-extract` — extract ~2K-file zip with mixed extensions/sizes (simulates NuGet/npm/pip restore)
+- `ext-sensitivity` — create+write+delete with .exe / .dll / .js / .ps1 extensions (same content)
+- `process-create-wait` — spawn an unsigned noop.exe (forces full AV scan, no trust-cache)
+- `dll-load-unique` — copy system DLL to unique temp path then load (bypasses section cache)
+- `file-write-content` — create→write→close→delete with pool of unique-hash unsigned PEs (forces full AV content inspection every iteration)
+- `motw` — copy + execute real unsigned exe, with vs without Zone.Identifier ADS (ZoneId=3 Internet origin)
 
 Later additions (not in v1):
 
@@ -218,9 +161,8 @@ Every compile workload is measured in these phases:
 For each scenario + configuration combination:
 
 1. Idle check (refuse to start if CPU > threshold)
-2. One warmup run (discarded — primes AV cache and disk cache)
-3. N timed repetitions (default N=5)
-4. Quick validation (check exit code and expected output artifacts)
+2. N timed repetitions (default N=5)
+3. Quick validation (check exit code and expected output artifacts)
 
 Within one repetition for compile workloads:
 
@@ -254,13 +196,23 @@ Also collected per run:
 - Command line and working directory
 - Runner version and scenario version
 
+#### Timing accuracy and granularity
+
+**Wall-clock (`Stopwatch`):** Based on `QueryPerformanceCounter` (QPC), which uses the TSC register on modern processors. Resolution is ~333ns on a 3 GHz TSC; sub-microsecond in practice. Not affected by power management or Turbo Boost on invariant-TSC hardware (all modern x64 processors). Suitable for timing individual operations in microbench families.
+
+**CPU time (Job object `TotalUserTime` / `TotalKernelTime`):** Stored in 100-nanosecond ticks, but **actual charging granularity is the scheduler clock interrupt — typically 15.625ms (64 Hz)**. The kernel charges CPU time to whichever thread is running when the clock tick fires. A thread running for 14ms may get charged 0ms or 15.6ms. Implications:
+
+- For compile workloads (30s+), this is negligible: ±15ms on a 30s measurement is <0.05% error, further reduced by averaging 5+ reps.
+- For API microbench totals (1–10s), the error averages out across many scheduler ticks.
+- For single-op latency (<1ms), Job object CPU accounting is useless — only `Stopwatch` should be used.
+- The kernel/user CPU ratio is statistically reliable for multi-second workloads because charging converges to the true distribution over thousands of scheduler ticks.
+
 ### Opt-in metrics
 
 These are not collected by default. Enable via CLI flags:
 
 | Opt-in metric | Flag | Notes |
 |---|---|---|
-| WPR ETL trace | `--trace` | Full system ETW trace via `wpr -start` / `wpr -stop`. Produces `.etl` for analysis in WPA. |
 | PerfMon counters CSV | `--counters` | Sampled system counters via `typeperf`: CPU%, disk bytes/sec, available memory. |
 
 ### API microbench metrics
@@ -274,9 +226,8 @@ Per benchmark family:
 | Total operations | Across all batches |
 | Ops/sec | Total operations / wall time |
 | Mean latency (us) | Wall time / total operations |
+| p50 / p95 / p99 / max latency (us) | Per-op QPC recording via `LatencyHistogram`, sorted percentiles |
 | Total wall time (ms) | End-to-end |
-
-Latency percentiles (p50/p95/p99) are deferred to a later version. Ops/sec and mean latency are sufficient for v1.
 
 ## What To Output
 
@@ -286,16 +237,13 @@ Each VM produces a results directory that can be copied to shared storage.
 
 ```
 results/
-  <campaign-timestamp>/
-    suite-manifest.json
-    <scenario>/
-      rep-01/
-        run.json
-        stdout.log
-        stderr.log
-        combined.log       (merged stdout/stderr for easier manual inspection)
-        trace.etl          (opt-in)
-        counters.csv       (opt-in)
+  suite-manifest.json
+  <scenario>/
+    rep-01/
+      run.json
+      stdout.log
+      stderr.log
+      counters.csv       (opt-in)
 ```
 
 The AV configuration name is recorded inside each `run.json`, not as a directory level, since each VM runs only one configuration.
@@ -310,6 +258,8 @@ Also produces:
 {
   "scenario_id": "ripgrep-clean-build",
   "av_name": "defender-default",
+  "av_product": "Microsoft Defender Antivirus",
+  "av_version": "4.18.24090.11",
   "repetition": 1,
   "timestamp_utc": "2026-04-13T15:30:00Z",
   "command": "cargo build --release",
@@ -324,6 +274,10 @@ Also produces:
   "io_read_ops": 84000,
   "io_write_ops": 51000,
   "total_processes": 47,
+  "p50_us": null,
+  "p95_us": null,
+  "p99_us": null,
+  "max_us": null,
   "machine": {
     "os": "Windows Server 2022",
     "cpu": "4 vCPU",
@@ -358,11 +312,16 @@ avbench-compare ^
 |---|---|
 | `scenario_id` | e.g., `ripgrep-clean-build` |
 | `av_name` | e.g., `defender-default` |
+| `av_product` | e.g., `Microsoft Defender Antivirus` (auto-detected or overridden, M4) |
+| `av_version` | e.g., `4.18.24090.11` (auto-detected or overridden, M4) |
 | `baseline_name` | e.g., `baseline-os` |
 | `repetitions` | Number of measured runs |
 | `mean_wall_ms` | Mean wall-clock time |
 | `median_wall_ms` | Median wall-clock time |
 | `mean_cpu_ms` | Mean total CPU time (user + kernel) |
+| `kernel_cpu_pct` | Mean kernel CPU as percentage of total CPU. AV minifilter overhead lands in kernel mode, so this ratio shifting upward vs. baseline is the most direct signal of AV scanning impact. |
+| `baseline_kernel_cpu_pct` | Baseline's kernel CPU percentage for the same scenario. Shown side-by-side for easy comparison. |
+| `kernel_cpu_slowdown_pct` | `(kernel_cpu_pct - baseline_kernel_cpu_pct)` in percentage points. Positive = AV added kernel-mode overhead. |
 | `peak_memory_mb` | Max peak job memory across reps |
 | `slowdown_pct` | `(mean_wall - baseline_mean_wall) / baseline_mean_wall * 100` |
 | `cv_pct` | Coefficient of variation for wall time |
@@ -373,7 +332,7 @@ avbench-compare ^
 Answers:
 
 - Which AV configuration slowed which workload the most?
-- Was the slowdown CPU-bound or I/O-bound?
+- Was the slowdown CPU-bound or I/O-bound? (The kernel CPU % shift between baseline and AV-enabled runs directly answers this: AV minifilter scanning executes in kernel mode within the build process tree, so a kernel CPU ratio increase pinpoints AV overhead.)
 - Which runs were too noisy to trust (CV > threshold)?
 
 ## C# System Design
@@ -390,7 +349,7 @@ One solution, three projects:
 
 ### `avbench` CLI commands (in-VM program)
 
-- `avbench setup` — install tools, clone repos, hydrate dependencies, write manifests
+- `avbench setup` — install tools, fetch benchmark source trees, hydrate dependencies, write manifests
 - `avbench run` — execute scenarios, collect metrics, write `run.json` and `runs.csv`. Requires `--name` to label this VM's AV configuration.
 
 ### `avbench-compare` CLI (host program)
@@ -399,9 +358,9 @@ One solution, three projects:
 
 ### `setup` — automated environment provisioning
 
-`avbench setup` takes a clean Windows VM (Server 2022, Windows 11, etc.) and makes it ready to run benchmarks. It installs all required tools, clones repos, and hydrates dependencies.
+`avbench setup` takes a clean Windows VM (Server 2022, Windows 11, etc.) and makes it ready to run benchmarks. It installs all required tools, fetches benchmark source trees, and hydrates dependencies.
 
-The setup is idempotent — re-running it skips already-installed tools and already-cloned repos.
+The setup is idempotent — re-running it skips already-installed tools and reuses existing source trees when their recorded commit SHA still matches the resolved source snapshot.
 
 #### Tool installation
 
@@ -410,33 +369,29 @@ Each tool is installed silently using its official unattended installer. The set
 | Tool | Install method | Detection |
 |---|---|---|
 | Git for Windows | `Git-*-64-bit.exe /VERYSILENT /NORESTART` | `git --version` |
-| Visual Studio Build Tools 2022 | `vs_buildtools.exe --quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended` | `vswhere -products *` |
-| CMake | MSI silent install or bundled with VS Build Tools | `cmake --version` |
-| Ninja | Download release zip, extract to PATH | `ninja --version` |
+| Visual Studio Build Tools / MSBuild | `winget install Microsoft.VisualStudio.BuildTools` with VCTools, managed desktop build tools, WinUI/Windows SDK, and C++ ATL components | `vswhere -products *` |
 | .NET SDK | `dotnet-sdk-*-win-x64.exe /quiet /norestart` | `dotnet --list-sdks` |
-| Rust (rustup) | `rustup-init.exe -y --default-toolchain stable` | `rustc --version` |
-| Python 3.x | `python-*-amd64.exe /quiet InstallAllUsers=1 PrependPath=1` | `python --version` |
-| Nuitka + deps | `pip install nuitka ordered-set` | `python -m nuitka --version` |
-| Windows App SDK 1.8 | NuGet restore (auto via `msbuild /t:Restore`) | Restored by build |
-| Windows ADK (optional) | Only if `--trace` support is wanted | `wpr -help` |
+| Rust (rustup) | `rustup-init.exe -y --default-toolchain 1.85.0` | `rustc --version` |
 
-#### Repo cloning and dependency hydration
+#### Repo acquisition and dependency hydration
 
 After tools are installed:
 
-1. Clone each repo to a pinned location (e.g., `C:\bench\<repo>`).
-2. Checkout pinned commit SHA.
-3. Read repo manifests where possible:
+1. Resolve an exact source snapshot for each repo and fetch it into a pinned location (e.g., `C:\bench\<repo>`).
+2. Prefer GitHub source archives over full `git clone`:
+   - ripgrep uses the latest release tag archive by default
+   - Roslyn uses the default branch head archive because milestone 2 tracks the current upstream build layout
+   - `--ripgrep-ref` resolves the requested ref to an exact commit SHA and downloads that archive
+3. Record the exact commit SHA plus source metadata (`source_kind`, `source_reference`, `archive_url`) in `suite-manifest.json`.
+4. Read repo manifests where possible:
    - `global.json` (Roslyn .NET SDK version)
    - `Cargo.toml` / `rust-toolchain.toml` (ripgrep Rust version)
-   - `pyproject.toml` (Black Python requirements)
-   - `CMakeLists.txt` (LLVM CMake version requirements)
-4. Hydrate dependencies (untimed):
+5. Hydrate dependencies (untimed):
    - Roslyn: `Restore.cmd`
    - ripgrep: `cargo fetch`
-   - Black/Nuitka: `python -m venv` + `pip install`
-   - LLVM: CMake configure (generates Ninja build files)
-5. Write `suite-manifest.json` (repos, SHAs, tool versions).
+6. Write `suite-manifest.json` (repos, SHAs, source metadata, tool versions).
+
+If Visual Studio installation leaves Windows in a real pending-restart state, `avbench setup` should stop with a clear message telling the user to restart the PC and rerun setup. Ignore the Visual Studio bootstrapper's own queued cleanup JSON delete under `C:\ProgramData\Microsoft\VisualStudio\Packages\_bootstrapper\`, because current VS 2026 installs can leave that behind even when `vswhere` reports `isRebootRequired=false`.
 
 `setup` must not silently upgrade toolchains once a campaign has started. Re-running `setup` after a campaign starts should detect and warn about version drift.
 
@@ -449,11 +404,10 @@ Optionally run `setup-test-vm.ps1` to disable Windows Update, Superfetch, search
 Responsibilities:
 
 1. Load suite manifest.
-2. Validate setup is complete (tools present, repos cloned, deps hydrated).
+2. Validate setup is complete (tools present, source trees fetched, deps hydrated).
 3. Idle check: refuse if system CPU > threshold.
 4. For each scenario block:
-   a. Warmup run (discarded).
-   b. For each repetition:
+   a. For each repetition:
       - Create Windows Job object (`CreateJobObject`).
       - Launch workload process, assign to Job (`AssignProcessToJobObject`).
       - Stream stdout/stderr to log files.
@@ -483,25 +437,23 @@ Key Win32 APIs via P/Invoke:
 
 - `CreateJobObject` — create the job
 - `SetInformationJobObject` — configure `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`
-- `CreateProcess` with `CREATE_SUSPENDED` — create the child
-- `AssignProcessToJobObject` — attach child to job before it runs
-- `ResumeThread` — let the child start
-- `WaitForSingleObject` — wait for child exit
+- `Process.Start()` — create the child (no `CREATE_SUSPENDED`; the window between start and job assignment is negligible for multi-second compile workloads)
+- `AssignProcessToJobObject` — attach child to job immediately after start
+- `WaitForExit` — wait for child exit
 - `QueryInformationJobObject` with `JobObjectBasicAndIoAccountingInformation` and `JobObjectExtendedLimitInformation` — get CPU, I/O, memory metrics
 
 Child processes inherit the job assignment by default (nested jobs work on Windows 8+/Server 2012+), so the entire build process tree is captured.
 
 ### API microbench worker
 
-A dedicated C# console app launched by the runner. The same Job object measurement wraps it.
+In-process static methods called directly within the `avbench.exe` process. Each bench family is a `static Execute()` method that uses `Stopwatch` (QPC) for wall-time measurement and returns a `RunResult`. Job object CPU/IO accounting is not used for microbenchs — the per-operation granularity is too fine for scheduler-tick-based CPU charging.
 
 Behavior:
 
-- One benchmark family per invocation.
-- Explicit warmup period (discarded).
+- One benchmark family per `Execute()` call.
 - Fixed-iteration measurement window.
-- Batch timing to reduce per-op harness noise.
-- Writes results to stdout as JSON, captured by the runner.
+- Per-op QPC recording for latency percentiles (p50/p95/p99/max).
+- Returns `RunResult` directly (no stdout/JSON round-trip).
 
 ### Collector layer
 
@@ -511,7 +463,6 @@ Default:
 
 Opt-in:
 
-- **`WprCollector`** — starts/stops `wpr.exe` for ETW tracing.
 - **`PerfCounterCollector`** — starts/stops `typeperf.exe` for sampled system counters.
 
 ## VM Image Preparation
@@ -535,7 +486,7 @@ Create separate snapshots for:
 
 Simple, defensible rules for v1:
 
-- One warmup run per scenario block (discarded).
+- No warmup runs — every repetition is measured. AV cache priming from a discarded warmup would hide the real cold-path overhead that developers experience on first build, package restore, or branch switch.
 - At least 5 measured repetitions per scenario.
 - Report mean, median, stdev, and coefficient of variation (CV).
 - Mark a scenario as `noisy` if CV > 10%.
@@ -543,14 +494,6 @@ Simple, defensible rules for v1:
 - Never compare a single best run against another single best run.
 
 ## Workload-Specific Notes
-
-### LLVM
-
-- Treat `cmake` configure and `ninja` build as separate scenarios.
-- Keep generator (`Ninja`) and project set (`clang`, X86-only) fixed for the full campaign.
-- Store build dir outside the source tree for easy cleanup.
-- LLVM clone should use `git clone --config core.autocrlf=false` on Windows.
-- LLVM + Clang Release build needs ~15-20 GB disk space.
 
 ### ripgrep
 
@@ -561,26 +504,11 @@ Simple, defensible rules for v1:
 
 ### Roslyn
 
-- Separate `Restore.cmd` (untimed) from `Build.cmd` (timed).
-- Requires Visual Studio 2022 Preview + .NET SDK matching `global.json`.
+- Separate `Restore.cmd` (untimed) from the timed build.
+- Requires Visual Studio/MSBuild plus the .NET SDK matching `global.json`.
 - Solution file is `Roslyn.slnx`.
+- Timed benchmark command is `dotnet build Roslyn.slnx -c Release /m /nr:false`.
 - Watch for compiler server (`VBCSCompiler.exe`) behavior — it stays resident and may affect subsequent runs.
-
-### Black + Nuitka
-
-- Create a small `black_entry.py` wrapper as the Nuitka entry point.
-- Keep `standalone` and `onefile` as separate scenarios.
-- Smoke-test the produced executable after build (run `black --version` or format a small file).
-
-### Files (WinUI 3)
-
-- Requires VS Build Tools with WinUI workload, .NET 10 SDK, Windows 11 SDK 10.0.26100.0, Windows App SDK 1.8.
-- Most prerequisites overlap with LLVM (MSVC, Win SDK) and Roslyn (.NET SDK, VS Build Tools). The incremental cost is the WinUI workload component and .NET 10 SDK.
-- Solution is `Files.slnx` — build with `msbuild Files.slnx /p:Configuration=Release /p:Platform=x64`.
-- Run `msbuild /t:Restore` as untimed setup before the timed build.
-- For incremental-build, touch a `.cs` file in `src/Files.App/` (e.g., `App.xaml.cs` or a ViewModel file).
-- XAML compilation and CsWin32 source generation are key differentiators from Roslyn — they exercise MSBuild targets that generate many intermediate files and trigger AV scanning.
-- Watch for `Files.App.Server` and C++ native projects (`Files.App.Launcher`, `Files.App.OpenDialog`, `Files.App.SaveDialog`) — they link against MSVC and may add noise. Measure the full solution build to capture the realistic mixed workload.
 
 ## What To Build First
 
@@ -588,7 +516,7 @@ Simple, defensible rules for v1:
 
 Deliverables:
 
-- `avbench setup` — automated tool installation (Git, Rust) + ripgrep repo clone + `cargo fetch`
+- `avbench setup` — automated tool installation (Git, Rust) + ripgrep source fetch + `cargo fetch`
 - `avbench run` — ripgrep compile scenarios + one API microbench (`file-create-delete`)
 - Job object process-tree runner with default metrics
 - JSON output (`run.json`)
@@ -603,18 +531,14 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 
 ### Milestone 2
 
-- Extend `avbench setup` to install VS Build Tools, CMake, Ninja, .NET SDK (10.0.102 for Files)
+- Extend `avbench setup` to install Visual Studio/MSBuild prerequisites and the .NET SDKs needed by Roslyn
 - Add Roslyn compile scenarios
-- Add LLVM compile scenarios
-- Add Files (WinUI 3) compile scenarios — clone repo, `msbuild /t:Restore`, then timed build
 - Build `avbench-compare` — reads results from multiple directories, produces `compare.csv` and `summary.md`
 
 ### Milestone 3
 
-- Extend `avbench setup` to install Python, Nuitka
-- Add Black + Nuitka compile scenarios
 - Add remaining API microbench families
-- Add `--trace` (WPR) and `--counters` (typeperf) opt-in collectors
+- Add `--counters` (typeperf) opt-in collector
 
 ### Milestone 4
 
@@ -627,16 +551,6 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 - Windows Job Objects: https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects
 - `JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION`: https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_and_io_accounting_information
 - `JOBOBJECT_BASIC_ACCOUNTING_INFORMATION`: https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_accounting_information
-- Windows Performance Toolkit (WPR/WPA): https://learn.microsoft.com/en-us/windows-hardware/test/wpt/
-- Windows Performance Recorder: https://learn.microsoft.com/en-us/windows-hardware/test/wpt/windows-performance-recorder
-- Event Tracing for Windows: https://learn.microsoft.com/en-us/windows/win32/etw/about-event-tracing
 - `typeperf`: https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/typeperf
-- LLVM getting started: https://github.com/llvm/llvm-project/blob/main/llvm/docs/GettingStarted.rst
-- LLVM Visual Studio guide: https://github.com/llvm/llvm-project/blob/main/llvm/docs/GettingStartedVS.rst
 - ripgrep README: https://github.com/BurntSushi/ripgrep/blob/master/README.md
 - Roslyn Windows build guide: https://github.com/dotnet/roslyn/blob/main/docs/contributing/Building%2C%20Debugging%2C%20and%20Testing%20on%20Windows.md
-- Nuitka user manual: https://nuitka.net/doc/user-manual.html
-- Black README: https://github.com/psf/black/blob/main/README.md
-- Files build guide: https://files.community/docs/contributing/building-from-source
-- Files repo: https://github.com/files-community/Files
-- Windows App SDK downloads: https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads

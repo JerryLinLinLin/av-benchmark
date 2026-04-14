@@ -10,6 +10,8 @@ public static class CsvResultWriter
     [
         "scenario_id",
         "av_name",
+        "av_product",
+        "av_version",
         "repetition",
         "timestamp_utc",
         "command",
@@ -24,6 +26,10 @@ public static class CsvResultWriter
         "io_read_ops",
         "io_write_ops",
         "total_processes",
+        "p50_us",
+        "p95_us",
+        "p99_us",
+        "max_us",
         "file_batch_size",
         "file_total_operations",
         "file_ops_per_sec",
@@ -40,6 +46,8 @@ public static class CsvResultWriter
             builder.AppendLine(string.Join(",",
                 Escape(result.ScenarioId),
                 Escape(result.AvName),
+                Escape(result.AvProduct),
+                Escape(result.AvVersion),
                 result.Repetition.ToString(CultureInfo.InvariantCulture),
                 Escape(result.TimestampUtc.ToString("O", CultureInfo.InvariantCulture)),
                 Escape(result.Command),
@@ -54,6 +62,10 @@ public static class CsvResultWriter
                 result.IoReadOps.ToString(CultureInfo.InvariantCulture),
                 result.IoWriteOps.ToString(CultureInfo.InvariantCulture),
                 result.TotalProcesses.ToString(CultureInfo.InvariantCulture),
+                FormatNullable(result.P50Us),
+                FormatNullable(result.P95Us),
+                FormatNullable(result.P99Us),
+                FormatNullable(result.MaxUs),
                 (result.FileMicrobench?.BatchSize ?? 0).ToString(CultureInfo.InvariantCulture),
                 (result.FileMicrobench?.TotalOperations ?? 0).ToString(CultureInfo.InvariantCulture),
                 (result.FileMicrobench?.OpsPerSec ?? 0).ToString("F3", CultureInfo.InvariantCulture),
@@ -72,4 +84,9 @@ public static class CsvResultWriter
 
         return value;
     }
+
+    private static string FormatNullable(double? value)
+        => value.HasValue
+            ? value.Value.ToString("F3", CultureInfo.InvariantCulture)
+            : string.Empty;
 }

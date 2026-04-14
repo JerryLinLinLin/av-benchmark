@@ -49,7 +49,7 @@ av-benchmark/
         JobObject.cs              → P/Invoke wrapper for Windows Job objects
         ProcessTreeRunner.cs      → launch process under Job, collect metrics
       Scenarios/
-        ScenarioRunner.cs         → orchestrate warmup + repetitions
+        ScenarioRunner.cs         → orchestrate repetitions
         RipgrepScenario.cs
         FileMicrobenchScenario.cs
       Output/
@@ -104,7 +104,7 @@ using System.CommandLine;
 using System.Security.Principal;
 using AvBench.Cli.Commands;
 
-// Require admin — tool installs and WPR tracing need elevation
+// Require admin — tool installs need elevation
 using var identity = WindowsIdentity.GetCurrent();
 var principal = new WindowsPrincipal(identity);
 if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
@@ -203,7 +203,7 @@ public static class RunCommand
             var output = parseResult.GetValue(outputOption)!;
             // 1. Load manifest
             // 2. Idle check
-            // 3. For each scenario: warmup + N reps
+            // 3. For each scenario: N reps
             // 4. Write runs.csv
             return 0;
         });
@@ -274,6 +274,19 @@ public sealed class RunResult
     [JsonPropertyName("total_processes")]
     public int TotalProcesses { get; set; }
 
+    // Latency percentiles (populated by API microbench families, null for compile scenarios)
+    [JsonPropertyName("p50_us")]
+    public double? P50Us { get; set; }
+
+    [JsonPropertyName("p95_us")]
+    public double? P95Us { get; set; }
+
+    [JsonPropertyName("p99_us")]
+    public double? P99Us { get; set; }
+
+    [JsonPropertyName("max_us")]
+    public double? MaxUs { get; set; }
+
     [JsonPropertyName("machine")]
     public MachineInfo Machine { get; set; } = new();
 
@@ -337,6 +350,15 @@ public sealed class RepoEntry
 
     [JsonPropertyName("local_path")]
     public string LocalPath { get; set; } = "";
+
+    [JsonPropertyName("source_kind")]
+    public string SourceKind { get; set; } = ""; // "archive" or "git-clone"
+
+    [JsonPropertyName("source_reference")]
+    public string SourceReference { get; set; } = ""; // release tag, branch name, or commit SHA
+
+    [JsonPropertyName("archive_url")]
+    public string? ArchiveUrl { get; set; } // URL of the downloaded archive, if source_kind is "archive"
 }
 
 [JsonSerializable(typeof(SuiteManifest))]
@@ -501,7 +523,7 @@ public sealed class RustInstaller : ToolInstaller
 
         // -y = accept defaults, no prompts
         // --default-toolchain stable
-        var exitCode = RunProcess(tempPath, "-y --default-toolchain stable");
+        var exitCode = RunProcess(tempPath, "-y --default-toolchain 1.85.0");
 
         if (exitCode != 0)
             throw new InvalidOperationException($"rustup-init exited with code {exitCode}");
@@ -833,6 +855,13 @@ public sealed class JobAccountingInfo
 
 ## Process-Tree Runner
 
+### Timing accuracy
+
+The runner uses two timing mechanisms with different accuracy characteristics:
+
+- **`Stopwatch` (wall time):** QPC-based, sub-microsecond resolution on invariant-TSC hardware. Reliable for all workload durations.
+- **Job object `TotalUserTime` / `TotalKernelTime`:** Expressed in 100ns ticks but charged at scheduler clock interrupt granularity (~15.625ms / 64 Hz). Reliable for multi-second compile workloads; not meaningful for sub-second intervals. The kernel/user ratio converges to the true distribution over thousands of scheduler ticks.
+
 ### `ProcessTreeRunner.cs`
 
 Launches a workload command under a Job Object, streams stdout/stderr to files, waits for completion, then queries accounting.
@@ -931,7 +960,7 @@ Why not `CREATE_SUSPENDED`? `Process.Start()` in .NET doesn't expose `CREATE_SUS
 
 ### `ScenarioRunner.cs`
 
-Orchestrates warmup, repetitions, and cleanup for a scenario.
+Orchestrates repetitions and cleanup for a scenario.
 
 ```csharp
 using AvBench.Core.Models;
@@ -956,21 +985,18 @@ public sealed class ScenarioRunner
     }
 
     /// <summary>
-    /// Run a full scenario block: idle check, warmup, N repetitions.
+    /// Run a full scenario block: idle check, N repetitions.
     /// Returns all RunResults.
     /// </summary>
     public List<RunResult> Execute(ScenarioDefinition scenario)
     {
         IdleCheck();
 
-        Console.WriteLine($"[run] Warmup: {scenario.Id}");
-        RunOnce(scenario, isWarmup: true);
-
         var results = new List<RunResult>();
         for (int rep = 1; rep <= _repetitions; rep++)
         {
             Console.WriteLine($"[run] {scenario.Id} rep {rep}/{_repetitions}");
-            var result = RunOnce(scenario, isWarmup: false);
+            var result = RunOnce(scenario);
             result.Repetition = rep;
             results.Add(result);
 
@@ -992,7 +1018,7 @@ public sealed class ScenarioRunner
         return results;
     }
 
-    private RunResult RunOnce(ScenarioDefinition scenario, bool isWarmup)
+    private RunResult RunOnce(ScenarioDefinition scenario)
     {
         // Run pre-actions (e.g., clean build dir)
         foreach (var action in scenario.PreActions)
@@ -1009,31 +1035,26 @@ public sealed class ScenarioRunner
             stderrLogPath: stderrLog,
             timeout: TimeSpan.FromHours(2));
 
-        if (!isWarmup)
+        return new RunResult
         {
-            return new RunResult
-            {
-                ScenarioId = scenario.Id,
-                AvName = _avName,
-                TimestampUtc = DateTime.UtcNow,
-                Command = $"{scenario.FileName} {scenario.Arguments}",
-                WorkingDir = scenario.WorkingDirectory,
-                ExitCode = treeResult.ExitCode,
-                WallMs = treeResult.WallMs,
-                UserCpuMs = treeResult.Accounting.TotalUserTimeMs,
-                KernelCpuMs = treeResult.Accounting.TotalKernelTimeMs,
-                PeakJobMemoryMb = treeResult.Accounting.PeakJobMemoryBytes / (1024 * 1024),
-                IoReadBytes = treeResult.Accounting.IoReadBytes,
-                IoWriteBytes = treeResult.Accounting.IoWriteBytes,
-                IoReadOps = treeResult.Accounting.IoReadOps,
-                IoWriteOps = treeResult.Accounting.IoWriteOps,
-                TotalProcesses = treeResult.Accounting.TotalProcesses,
-                Machine = CollectMachineInfo(),
-                RunnerVersion = _runnerVersion
-            };
-        }
-
-        return new RunResult(); // warmup, discarded
+            ScenarioId = scenario.Id,
+            AvName = _avName,
+            TimestampUtc = DateTime.UtcNow,
+            Command = $"{scenario.FileName} {scenario.Arguments}",
+            WorkingDir = scenario.WorkingDirectory,
+            ExitCode = treeResult.ExitCode,
+            WallMs = treeResult.WallMs,
+            UserCpuMs = treeResult.Accounting.TotalUserTimeMs,
+            KernelCpuMs = treeResult.Accounting.TotalKernelTimeMs,
+            PeakJobMemoryMb = treeResult.Accounting.PeakJobMemoryBytes / (1024 * 1024),
+            IoReadBytes = treeResult.Accounting.IoReadBytes,
+            IoWriteBytes = treeResult.Accounting.IoWriteBytes,
+            IoReadOps = treeResult.Accounting.IoReadOps,
+            IoWriteOps = treeResult.Accounting.IoWriteOps,
+            TotalProcesses = treeResult.Accounting.TotalProcesses,
+            Machine = CollectMachineInfo(),
+            RunnerVersion = _runnerVersion
+        };
     }
 
     private static void IdleCheck()
@@ -1164,9 +1185,6 @@ public static class FileMicrobenchScenario
     public static RunResult Execute(string tempRoot, int totalOps, int batchSize, string avName)
     {
         Directory.CreateDirectory(tempRoot);
-
-        // Warmup
-        RunBatch(tempRoot, batchSize);
 
         var sw = Stopwatch.StartNew();
         int completed = 0;

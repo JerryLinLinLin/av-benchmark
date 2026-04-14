@@ -1,8 +1,11 @@
 using System.CommandLine;
+using System.Runtime.Versioning;
+using AvBench.Core;
 using AvBench.Core.Setup;
 
 namespace AvBench.Cli.Commands;
 
+[SupportedOSPlatform("windows")]
 public static class SetupCommand
 {
     public static Command Create()
@@ -18,18 +21,49 @@ public static class SetupCommand
             Description = "Optional ripgrep branch, tag, or SHA to check out before hydrating dependencies."
         };
 
-        var command = new Command("setup", "Install Git and Rust, clone ripgrep, and run cargo fetch.");
+        var workloadOption = new Option<string[]>("--workload", ["-w"])
+        {
+            Description = $"One or more workload ids to set up. Defaults to all: {BenchmarkWorkloads.HelpText}.",
+            AllowMultipleArgumentsPerToken = true,
+            DefaultValueFactory = _ => []
+        };
+
+        var command = new Command("setup", "Install toolchains, fetch selected benchmark source trees, hydrate dependencies, and write suite-manifest.json.");
         command.Options.Add(benchDirOption);
         command.Options.Add(ripgrepRefOption);
+        command.Options.Add(workloadOption);
 
         command.SetAction(async parseResult =>
         {
-            var benchDir = parseResult.GetValue(benchDirOption)!;
-            var ripgrepRef = parseResult.GetValue(ripgrepRefOption);
+            try
+            {
+                var benchDir = parseResult.GetValue(benchDirOption)!;
+                var ripgrepRef = parseResult.GetValue(ripgrepRefOption);
+                if (!BenchmarkWorkloads.TryNormalize(parseResult.GetValue(workloadOption), out var workloads, out var error))
+                {
+                    Console.Error.WriteLine($"ERROR: {error}");
+                    return 1;
+                }
 
-            var service = new SetupService();
-            await service.ExecuteAsync(benchDir.FullName, ripgrepRef, CancellationToken.None);
-            return 0;
+                var service = new SetupService();
+                await service.ExecuteAsync(benchDir.FullName, ripgrepRef, workloads, CancellationToken.None);
+                return 0;
+            }
+            catch (SetupRestartRequiredException ex)
+            {
+                Console.WriteLine($"[setup] {ex.Message}");
+                return 2;
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.Error.WriteLine($"ERROR: {ex.Message}");
+                return 1;
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.Error.WriteLine($"ERROR: {ex.Message}");
+                return 1;
+            }
         });
 
         return command;

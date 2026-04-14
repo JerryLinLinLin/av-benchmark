@@ -3,36 +3,105 @@ using System.Text.Json;
 using AvBench.Core.Environment;
 using AvBench.Core.Models;
 using AvBench.Core.Serialization;
+using System.Runtime.Versioning;
 
 namespace AvBench.Core.Setup;
 
+[SupportedOSPlatform("windows")]
 public sealed class SetupService
 {
     public const string SuiteManifestFileName = "suite-manifest.json";
+    private static readonly Version MinimumVisualStudioVersion = new(17, 0, 0);
 
-    public async Task<SuiteManifest> ExecuteAsync(string benchDirectory, string? ripgrepRevision, CancellationToken cancellationToken)
+    public async Task<SuiteManifest> ExecuteAsync(
+        string benchDirectory,
+        string? ripgrepRevision,
+        IReadOnlyCollection<string> selectedWorkloads,
+        CancellationToken cancellationToken)
     {
         KnownToolPaths.EnsureCommonToolPaths();
         Directory.CreateDirectory(benchDirectory);
 
-        var gitVersion = await new GitInstaller().EnsureInstalledAsync(cancellationToken);
-        var rustVersion = await new RustInstaller().EnsureInstalledAsync(cancellationToken);
+        RepoEntry? ripgrep = null;
+        RepoEntry? roslyn = null;
+        var repos = new List<RepoEntry>();
+        var workloads = new List<WorkloadEntry>();
+        var tools = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        var ripgrep = await RepoCloner.CloneRipgrepAsync(benchDirectory, ripgrepRevision, cancellationToken);
-        await RepoCloner.CargoFetchAsync(ripgrep.LocalPath, cancellationToken);
+        if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Ripgrep))
+        {
+            ripgrep = await RepoCloner.CloneRipgrepAsync(benchDirectory, ripgrepRevision, cancellationToken);
+            repos.Add(ripgrep);
+        }
+
+        if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Roslyn))
+        {
+            roslyn = await RepoCloner.CloneRoslynAsync(benchDirectory, cancellationToken);
+            repos.Add(roslyn);
+        }
+
+        if (BenchmarkWorkloads.RequiresRust(selectedWorkloads))
+        {
+            tools["rustc"] = await new RustInstaller().EnsureInstalledAsync(cancellationToken);
+        }
+
+        if (BenchmarkWorkloads.RequiresVisualStudio(selectedWorkloads))
+        {
+            var roslynVersion = roslyn is null ? null : RepoCloner.ResolveVisualStudioVersion(roslyn.LocalPath);
+            tools["visual_studio"] = await new VsBuildToolsInstaller(DetermineRequiredVisualStudioVersion(roslynVersion))
+                .EnsureInstalledAsync(cancellationToken);
+
+            if (WindowsRestartDetector.IsRestartPending())
+            {
+                throw SetupRestartRequiredException.PendingVisualStudioFinalize();
+            }
+        }
+
+        if (BenchmarkWorkloads.RequiresDotNetSdk(selectedWorkloads))
+        {
+            var sdkVersions = new List<string>();
+            if (roslyn is not null)
+            {
+                sdkVersions.Add(RepoCloner.ResolveDotNetSdkVersion(roslyn.LocalPath));
+            }
+
+            tools["dotnet_sdks"] = await new DotNetSdkInstaller(
+                    sdkVersions.Distinct(StringComparer.OrdinalIgnoreCase).ToArray())
+                .EnsureInstalledAsync(cancellationToken);
+        }
+
+        if (ripgrep is not null)
+        {
+            await RepoCloner.CargoFetchAsync(ripgrep.LocalPath, cancellationToken);
+            workloads.Add(new WorkloadEntry
+            {
+                Name = BenchmarkWorkloads.Ripgrep,
+                RepoName = ripgrep.Name,
+                WorkingDirectory = ripgrep.LocalPath,
+                IncrementalTouchPath = RepoCloner.ResolveRipgrepTouchPath(ripgrep.LocalPath)
+            });
+        }
+
+        if (roslyn is not null)
+        {
+            await RepoCloner.HydrateRoslynAsync(roslyn.LocalPath, cancellationToken);
+            workloads.Add(new WorkloadEntry
+            {
+                Name = BenchmarkWorkloads.Roslyn,
+                RepoName = roslyn.Name,
+                WorkingDirectory = roslyn.LocalPath,
+                IncrementalTouchPath = RepoCloner.ResolveRoslynTouchPath(roslyn.LocalPath)
+            });
+        }
 
         var manifest = new SuiteManifest
         {
             CreatedUtc = DateTime.UtcNow,
             BenchDirectory = benchDirectory,
             RunnerVersion = SystemInfoProvider.GetRunnerVersion(),
-            IncrementalTouchPath = RepoCloner.ResolveIncrementalTouchPath(ripgrep.LocalPath),
-            Repos = [ripgrep],
-            Tools = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["git"] = gitVersion,
-                ["rustc"] = rustVersion
-            }
+            Repos = repos,
+            Workloads = workloads,
+            Tools = tools
         };
 
         var manifestPath = Path.Combine(benchDirectory, SuiteManifestFileName);
@@ -50,5 +119,14 @@ public sealed class SetupService
         var hash = sha256.ComputeHash(stream);
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
-}
 
+    private static string DetermineRequiredVisualStudioVersion(string? roslynVersion)
+    {
+        if (Version.TryParse(roslynVersion, out var roslynParsed) && roslynParsed > MinimumVisualStudioVersion)
+        {
+            return roslynParsed.ToString();
+        }
+
+        return MinimumVisualStudioVersion.ToString();
+    }
+}
