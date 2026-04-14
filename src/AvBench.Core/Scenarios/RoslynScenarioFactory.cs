@@ -52,18 +52,6 @@ public static class RoslynScenarioFactory
                     SourceFileToucher.Touch(workload.IncrementalTouchPath!);
                 },
                 ValidateAsync = _ => ScenarioSupport.EnsureDirectoryHasFilesAsync(artifactsDirectory, "Roslyn artifacts")
-            },
-            new ScenarioDefinition
-            {
-                Id = "roslyn-noop-build",
-                FileName = "dotnet",
-                Arguments = buildArguments,
-                WorkingDirectory = repoDirectory,
-                PrepareAsync = cancellationToken => ScenarioSupport.EnsureBuildOutputsExistAsync(
-                    [artifactsDirectory],
-                    ct => RunUntimedBuildAsync(repoDirectory, buildArguments, ct),
-                    cancellationToken),
-                ValidateAsync = _ => ScenarioSupport.EnsureDirectoryHasFilesAsync(artifactsDirectory, "Roslyn artifacts")
             }
         ];
     }

@@ -43,18 +43,6 @@ public static class RipgrepScenarioFactory
                     SourceFileToucher.Touch(workload.IncrementalTouchPath!);
                 },
                 ValidateAsync = _ => ScenarioSupport.EnsureFileExistsAsync(artifactPath, "ripgrep artifact")
-            },
-            new ScenarioDefinition
-            {
-                Id = "ripgrep-noop-build",
-                FileName = "cargo",
-                Arguments = "build --release",
-                WorkingDirectory = repoDirectory,
-                PrepareAsync = cancellationToken => ScenarioSupport.EnsureBuildOutputsExistAsync(
-                    [artifactPath],
-                    ct => RunUntimedBuildAsync(repoDirectory, ct),
-                    cancellationToken),
-                ValidateAsync = _ => ScenarioSupport.EnsureFileExistsAsync(artifactPath, "ripgrep artifact")
             }
         ];
     }
