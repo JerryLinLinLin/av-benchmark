@@ -37,6 +37,11 @@ public abstract class ToolInstaller
     {
         Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
 
+        if (File.Exists(destinationPath))
+        {
+            File.Delete(destinationPath);
+        }
+
         using var client = new HttpClient();
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("avbench", "0.1.0"));
 

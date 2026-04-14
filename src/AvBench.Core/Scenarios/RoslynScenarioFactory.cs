@@ -9,20 +9,22 @@ public static class RoslynScenarioFactory
         var workload = manifest.GetRequiredWorkload("roslyn");
         var repoDirectory = workload.WorkingDirectory;
         var artifactsDirectory = Path.Combine(repoDirectory, "artifacts", "bin");
-        var buildScriptPath = Path.Combine(repoDirectory, "Build.cmd");
+        var solutionPath = Path.Combine(repoDirectory, "Roslyn.slnx");
 
-        if (!File.Exists(buildScriptPath))
+        if (!File.Exists(solutionPath))
         {
-            throw new InvalidOperationException($"Roslyn build script was not found at {buildScriptPath}.");
+            throw new InvalidOperationException($"Roslyn solution was not found at {solutionPath}.");
         }
+
+        var buildArguments = $"build \"{solutionPath}\" -c Release /m /nr:false";
 
         return
         [
             new ScenarioDefinition
             {
                 Id = "roslyn-clean-build",
-                FileName = "cmd.exe",
-                Arguments = "/d /c Build.cmd -configuration Release",
+                FileName = "dotnet",
+                Arguments = buildArguments,
                 WorkingDirectory = repoDirectory,
                 PrepareAsync = _ =>
                 {
@@ -35,14 +37,14 @@ public static class RoslynScenarioFactory
             new ScenarioDefinition
             {
                 Id = "roslyn-incremental-build",
-                FileName = "cmd.exe",
-                Arguments = "/d /c Build.cmd -configuration Release",
+                FileName = "dotnet",
+                Arguments = buildArguments,
                 WorkingDirectory = repoDirectory,
                 PrepareAsync = async cancellationToken =>
                 {
                     await ScenarioSupport.EnsureBuildOutputsExistAsync(
                         [artifactsDirectory],
-                        ct => RunUntimedBuildAsync(repoDirectory, ct),
+                        ct => RunUntimedBuildAsync(repoDirectory, buildArguments, ct),
                         cancellationToken);
                     SourceFileToucher.Touch(workload.IncrementalTouchPath!);
                 },
@@ -51,23 +53,23 @@ public static class RoslynScenarioFactory
             new ScenarioDefinition
             {
                 Id = "roslyn-noop-build",
-                FileName = "cmd.exe",
-                Arguments = "/d /c Build.cmd -configuration Release",
+                FileName = "dotnet",
+                Arguments = buildArguments,
                 WorkingDirectory = repoDirectory,
                 PrepareAsync = cancellationToken => ScenarioSupport.EnsureBuildOutputsExistAsync(
                     [artifactsDirectory],
-                    ct => RunUntimedBuildAsync(repoDirectory, ct),
+                    ct => RunUntimedBuildAsync(repoDirectory, buildArguments, ct),
                     cancellationToken),
                 ValidateAsync = _ => ScenarioSupport.EnsureDirectoryHasFilesAsync(artifactsDirectory, "Roslyn artifacts")
             }
         ];
     }
 
-    private static Task RunUntimedBuildAsync(string repoDirectory, CancellationToken cancellationToken)
+    private static Task RunUntimedBuildAsync(string repoDirectory, string buildArguments, CancellationToken cancellationToken)
     {
         return ScenarioSupport.RunProcessAsync(
-            "cmd.exe",
-            "/d /c Build.cmd -configuration Release",
+            "dotnet",
+            buildArguments,
             repoDirectory,
             "Roslyn untimed prerequisite build",
             cancellationToken);

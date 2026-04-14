@@ -4,7 +4,7 @@ namespace AvBench.Core.Setup;
 
 public sealed class VsBuildToolsInstaller(string? minimumVersion = null) : ToolInstaller
 {
-    private const string BootstrapperUrl = "https://aka.ms/vs/17/release/vs_buildtools.exe";
+    private const string WingetPackageId = "Microsoft.VisualStudio.BuildTools";
 
     private static readonly string VswherePath = Path.Combine(
         System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86),
@@ -43,10 +43,9 @@ public sealed class VsBuildToolsInstaller(string? minimumVersion = null) : ToolI
 
     public override async Task InstallAsync(CancellationToken cancellationToken)
     {
-        var installerPath = Path.Combine(Path.GetTempPath(), "avbench", "vs_buildtools.exe");
-        await DownloadFileAsync(BootstrapperUrl, installerPath, cancellationToken);
+        await Task.Yield();
 
-        var arguments = string.Join(" ",
+        var overrideArguments = string.Join(" ",
             "--quiet",
             "--wait",
             "--norestart",
@@ -57,10 +56,15 @@ public sealed class VsBuildToolsInstaller(string? minimumVersion = null) : ToolI
             "--add Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs",
             "--includeRecommended");
 
-        var exitCode = RunProcess(installerPath, arguments, useShellExecute: true);
+        var arguments =
+            $"install -e --id {WingetPackageId} --source winget " +
+            "--accept-package-agreements --accept-source-agreements --silent " +
+            $"--override \"{overrideArguments}\"";
+
+        var exitCode = RunProcess("winget", arguments);
         if (exitCode != 0 && exitCode != 3010)
         {
-            throw new InvalidOperationException($"Visual Studio Build Tools installer exited with code {exitCode}.");
+            throw new InvalidOperationException($"Visual Studio Build Tools install exited with code {exitCode}.");
         }
     }
 
@@ -96,11 +100,20 @@ public sealed class VsBuildToolsInstaller(string? minimumVersion = null) : ToolI
         string operationName,
         CancellationToken cancellationToken)
     {
+        await ProcessUtil.EnsureSuccessAsync(
+            "cmd.exe",
+            BuildDeveloperShellArguments(commandLine),
+            workingDirectory,
+            operationName,
+            cancellationToken);
+    }
+
+    public static string BuildDeveloperShellArguments(string commandLine)
+    {
         var vsDevCmdPath = FindVsDevCmdPath()
             ?? throw new InvalidOperationException("VsDevCmd.bat could not be located. Visual Studio Build Tools are required.");
 
-        var escapedCommand = $"/d /c \"call \"\"{vsDevCmdPath}\"\" -arch=amd64 -host_arch=amd64 >nul && {commandLine}\"";
-        await ProcessUtil.EnsureSuccessAsync("cmd.exe", escapedCommand, workingDirectory, operationName, cancellationToken);
+        return $"/d /c \"\"{vsDevCmdPath}\" -arch=amd64 -host_arch=amd64 >nul && {commandLine}\"";
     }
 
     private static string? FirstNonEmptyLine(string? value)

@@ -67,7 +67,7 @@ public static class RepoCloner
         Console.WriteLine($"[setup] Restoring Files solution in {repoDirectory}");
         await ProcessUtil.EnsureSuccessAsync(
             msbuildPath,
-            $"\"{solutionPath}\" /t:Restore /p:Configuration=Release /p:Platform=x64 /nr:false",
+            $"\"{solutionPath}\" /t:Restore /p:Configuration=Release /p:Platform=x64 /p:RestorePackagesConfig=true /nr:false",
             repoDirectory,
             "Files restore",
             cancellationToken);

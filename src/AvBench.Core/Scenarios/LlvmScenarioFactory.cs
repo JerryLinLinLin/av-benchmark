@@ -20,7 +20,7 @@ public static class LlvmScenarioFactory
             {
                 Id = "llvm-configure",
                 FileName = "cmd.exe",
-                Arguments = $"/d /c {RepoCloner.BuildLlvmConfigureCommand(repoDirectory, buildDirectory)}",
+                Arguments = VsBuildToolsInstaller.BuildDeveloperShellArguments(RepoCloner.BuildLlvmConfigureCommand(repoDirectory, buildDirectory)),
                 WorkingDirectory = repoDirectory,
                 PrepareAsync = _ =>
                 {
@@ -34,7 +34,7 @@ public static class LlvmScenarioFactory
             {
                 Id = "llvm-clean-build",
                 FileName = "cmd.exe",
-                Arguments = $"/d /c {BuildNinjaCommand(buildDirectory)}",
+                Arguments = VsBuildToolsInstaller.BuildDeveloperShellArguments(BuildNinjaCommand(buildDirectory)),
                 WorkingDirectory = repoDirectory,
                 PrepareAsync = async cancellationToken =>
                 {
@@ -51,7 +51,7 @@ public static class LlvmScenarioFactory
             {
                 Id = "llvm-incremental-build",
                 FileName = "cmd.exe",
-                Arguments = $"/d /c {BuildNinjaCommand(buildDirectory)}",
+                Arguments = VsBuildToolsInstaller.BuildDeveloperShellArguments(BuildNinjaCommand(buildDirectory)),
                 WorkingDirectory = repoDirectory,
                 PrepareAsync = async cancellationToken =>
                 {
@@ -64,7 +64,7 @@ public static class LlvmScenarioFactory
             {
                 Id = "llvm-noop-build",
                 FileName = "cmd.exe",
-                Arguments = $"/d /c {BuildNinjaCommand(buildDirectory)}",
+                Arguments = VsBuildToolsInstaller.BuildDeveloperShellArguments(BuildNinjaCommand(buildDirectory)),
                 WorkingDirectory = repoDirectory,
                 PrepareAsync = cancellationToken => EnsureBuildOutputsReadyAsync(repoDirectory, buildDirectory, buildNinjaPath, clangPath, cancellationToken),
                 ValidateAsync = _ => ScenarioSupport.EnsureFileExistsAsync(clangPath, "LLVM clang artifact")

@@ -12,6 +12,7 @@ public static class KnownToolPaths
         EnsureDotNetOnPath();
         EnsureNinjaOnPath();
         EnsureCmakeOnPath();
+        EnsurePythonOnPath();
     }
 
     public static void EnsureGitOnPath()
@@ -42,6 +43,36 @@ public static class KnownToolPaths
     public static void EnsureCmakeOnPath()
     {
         AddToPathIfExists(@"C:\Program Files\CMake\bin");
+    }
+
+    public static void EnsurePythonOnPath()
+    {
+        var localPrograms = Path.Combine(
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+            "Programs",
+            "Python");
+
+        if (Directory.Exists(localPrograms))
+        {
+            foreach (var pythonHome in Directory.EnumerateDirectories(localPrograms, "Python*").OrderByDescending(static path => path, StringComparer.OrdinalIgnoreCase))
+            {
+                AddToPathIfExists(pythonHome);
+                AddToPathIfExists(Path.Combine(pythonHome, "Scripts"));
+            }
+        }
+
+        var allUsersPrograms = Path.Combine(
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles),
+            "Python");
+
+        if (Directory.Exists(allUsersPrograms))
+        {
+            foreach (var pythonHome in Directory.EnumerateDirectories(allUsersPrograms, "Python*").OrderByDescending(static path => path, StringComparer.OrdinalIgnoreCase))
+            {
+                AddToPathIfExists(pythonHome);
+                AddToPathIfExists(Path.Combine(pythonHome, "Scripts"));
+            }
+        }
     }
 
     private static void AddToPathIfExists(string path)

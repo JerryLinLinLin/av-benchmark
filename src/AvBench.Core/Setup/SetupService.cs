@@ -9,6 +9,7 @@ namespace AvBench.Core.Setup;
 public sealed class SetupService
 {
     public const string SuiteManifestFileName = "suite-manifest.json";
+    private static readonly Version MinimumVisualStudioVersion = new(18, 0, 0);
 
     public async Task<SuiteManifest> ExecuteAsync(string benchDirectory, string? ripgrepRevision, CancellationToken cancellationToken)
     {
@@ -24,11 +25,12 @@ public sealed class SetupService
         var files = await RepoCloner.CloneFilesAsync(benchDirectory, cancellationToken);
 
         var llvmBuildDirectory = Path.Combine(benchDirectory, "llvm-build");
-        var requiredVsVersion = RepoCloner.ResolveVisualStudioVersion(roslyn.LocalPath);
+        var requiredVsVersion = DetermineRequiredVisualStudioVersion(RepoCloner.ResolveVisualStudioVersion(roslyn.LocalPath));
 
         var vsVersion = await new VsBuildToolsInstaller(requiredVsVersion).EnsureInstalledAsync(cancellationToken);
         var cmakeVersion = await new CmakeInstaller().EnsureInstalledAsync(cancellationToken);
         var ninjaVersion = await new NinjaInstaller().EnsureInstalledAsync(cancellationToken);
+        var pythonVersion = await new PythonInstaller().EnsureInstalledAsync(cancellationToken);
         var dotnetInstaller = new DotNetSdkInstaller(
         [
             RepoCloner.ResolveDotNetSdkVersion(roslyn.LocalPath),
@@ -92,6 +94,7 @@ public sealed class SetupService
                 ["visual_studio"] = vsVersion,
                 ["cmake"] = cmakeVersion,
                 ["ninja"] = ninjaVersion,
+                ["python"] = pythonVersion,
                 ["dotnet_sdks"] = dotnetSdkVersions
             }
         };
@@ -110,5 +113,15 @@ public sealed class SetupService
         using var stream = File.OpenRead(manifestPath);
         var hash = sha256.ComputeHash(stream);
         return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    private static string DetermineRequiredVisualStudioVersion(string? roslynVersion)
+    {
+        if (Version.TryParse(roslynVersion, out var roslynParsed) && roslynParsed > MinimumVisualStudioVersion)
+        {
+            return roslynParsed.ToString();
+        }
+
+        return MinimumVisualStudioVersion.ToString();
     }
 }
