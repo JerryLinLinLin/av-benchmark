@@ -107,11 +107,6 @@ public static class RunCommand
                 scenarios.AddRange(LlvmScenarioFactory.Create(manifest));
             }
 
-            if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Files))
-            {
-                scenarios.AddRange(FilesScenarioFactory.Create(manifest));
-            }
-
             var executablePath = Environment.ProcessPath
                 ?? throw new InvalidOperationException("Unable to resolve the current executable path.");
             if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.FileCreateDelete))

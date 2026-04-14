@@ -11,7 +11,7 @@ namespace AvBench.Core.Setup;
 public sealed class SetupService
 {
     public const string SuiteManifestFileName = "suite-manifest.json";
-    private static readonly Version MinimumVisualStudioVersion = new(18, 0, 0);
+    private static readonly Version MinimumVisualStudioVersion = new(17, 0, 0);
 
     public async Task<SuiteManifest> ExecuteAsync(
         string benchDirectory,
@@ -25,7 +25,6 @@ public sealed class SetupService
         RepoEntry? ripgrep = null;
         RepoEntry? roslyn = null;
         RepoEntry? llvm = null;
-        RepoEntry? files = null;
 
         var llvmBuildDirectory = Path.Combine(benchDirectory, "llvm-build");
         var repos = new List<RepoEntry>();
@@ -48,12 +47,6 @@ public sealed class SetupService
         {
             llvm = await RepoCloner.CloneLlvmAsync(benchDirectory, cancellationToken);
             repos.Add(llvm);
-        }
-
-        if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Files))
-        {
-            files = await RepoCloner.CloneFilesAsync(benchDirectory, cancellationToken);
-            repos.Add(files);
         }
 
         if (BenchmarkWorkloads.RequiresRust(selectedWorkloads))
@@ -96,11 +89,6 @@ public sealed class SetupService
                 sdkVersions.Add(RepoCloner.ResolveDotNetSdkVersion(roslyn.LocalPath));
             }
 
-            if (files is not null)
-            {
-                sdkVersions.Add(RepoCloner.ResolveDotNetSdkVersion(files.LocalPath));
-            }
-
             tools["dotnet_sdks"] = await new DotNetSdkInstaller(
                     sdkVersions.Distinct(StringComparer.OrdinalIgnoreCase).ToArray())
                 .EnsureInstalledAsync(cancellationToken);
@@ -140,18 +128,6 @@ public sealed class SetupService
                 WorkingDirectory = llvm.LocalPath,
                 BuildDirectory = llvmBuildDirectory,
                 IncrementalTouchPath = RepoCloner.ResolveLlvmTouchPath(llvm.LocalPath)
-            });
-        }
-
-        if (files is not null)
-        {
-            await RepoCloner.HydrateFilesAsync(files.LocalPath, cancellationToken);
-            workloads.Add(new WorkloadEntry
-            {
-                Name = BenchmarkWorkloads.Files,
-                RepoName = files.Name,
-                WorkingDirectory = files.LocalPath,
-                IncrementalTouchPath = RepoCloner.ResolveFilesTouchPath(files.LocalPath)
             });
         }
 

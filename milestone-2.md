@@ -5,7 +5,6 @@
 - Extend `avbench setup` to install Visual Studio/MSBuild prerequisites, CMake, Ninja, Python, and .NET SDKs
 - Add Roslyn compile scenarios (clean/incremental/noop)
 - Add LLVM compile scenarios (configure, clean/incremental/noop)
-- Add Files (WinUI 3) compile scenarios (clean/incremental/noop)
 - Build `avbench-compare` — reads results from multiple VMs, produces `compare.csv` and `summary.md`
 
 ## Prerequisites from Milestone 1
@@ -34,7 +33,6 @@ av-benchmark/
       Scenarios/
         RoslynScenario.cs            ← NEW
         LlvmScenario.cs             ← NEW
-        FilesScenario.cs             ← NEW
     AvBench.Compare/       ← NEW project
       AvBench.Compare.csproj
       Program.cs
@@ -80,15 +78,13 @@ dotnet add package System.CommandLine --version 2.0.5
 
 ### `VsBuildToolsInstaller.cs`
 
-Visual Studio/MSBuild is the heaviest install. Live verification against the current Roslyn and Files repos showed that milestone 2 needs:
+Visual Studio/MSBuild is the heaviest install. Live verification against the current Roslyn and LLVM repos showed that milestone 2 needs:
 - `Microsoft.VisualStudio.Workload.VCTools`
 - `Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools`
 - `Microsoft.VisualStudio.Workload.UniversalBuildTools`
 - `Microsoft.VisualStudio.Component.Windows11SDK.26100`
-- `Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs`
-- `Microsoft.VisualStudio.Component.VC.ATLMFC`
 
-Detection: `vswhere.exe -latest -products * -requires Microsoft.Component.MSBuild -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64`, plus file-level verification that `atlbase.h` and Windows SDK `10.0.26100.0` headers are present. Live testing showed version-only detection is not enough for Files.
+Detection: `vswhere.exe -latest -products * -requires Microsoft.Component.MSBuild -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64`, plus file-level verification that Windows SDK `10.0.26100.0` headers are present.
 
 Important behavior:
 - If Windows already has a pending restart, setup should stop before attempting Visual Studio install.
@@ -140,8 +136,6 @@ public sealed class VsBuildToolsInstaller : ToolInstaller
             "--add Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools",
             "--add Microsoft.VisualStudio.Workload.UniversalBuildTools",
             "--add Microsoft.VisualStudio.Component.Windows11SDK.26100",
-            "--add Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs",
-            "--add Microsoft.VisualStudio.Component.VC.ATLMFC",
             "--includeRecommended");
 
         var exitCode = RunProcess(tempPath, args);
@@ -367,11 +361,9 @@ public sealed class NinjaInstaller : ToolInstaller
 
 ### `DotNetSdkInstaller.cs`
 
-Installs .NET SDK. We need two SDK versions:
-- .NET 8 SDK (for Roslyn, matching its `global.json`)
-- .NET 10 SDK 10.0.102 (for Files, matching its `global.json`)
+Installs .NET SDK. Milestone 2 needs the version pinned by Roslyn's `global.json`.
 
-The installer handles side-by-side SDK installs. Use the official `dotnet-install.ps1` script for each version.
+The installer handles one or more pinned SDK installs. Use the official `dotnet-install.ps1` script for each version.
 
 ```csharp
 using System.Diagnostics;
@@ -384,7 +376,7 @@ public sealed class DotNetSdkInstaller : ToolInstaller
     public override string Name => ".NET SDK";
 
     // Versions to install — pin to match each project's global.json
-    private static readonly string[] RequiredVersions = ["8.0.404", "10.0.102"];
+    private static readonly string[] RequiredVersions = ["8.0.404"];
 
     private const string InstallScriptUrl =
         "https://dot.net/v1/dotnet-install.ps1";
@@ -484,7 +476,7 @@ Extend `RepoCloner` to acquire benchmark source trees without paying the full `g
 
 - Prefer GitHub source archives over full clones
 - Resolve an exact commit SHA first, then download the matching archive
-- Use the latest release tag archive for ripgrep, LLVM, and Files
+- Use the latest release tag archive for ripgrep and LLVM
 - Use the default-branch head archive for Roslyn, because milestone 2 tracks current upstream build layout
 - Use a requested ripgrep ref by resolving it to an exact commit SHA and downloading that archive
 - Record source metadata in `suite-manifest.json` (`sha`, `source_kind`, `source_reference`, `archive_url`)
@@ -527,32 +519,6 @@ public static void HydrateLlvm(string repoDir, string buildDir)
     proc.WaitForExit();
     if (proc.ExitCode != 0)
         throw new InvalidOperationException($"CMake configure failed: exit {proc.ExitCode}");
-}
-```
-
-### Files
-
-The current Files build guide requires Visual Studio 2022 17.13+ with .NET 10.0.102, Windows 11 SDK 10.0.26100.0, MSVC v145, and C++ ATL, plus Windows App SDK 1.8. For `avbench setup` we automate the equivalent MSBuild/Build Tools prerequisites, and live verification showed that the working Build Tools payload is `Microsoft.VisualStudio.Component.VC.ATLMFC` because it installs `atlmfc\include\atlbase.h`.
-
-MSBuild restore is untimed setup and must include `RestorePackagesConfig=true`.
-
-```csharp
-public static void HydrateFiles(string repoDir)
-{
-    var msbuild = VsBuildToolsInstaller.FindMsBuildPath()
-        ?? throw new InvalidOperationException("MSBuild not found — install VS Build Tools first");
-
-    Console.WriteLine($"[setup] MSBuild restore in {repoDir}");
-    var psi = new ProcessStartInfo(msbuild,
-        $"Files.slnx /t:Restore /p:Platform=x64 /p:Configuration=Release /p:RestorePackagesConfig=true /nr:false")
-    {
-        WorkingDirectory = repoDir,
-        UseShellExecute = false
-    };
-    var proc = Process.Start(psi)!;
-    proc.WaitForExit();
-    if (proc.ExitCode != 0)
-        throw new InvalidOperationException($"MSBuild restore failed: exit {proc.ExitCode}");
 }
 ```
 
@@ -661,63 +627,6 @@ public static class LlvmScenario
         // Touch a Clang source file to trigger incremental rebuild
         var target = Path.Combine(repoDir,
             "llvm", "clang", "lib", "Basic", "Version.cpp");
-        return $"copy /b \"{target}\"+,, \"{target}\"";
-    }
-}
-```
-
-### `FilesScenario.cs`
-
-```csharp
-namespace AvBench.Core.Scenarios;
-
-public static class FilesScenario
-{
-    public static List<ScenarioDefinition> Create(string repoDir)
-    {
-        var msbuild = VsBuildToolsInstaller.FindMsBuildPath()
-            ?? throw new InvalidOperationException("MSBuild not found");
-
-        return
-        [
-            new ScenarioDefinition
-            {
-                Id = "files-clean-build",
-                FileName = msbuild,
-                Arguments = "Files.slnx /t:Build /p:Configuration=Release /p:Platform=x64 /m",
-                WorkingDirectory = repoDir,
-                PreActions =
-                [
-                    // Clean: delete bin/obj/AppPackages across all projects
-                    $"for /d /r \"{Path.Combine(repoDir, "src")}\" %d in (bin obj) do @if exist \"%d\" rmdir /s /q \"%d\"",
-                    $"if exist \"{Path.Combine(repoDir, "tests")}\" for /d /r \"{Path.Combine(repoDir, "tests")}\" %d in (bin obj) do @if exist \"%d\" rmdir /s /q \"%d\""
-                ]
-            },
-            new ScenarioDefinition
-            {
-                Id = "files-incremental-build",
-                FileName = msbuild,
-                Arguments = "Files.slnx /t:Build /p:Configuration=Release /p:Platform=x64 /m",
-                WorkingDirectory = repoDir,
-                PreActions = [TouchFileCommand(repoDir)]
-            },
-            new ScenarioDefinition
-            {
-                Id = "files-noop-build",
-                FileName = msbuild,
-                Arguments = "Files.slnx /t:Build /p:Configuration=Release /p:Platform=x64 /m",
-                WorkingDirectory = repoDir,
-                PreActions = []
-            }
-        ];
-    }
-
-    private static string TouchFileCommand(string repoDir)
-    {
-        // Touch a ViewModel file in Files.App to trigger incremental rebuild
-        // This exercises XAML compilation + C# compilation
-        var target = Path.Combine(repoDir,
-            "src", "Files.App", "App.xaml.cs");
         return $"copy /b \"{target}\"+,, \"{target}\"";
     }
 }
@@ -1074,10 +983,6 @@ command.SetAction(async parseResult =>
     await RepoCloner.CloneLlvmAsync(benchDir.FullName, CancellationToken.None);
     RepoCloner.HydrateLlvm(llvmDir, llvmBuildDir);
 
-    var filesDir = Path.Combine(benchDir.FullName, "Files");
-    await RepoCloner.CloneFilesAsync(benchDir.FullName, CancellationToken.None);
-    RepoCloner.HydrateFiles(filesDir);
-
     // Write suite-manifest.json
     // ...
 
@@ -1099,7 +1004,6 @@ scenarios.AddRange(RipgrepScenario.Create(rgDir));
 // M2 scenarios
 scenarios.AddRange(RoslynScenario.Create(roslynDir));
 scenarios.AddRange(LlvmScenario.Create(llvmDir, llvmBuildDir));
-scenarios.AddRange(FilesScenario.Create(filesDir));
 
 // API microbench (M1)
 // file-create-delete handled separately...
@@ -1141,25 +1045,23 @@ Note: VS Build Tools install takes 10-30 minutes. Plan accordingly.
 
 ### Step 3: Add MSBuild path helper
 
-Add `VsBuildToolsInstaller.FindMsBuildPath()` — uses vswhere to locate MSBuild.exe. This is used by Files and Roslyn scenarios.
+Add `VsBuildToolsInstaller.FindMsBuildPath()` — uses vswhere to locate MSBuild.exe for installer verification.
 
 ### Step 4: Add repo hydration methods
 
-Extend `RepoCloner` with `HydrateRoslyn()`, `HydrateLlvm()`, `HydrateFiles()`.
+Extend `RepoCloner` with `HydrateRoslyn()` and `HydrateLlvm()`.
 
 Test:
 - Roslyn: `Restore.cmd` completes without errors
 - LLVM: `cmake` configure generates `build.ninja` in build dir and succeeds with Python available
-- Files: `msbuild /t:Restore /p:RestorePackagesConfig=true /nr:false` restores NuGet and native packages
 
 ### Step 5: Build scenario definitions
 
-Create `RoslynScenario.cs`, `LlvmScenario.cs`, `FilesScenario.cs`.
+Create `RoslynScenario.cs` and `LlvmScenario.cs`.
 
 Test each scenario standalone:
 - Roslyn clean build via `dotnet build Roslyn.slnx -c Release /m /nr:false` produces output in `artifacts/`
 - LLVM clean build via `ninja` produces clang binary
-- Files clean build via `msbuild` produces output in `src/Files.App/bin/`
 
 ### Step 6: Wire up extended setup/run commands
 
@@ -1217,8 +1119,6 @@ comparison/
 |---|---|---|
 | VS Build Tools install takes 30+ minutes | Setup is very slow | Install once per VM snapshot. Document expected time. |
 | LLVM clean build takes 30-60 minutes | Fewer repetitions practical | Use N=3 for LLVM; N=5 for faster workloads. Allow per-scenario rep count override. |
-| Files requires .NET 10 SDK (preview) | SDK availability may vary | Pin exact version in installer code. Use `dotnet-install.ps1` to fetch exact version. |
-| Files has C++ projects requiring MSVC | Incremental MSVC builds may create noise | Measure full solution build. The C++ projects are small (dialog helpers). |
 | Visual Studio install may require reboot | Setup cannot finish in one pass | Detect real pending restart state, tell the user to restart Windows, and rerun `avbench setup`. Ignore the Visual Studio bootstrapper cleanup JSON delete that can remain queued after a successful install. |
 | MSBuild path varies by VS version | Scenario fails to find MSBuild | Use vswhere with `-find MSBuild\**\Bin\MSBuild.exe` to discover dynamically. |
 | Comparison across VMs with different hardware | Invalid slowdown numbers | `compare.csv` includes `machine` info from `run.json`. Document: all VMs must use identical hardware specs. |
@@ -1229,10 +1129,9 @@ comparison/
 Manual verification on test VMs:
 
 1. `avbench setup` on clean VM installs all tools (VS Build Tools, CMake, Ninja, .NET SDK, Git, Rust)
-2. All benchmark source trees fetched and hydrated (Roslyn Restore.cmd, LLVM cmake configure, Files msbuild restore)
+2. All benchmark source trees fetched and hydrated (Roslyn Restore.cmd, LLVM cmake configure)
 3. Each scenario produces valid `run.json` with non-zero metrics
 4. LLVM clean build produces clang binary
 5. Roslyn clean build produces compiler output in `artifacts/`
-6. Files clean build produces output in respective `bin/` dirs
-7. `avbench-compare` produces `compare.csv` with correct columns and plausible slowdown values
-8. `summary.md` renders correctly and identifies highest-slowdown scenarios
+6. `avbench-compare` produces `compare.csv` with correct columns and plausible slowdown values
+7. `summary.md` renders correctly and identifies highest-slowdown scenarios

@@ -149,24 +149,6 @@ Scenarios:
 - `nuitka-standalone`
 - `nuitka-onefile`
 
-#### `files-community/Files`
-
-Large C# / WinUI 3 desktop app (modern file manager, 43k stars). Exercises WindowsApp SDK 1.8, XAML compilation, CsWin32 source generator for Win32 P/Invoke, WinUI custom controls, packaged-app build pipeline, and C++ native helper projects. 97% C# — the heaviest Windows-native C# workload in the suite.
-
-The current Files build guide requires Visual Studio 2022 17.13+ with Windows 11 SDK `10.0.26100.0`, .NET 10 SDK `10.0.102`, MSVC v145 build tools, and C++ ATL for the latest v145 toolset, plus Windows App SDK 1.8. For `avbench setup`, we automate the equivalent Visual Studio Build Tools/MSBuild prerequisites, including the `Microsoft.VisualStudio.Component.VC.ATLMFC` payload that actually installs the ATL headers Files needs.
-
-```
-msbuild Files.slnx /p:Configuration=Release /p:Platform=x64
-```
-
-The solution contains ~15 projects (C# app, server, storage, controls, source generators, C++ dialog helpers, background tasks, tests). Produces a packaged WinUI 3 desktop app.
-
-Scenarios:
-
-- `clean-build` (delete `bin`/`obj`/`AppPackages` dirs, then `msbuild /t:Build`)
-- `incremental-build` (touch one `.cs` file in `src/Files.App/`, rebuild)
-- `noop-build` (rebuild with no changes)
-
 ### API microbench workloads
 
 Split by behavior, not collapsed into one mega-loop.
@@ -426,7 +408,7 @@ After tools are installed:
 
 1. Resolve an exact source snapshot for each repo and fetch it into a pinned location (e.g., `C:\bench\<repo>`).
 2. Prefer GitHub source archives over full `git clone`:
-   - ripgrep, LLVM, and Files use the latest release tag archive by default
+   - ripgrep and LLVM use the latest release tag archive by default
    - Roslyn uses the default branch head archive because milestone 2 tracks the current upstream build layout
    - `--ripgrep-ref` resolves the requested ref to an exact commit SHA and downloads that archive
 3. Record the exact commit SHA plus source metadata (`source_kind`, `source_reference`, `archive_url`) in `suite-manifest.json`.
@@ -440,7 +422,6 @@ After tools are installed:
    - ripgrep: `cargo fetch`
    - Black/Nuitka: `python -m venv` + `pip install`
    - LLVM: CMake configure in a VS developer shell (current upstream requires Python to be on PATH)
-   - Files: `msbuild Files.slnx /t:Restore /p:Configuration=Release /p:Platform=x64 /p:RestorePackagesConfig=true /nr:false`
 6. Write `suite-manifest.json` (repos, SHAs, source metadata, tool versions).
 
 If Visual Studio installation leaves Windows in a real pending-restart state, `avbench setup` should stop with a clear message telling the user to restart the PC and rerun setup. Ignore the Visual Studio bootstrapper's own queued cleanup JSON delete under `C:\ProgramData\Microsoft\VisualStudio\Packages\_bootstrapper\`, because current VS 2026 installs can leave that behind even when `vswhere` reports `isRebootRequired=false`.
@@ -580,17 +561,6 @@ Simple, defensible rules for v1:
 - Keep `standalone` and `onefile` as separate scenarios.
 - Smoke-test the produced executable after build (run `black --version` or format a small file).
 
-### Files (WinUI 3)
-
-- Current upstream docs require Visual Studio 2022 17.13+ with .NET 10 SDK `10.0.102`, Windows 11 SDK `10.0.26100.0`, MSVC v145, and C++ ATL, plus Windows App SDK 1.8.
-- `avbench setup` should automate the equivalent MSBuild/Build Tools prerequisites and must stop for a reboot if Visual Studio install requests one. Use the ATL/MFC Build Tools component (`Microsoft.VisualStudio.Component.VC.ATLMFC`) so `atlmfc\include\atlbase.h` is present for the native helper projects.
-- Most prerequisites overlap with LLVM (MSVC, Win SDK) and Roslyn (.NET SDK, VS Build Tools). The incremental cost is the WinUI workload component and .NET 10 SDK.
-- Solution is `Files.slnx` — build with `msbuild Files.slnx /p:Configuration=Release /p:Platform=x64`.
-- Run `msbuild /t:Restore /p:RestorePackagesConfig=true /nr:false` as untimed setup before the timed build.
-- For incremental-build, touch a `.cs` file in `src/Files.App/` (e.g., `App.xaml.cs` or a ViewModel file).
-- XAML compilation and CsWin32 source generation are key differentiators from Roslyn — they exercise MSBuild targets that generate many intermediate files and trigger AV scanning.
-- Watch for `Files.App.Server` and C++ native projects (`Files.App.Launcher`, `Files.App.OpenDialog`, `Files.App.SaveDialog`) — they link against MSVC and may add noise. Measure the full solution build to capture the realistic mixed workload.
-
 ## What To Build First
 
 ### Milestone 1
@@ -612,10 +582,9 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 
 ### Milestone 2
 
-- Extend `avbench setup` to install Visual Studio/MSBuild prerequisites, CMake, Ninja, Python, and the .NET SDKs needed by Roslyn and Files
+- Extend `avbench setup` to install Visual Studio/MSBuild prerequisites, CMake, Ninja, Python, and the .NET SDKs needed by Roslyn
 - Add Roslyn compile scenarios
 - Add LLVM compile scenarios
-- Add Files (WinUI 3) compile scenarios — fetch source, `msbuild /t:Restore`, then timed build
 - Build `avbench-compare` — reads results from multiple directories, produces `compare.csv` and `summary.md`
 
 ### Milestone 3
@@ -646,6 +615,3 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 - Roslyn Windows build guide: https://github.com/dotnet/roslyn/blob/main/docs/contributing/Building%2C%20Debugging%2C%20and%20Testing%20on%20Windows.md
 - Nuitka user manual: https://nuitka.net/doc/user-manual.html
 - Black README: https://github.com/psf/black/blob/main/README.md
-- Files build guide: https://files.community/docs/contributing/building-from-source
-- Files repo: https://github.com/files-community/Files
-- Windows App SDK downloads: https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads

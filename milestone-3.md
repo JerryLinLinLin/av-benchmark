@@ -13,7 +13,7 @@
 All M1/M2 components are assumed working:
 
 - Full tool installer chain (Git, Rust, VS Build Tools, CMake, Ninja, .NET SDK)
-- All compile scenarios (ripgrep, Roslyn, LLVM, Files)
+- All compile scenarios (ripgrep, Roslyn, LLVM)
 - Job object runner, output writers
 - `avbench-compare` with CSV and markdown output
 

@@ -13,9 +13,7 @@ public sealed class VsBuildToolsInstaller(string? minimumVersion = null) : ToolI
         "Microsoft.VisualStudio.Workload.VCTools",
         "Microsoft.VisualStudio.Workload.ManagedDesktopBuildTools",
         "Microsoft.VisualStudio.Workload.UniversalBuildTools",
-        "Microsoft.VisualStudio.Component.Windows11SDK.26100",
-        "Microsoft.VisualStudio.ComponentGroup.WindowsAppSDK.Cs",
-        "Microsoft.VisualStudio.Component.VC.ATLMFC"
+        "Microsoft.VisualStudio.Component.Windows11SDK.26100"
     ];
 
     private static readonly string VswherePath = Path.Combine(
@@ -164,32 +162,7 @@ public sealed class VsBuildToolsInstaller(string? minimumVersion = null) : ToolI
 
     private static bool HasRequiredFiles()
     {
-        return File.Exists(FindAtlBaseHeaderPath())
-            && File.Exists(FindWindowsSdkHeaderPath());
-    }
-
-    private static string FindAtlBaseHeaderPath()
-    {
-        var baseDirectory = Path.Combine(
-            System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86),
-            @"Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC");
-
-        if (!Directory.Exists(baseDirectory))
-        {
-            return string.Empty;
-        }
-
-        var latestMsvcDirectory = Directory
-            .EnumerateDirectories(baseDirectory)
-            .OrderByDescending(static path => path, StringComparer.OrdinalIgnoreCase)
-            .FirstOrDefault();
-
-        if (latestMsvcDirectory is null)
-        {
-            return string.Empty;
-        }
-
-        return Path.Combine(latestMsvcDirectory, "atlmfc", "include", "atlbase.h");
+        return File.Exists(FindWindowsSdkHeaderPath());
     }
 
     private static string FindWindowsSdkHeaderPath()

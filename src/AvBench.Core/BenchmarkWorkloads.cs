@@ -5,7 +5,6 @@ public static class BenchmarkWorkloads
     public const string Ripgrep = "ripgrep";
     public const string Roslyn = "roslyn";
     public const string Llvm = "llvm";
-    public const string Files = "files";
     public const string FileCreateDelete = "file-create-delete";
     public const string All = "all";
 
@@ -14,7 +13,6 @@ public static class BenchmarkWorkloads
         Ripgrep,
         Roslyn,
         Llvm,
-        Files,
         FileCreateDelete
     ];
 
@@ -53,12 +51,10 @@ public static class BenchmarkWorkloads
 
     public static bool RequiresVisualStudio(IReadOnlyCollection<string> selectedWorkloads)
         => Contains(selectedWorkloads, Roslyn)
-            || Contains(selectedWorkloads, Llvm)
-            || Contains(selectedWorkloads, Files);
+            || Contains(selectedWorkloads, Llvm);
 
     public static bool RequiresDotNetSdk(IReadOnlyCollection<string> selectedWorkloads)
-        => Contains(selectedWorkloads, Roslyn)
-            || Contains(selectedWorkloads, Files);
+        => Contains(selectedWorkloads, Roslyn);
 
     public static bool RequiresCmake(IReadOnlyCollection<string> selectedWorkloads)
         => Contains(selectedWorkloads, Llvm);
@@ -72,8 +68,7 @@ public static class BenchmarkWorkloads
     public static bool IncludesSourceTree(IReadOnlyCollection<string> selectedWorkloads)
         => Contains(selectedWorkloads, Ripgrep)
             || Contains(selectedWorkloads, Roslyn)
-            || Contains(selectedWorkloads, Llvm)
-            || Contains(selectedWorkloads, Files);
+            || Contains(selectedWorkloads, Llvm);
 
     private static string NormalizeSingle(string value)
     {
@@ -88,7 +83,6 @@ public static class BenchmarkWorkloads
             Ripgrep => Ripgrep,
             Roslyn => Roslyn,
             Llvm => Llvm,
-            Files => Files,
             FileCreateDelete => FileCreateDelete,
             "microbench" => FileCreateDelete,
             "file" => FileCreateDelete,

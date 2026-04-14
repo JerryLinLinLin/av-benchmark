@@ -43,17 +43,6 @@ public static class RepoCloner
                 RepositorySourcePreference.LatestRelease),
             cancellationToken);
 
-    public static Task<RepoEntry> CloneFilesAsync(string benchDirectory, CancellationToken cancellationToken)
-        => PrepareRepositoryAsync(
-            new GitHubRepositorySpec(
-                "Files",
-                "files-community",
-                "Files",
-                Path.Combine(benchDirectory, "Files"),
-                null,
-                RepositorySourcePreference.LatestRelease),
-            cancellationToken);
-
     public static async Task CargoFetchAsync(string repoDirectory, CancellationToken cancellationToken)
     {
         Console.WriteLine($"[setup] Running cargo fetch in {repoDirectory}");
@@ -81,26 +70,6 @@ public static class RepoCloner
             BuildLlvmConfigureCommand(repoDirectory, buildDirectory),
             repoDirectory,
             "LLVM CMake configure",
-            cancellationToken);
-    }
-
-    public static async Task HydrateFilesAsync(string repoDirectory, CancellationToken cancellationToken)
-    {
-        var msbuildPath = VsBuildToolsInstaller.FindMsBuildPath()
-            ?? throw new InvalidOperationException("MSBuild.exe could not be located. Visual Studio Build Tools are required.");
-
-        var solutionPath = Path.Combine(repoDirectory, "Files.slnx");
-        if (!File.Exists(solutionPath))
-        {
-            throw new InvalidOperationException($"Files solution was not found at {solutionPath}.");
-        }
-
-        Console.WriteLine($"[setup] Restoring Files solution in {repoDirectory}");
-        await ProcessUtil.EnsureSuccessAsync(
-            msbuildPath,
-            $"\"{solutionPath}\" /t:Restore /p:Configuration=Release /p:Platform=x64 /p:RestorePackagesConfig=true /nr:false",
-            repoDirectory,
-            "Files restore",
             cancellationToken);
     }
 
@@ -145,19 +114,6 @@ public static class RepoCloner
                 .OrderBy(static path => path.Length)
                 .FirstOrDefault(),
             "Unable to locate a C++ source file for the LLVM incremental scenario.");
-
-    public static string ResolveFilesTouchPath(string repoDirectory)
-        => ResolveFirstExistingPath(
-            new[]
-            {
-                Path.Combine(repoDirectory, "src", "Files.App", "App.xaml.cs"),
-                Path.Combine(repoDirectory, "src", "Files.App", "MainWindow.xaml.cs")
-            },
-            () => Directory.EnumerateFiles(Path.Combine(repoDirectory, "src", "Files.App"), "*.cs", SearchOption.AllDirectories)
-                .Where(static path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
-                .OrderBy(static path => path.Length)
-                .FirstOrDefault(),
-            "Unable to locate a Files C# source file for the incremental scenario.");
 
     public static string ResolveDotNetSdkVersion(string repoDirectory)
     {
