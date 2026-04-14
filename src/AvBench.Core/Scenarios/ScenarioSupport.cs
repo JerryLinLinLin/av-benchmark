@@ -1,8 +1,10 @@
 using AvBench.Core.Internal;
 using AvBench.Core.Setup;
+using System.Runtime.Versioning;
 
 namespace AvBench.Core.Scenarios;
 
+[SupportedOSPlatform("windows")]
 internal static class ScenarioSupport
 {
     public static void DeletePathIfExists(string path)

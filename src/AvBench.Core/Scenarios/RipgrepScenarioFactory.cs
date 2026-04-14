@@ -1,7 +1,9 @@
 using AvBench.Core.Models;
+using System.Runtime.Versioning;
 
 namespace AvBench.Core.Scenarios;
 
+[SupportedOSPlatform("windows")]
 public static class RipgrepScenarioFactory
 {
     public static IReadOnlyList<ScenarioDefinition> Create(SuiteManifest manifest)

@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Runtime.Versioning;
 using AvBench.Core;
 using AvBench.Core.Environment;
 using AvBench.Core.Models;
@@ -9,6 +10,7 @@ using AvBench.Core.Setup;
 
 namespace AvBench.Cli.Commands;
 
+[SupportedOSPlatform("windows")]
 public static class RunCommand
 {
     public static Command Create()

@@ -11,3 +11,4 @@ results/
 *.tmp
 bench/
 artifacts/
+tmp/

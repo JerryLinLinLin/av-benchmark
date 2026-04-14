@@ -1,9 +1,11 @@
 using System.CommandLine;
+using System.Runtime.Versioning;
 using AvBench.Core;
 using AvBench.Core.Setup;
 
 namespace AvBench.Cli.Commands;
 
+[SupportedOSPlatform("windows")]
 public static class SetupCommand
 {
     public static Command Create()
