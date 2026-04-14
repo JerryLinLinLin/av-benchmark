@@ -7,6 +7,7 @@ public static class RoslynScenarioFactory
     public static IReadOnlyList<ScenarioDefinition> Create(SuiteManifest manifest)
     {
         var workload = manifest.GetRequiredWorkload("roslyn");
+        var repo = manifest.GetRequiredRepo("roslyn");
         var repoDirectory = workload.WorkingDirectory;
         var artifactsDirectory = Path.Combine(repoDirectory, "artifacts", "bin");
         var solutionPath = Path.Combine(repoDirectory, "Roslyn.slnx");
@@ -16,7 +17,7 @@ public static class RoslynScenarioFactory
             throw new InvalidOperationException($"Roslyn solution was not found at {solutionPath}.");
         }
 
-        var buildArguments = $"build \"{solutionPath}\" -c Release /m /nr:false";
+        var buildArguments = BuildArguments(solutionPath, repo);
 
         return
         [
@@ -73,5 +74,26 @@ public static class RoslynScenarioFactory
             repoDirectory,
             "Roslyn untimed prerequisite build",
             cancellationToken);
+    }
+
+    private static string BuildArguments(string solutionPath, RepoEntry repo)
+    {
+        var arguments = new List<string>
+        {
+            "build",
+            $"\"{solutionPath}\"",
+            "-c Release",
+            "/m",
+            "/nr:false",
+            $"/p:RepositoryUrl={repo.Url}",
+            $"/p:RepositoryCommit={repo.Sha}"
+        };
+
+        if (!string.IsNullOrWhiteSpace(repo.SourceReference))
+        {
+            arguments.Add($"/p:RepositoryBranch={repo.SourceReference}");
+        }
+
+        return string.Join(" ", arguments);
     }
 }
