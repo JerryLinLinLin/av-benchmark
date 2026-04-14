@@ -86,8 +86,7 @@ Minimum Rust version: 1.85.0 stable. Optional PCRE2 feature build (`cargo build 
 Scenarios:
 
 - `clean-build` (`cargo build --release`)
-- `incremental-build` (make a small, harmless edit to one stable `.rs` file, rebuild)
-- `noop-build`
+- `incremental-build` (touch a core source file in `crates/searcher/`, triggering cascade rebuild through printer → core → final binary)
 
 #### `dotnet/roslyn`
 
@@ -105,8 +104,7 @@ Roslyn uses `Roslyn.slnx` as of recent commits. The current repo also builds cle
 Scenarios:
 
 - `clean-build` (`dotnet build Roslyn.slnx -c Release /m /nr:false`)
-- `incremental-build` (touch one stable `.cs` file, rebuild)
-- `noop-build`
+- `incremental-build` (touch a core source file in `src/Compilers/Core/Portable/`, triggering cascade rebuild through CSharp, Workspaces, and downstream assemblies)
 
 Restore is always untimed and belongs in suite setup.
 
@@ -153,8 +151,7 @@ Every compile workload is measured in these phases:
 
 - `prepare` — untimed, dependency hydration (NuGet restore, cargo fetch, etc.)
 - `clean-build` — first timed phase
-- `incremental-build`
-- `noop-build`
+- `incremental-build` — touch a core source file, cascade rebuild
 
 ### Execution model — one session, one rep
 
@@ -179,8 +176,7 @@ Within one session for compile workloads:
 
 1. Clean (delete build artifacts)
 2. Build
-3. Touch one file, rebuild (incremental)
-4. Rebuild again (no-op)
+3. Touch one core source file, rebuild (incremental)
 
 ## What To Measure
 
@@ -540,7 +536,7 @@ Deliverables:
 
 Target workloads:
 
-- ripgrep clean/incremental/noop build
+- ripgrep clean/incremental build
 - `file-create-delete` API microbench
 
 Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API microbench gives immediate AV overhead signal.

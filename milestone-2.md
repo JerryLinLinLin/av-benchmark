@@ -3,7 +3,7 @@
 ## Scope
 
 - Extend `avbench setup` to install Visual Studio/MSBuild prerequisites and .NET SDKs
-- Add Roslyn compile scenarios (clean/incremental/noop)
+- Add Roslyn compile scenarios (clean/incremental)
 - Build `avbench-compare` — reads results from multiple VMs, produces `compare.csv` and `summary.md`
 
 ## Prerequisites from Milestone 1
@@ -374,25 +374,17 @@ public static class RoslynScenario
                 Arguments = $"build \"{solutionPath}\" -c Release /m /nr:false",
                 WorkingDirectory = repoDir,
                 PreActions = [TouchFileCommand(repoDir)]
-            },
-            new ScenarioDefinition
-            {
-                Id = "roslyn-noop-build",
-                FileName = "dotnet",
-                Arguments = $"build \"{solutionPath}\" -c Release /m /nr:false",
-                WorkingDirectory = repoDir,
-                PreActions = []
             }
         ];
     }
 
     private static string TouchFileCommand(string repoDir)
     {
-        // Touch a stable C# file to trigger incremental rebuild
-        // CSharpSyntaxGenerator is small, stable, and doesn't break the build
+        // Touch a core source file in Microsoft.CodeAnalysis (base assembly)
+        // to trigger cascade rebuild through CSharp, Workspaces, and downstream assemblies
         var target = Path.Combine(repoDir,
-            "src", "Compilers", "CSharp", "Portable",
-            "CSharpResources.Designer.cs");
+            "src", "Compilers", "Core", "Portable",
+            "DiagnosticAnalyzer", "AnalyzerManager.cs");
         return $"copy /b \"{target}\"+,, \"{target}\"";
     }
 }

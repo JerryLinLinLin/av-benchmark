@@ -3,7 +3,7 @@
 ## Scope
 
 - `avbench setup` — install Git + Rust, clone ripgrep, run `cargo fetch`
-- `avbench run` — ripgrep compile scenarios (clean/incremental/noop) + `file-create-delete` API microbench
+- `avbench run` — ripgrep compile scenarios (clean/incremental) + `file-create-delete` API microbench
 - Job object process-tree runner with default metrics
 - JSON output (`run.json`) and CSV flattening (`runs.csv`)
 
@@ -1122,22 +1122,15 @@ public static class RipgrepScenario
                 Arguments = "build --release",
                 WorkingDirectory = repoDir,
                 PreActions = [MutateIncrementalSourceCommand(repoDir)]
-            },
-            new ScenarioDefinition
-            {
-                Id = "ripgrep-noop-build",
-                FileName = "cargo",
-                Arguments = "build --release",
-                WorkingDirectory = repoDir,
-                PreActions = []  // no changes, just rebuild
             }
         ];
     }
 
     private static string MutateIncrementalSourceCommand(string repoDir)
     {
-        // Make a harmless source edit to trigger a real incremental rebuild
-        var target = Path.Combine(repoDir, "crates", "core", "main.rs");
+        // Touch a core source file in crates/searcher/ to trigger cascade rebuild
+        // searcher → printer → core → final binary (~4–5 crate recompiles)
+        var target = Path.Combine(repoDir, "crates", "searcher", "src", "lib.rs");
         return $"powershell -NoProfile -Command " +
                "\"$p='{target}'; " +
                "$marker='// avbench incremental marker: '; " +
@@ -1396,11 +1389,6 @@ results/
     stdout.log
     stderr.log
     counters.csv
-  ripgrep-noop-build/
-    run.json
-    stdout.log
-    stderr.log
-    counters.csv
   file-create-delete/
     run.json
   runs.csv
@@ -1415,7 +1403,7 @@ Repetitions are achieved by the external orchestrator: restore VM snapshot → `
 | `AssignProcessToJobObject` after `Process.Start` misses early children | Under-count metrics for first few ms | Acceptable for compile workloads (seconds+). Add raw `CreateProcess` with `CREATE_SUSPENDED` in M2 if needed. |
 | Git/Rust installer URLs become stale | Setup fails on new VMs | Use `tools-manifest.json` to override URLs. Pin known-good versions. |
 | AV blocks installer downloads | Setup fails | Document: whitelist download URLs in AV profile if needed, or pre-stage installers on a network share. |
-| ripgrep `crates/core/main.rs` path may change across versions | Incremental scenario breaks | Pin ripgrep to a specific SHA. Validate the incremental source target path in `setup`. |
+| ripgrep `crates/searcher/src/lib.rs` path may change across versions | Incremental scenario breaks | Pin ripgrep to a specific SHA. Validate the incremental source target path in `setup`. |
 | Job object accounting on nested jobs | Double-counting on older Windows | Target Windows Server 2022+ / Windows 11+ where nested jobs are fully supported. |
 
 ## Testing Strategy
