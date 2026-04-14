@@ -20,6 +20,7 @@ public static class FilesScenarioFactory
         }
 
         var buildArguments = $"\"{solutionPath}\" /p:Configuration=Release /p:Platform=x64 /m /nr:false /p:UseSharedCompilation=false";
+        var restoreArguments = $"\"{solutionPath}\" /t:Restore /p:Configuration=Release /p:Platform=x64 /p:RestorePackagesConfig=true /nr:false";
 
         return
         [
@@ -29,10 +30,10 @@ public static class FilesScenarioFactory
                 FileName = msbuildPath,
                 Arguments = buildArguments,
                 WorkingDirectory = repoDirectory,
-                PrepareAsync = _ =>
+                PrepareAsync = cancellationToken =>
                 {
                     DeleteCommonBuildOutputs(repoDirectory);
-                    return Task.CompletedTask;
+                    return RunUntimedRestoreAsync(msbuildPath, restoreArguments, repoDirectory, cancellationToken);
                 },
                 ValidateAsync = _ => ScenarioSupport.EnsureDirectoryHasFilesAsync(outputDirectory, "Files build output")
             },
@@ -96,6 +97,20 @@ public static class FilesScenarioFactory
             buildArguments,
             repoDirectory,
             "Files untimed prerequisite build",
+            cancellationToken);
+    }
+
+    private static Task RunUntimedRestoreAsync(
+        string msbuildPath,
+        string restoreArguments,
+        string repoDirectory,
+        CancellationToken cancellationToken)
+    {
+        return ScenarioSupport.RunProcessAsync(
+            msbuildPath,
+            restoreArguments,
+            repoDirectory,
+            "Files untimed prerequisite restore",
             cancellationToken);
     }
 }
