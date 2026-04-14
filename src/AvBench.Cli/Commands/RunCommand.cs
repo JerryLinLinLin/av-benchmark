@@ -41,17 +41,24 @@ public static class RunCommand
 
         var workloadOption = new Option<string[]>("--workload", ["-w"])
         {
-            Description = $"One or more workload ids to run. Defaults to all workloads present in the manifest plus {BenchmarkWorkloads.FileCreateDelete}: {BenchmarkWorkloads.HelpText}.",
+            Description = $"One or more workload ids to run. Defaults to all supported workloads: {BenchmarkWorkloads.HelpText}.",
             AllowMultipleArgumentsPerToken = true,
             DefaultValueFactory = _ => []
         };
 
-        var command = new Command("run", "Execute milestone 2 benchmark scenarios.");
+        var countersOption = new Option<bool>("--counters")
+        {
+            Description = "Enable typeperf counter sampling for each repetition.",
+            DefaultValueFactory = _ => false
+        };
+
+        var command = new Command("run", "Execute benchmark scenarios for the configured M1-M3 workload set.");
         command.Options.Add(nameOption);
         command.Options.Add(benchDirOption);
         command.Options.Add(repetitionsOption);
         command.Options.Add(outputOption);
         command.Options.Add(workloadOption);
+        command.Options.Add(countersOption);
 
         command.SetAction(async parseResult =>
         {
@@ -61,6 +68,7 @@ public static class RunCommand
                 var benchDir = parseResult.GetValue(benchDirOption)!;
                 var repetitions = parseResult.GetValue(repetitionsOption);
                 var outputRoot = parseResult.GetValue(outputOption)!;
+                var enableCounters = parseResult.GetValue(countersOption);
                 if (!BenchmarkWorkloads.TryNormalize(parseResult.GetValue(workloadOption), out var selectedWorkloads, out var error))
                 {
                     Console.Error.WriteLine($"ERROR: {error}");
@@ -94,7 +102,8 @@ public static class RunCommand
                     avName.Trim(),
                     outputRoot.FullName,
                     SystemInfoProvider.GetRunnerVersion(),
-                    SetupService.ComputeManifestSha(manifestPath));
+                    SetupService.ComputeManifestSha(manifestPath),
+                    enableCounters);
 
                 var scenarios = new List<ScenarioDefinition>();
                 if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Ripgrep))
@@ -109,10 +118,9 @@ public static class RunCommand
 
                 var executablePath = Environment.ProcessPath
                     ?? throw new InvalidOperationException("Unable to resolve the current executable path.");
-                if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.FileCreateDelete))
+                if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Microbench))
                 {
-                    var fileMicrobench = FileMicrobenchScenarioFactory.Create(executablePath, benchDir.FullName);
-                    scenarios.Add(fileMicrobench);
+                    scenarios.AddRange(MicrobenchScenarioFactory.Create(executablePath, benchDir.FullName));
                 }
 
                 var results = new List<RunResult>();
@@ -150,7 +158,8 @@ public static class RunCommand
 
         foreach (var workload in selectedWorkloads)
         {
-            if (string.Equals(workload, BenchmarkWorkloads.FileCreateDelete, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(workload, BenchmarkWorkloads.Microbench, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(workload, BenchmarkWorkloads.FileCreateDelete, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }

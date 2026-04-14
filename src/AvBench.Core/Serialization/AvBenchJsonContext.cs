@@ -4,7 +4,7 @@ using AvBench.Core.Models;
 namespace AvBench.Core.Serialization;
 
 [JsonSourceGenerationOptions(WriteIndented = true)]
-[JsonSerializable(typeof(FileMicrobenchMetrics))]
+[JsonSerializable(typeof(MicrobenchMetrics))]
 [JsonSerializable(typeof(List<RunResult>))]
 [JsonSerializable(typeof(RunResult))]
 [JsonSerializable(typeof(SuiteManifest))]

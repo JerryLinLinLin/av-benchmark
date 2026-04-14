@@ -30,10 +30,10 @@ public static class CsvResultWriter
         "p95_us",
         "p99_us",
         "max_us",
-        "file_batch_size",
-        "file_total_operations",
-        "file_ops_per_sec",
-        "file_mean_latency_us"
+        "micro_batch_size",
+        "micro_total_operations",
+        "micro_ops_per_sec",
+        "micro_mean_latency_us"
     ];
 
     public static async Task WriteAsync(IReadOnlyCollection<RunResult> results, string path, CancellationToken cancellationToken)
@@ -66,10 +66,10 @@ public static class CsvResultWriter
                 FormatNullable(result.P95Us),
                 FormatNullable(result.P99Us),
                 FormatNullable(result.MaxUs),
-                (result.FileMicrobench?.BatchSize ?? 0).ToString(CultureInfo.InvariantCulture),
-                (result.FileMicrobench?.TotalOperations ?? 0).ToString(CultureInfo.InvariantCulture),
-                (result.FileMicrobench?.OpsPerSec ?? 0).ToString("F3", CultureInfo.InvariantCulture),
-                (result.FileMicrobench?.MeanLatencyUs ?? 0).ToString("F3", CultureInfo.InvariantCulture)));
+                (result.Microbench?.BatchSize ?? 0).ToString(CultureInfo.InvariantCulture),
+                (result.Microbench?.TotalOperations ?? 0).ToString(CultureInfo.InvariantCulture),
+                (result.Microbench?.OpsPerSec ?? 0).ToString("F3", CultureInfo.InvariantCulture),
+                (result.Microbench?.MeanLatencyUs ?? 0).ToString("F3", CultureInfo.InvariantCulture)));
         }
 
         await File.WriteAllTextAsync(path, builder.ToString(), cancellationToken);

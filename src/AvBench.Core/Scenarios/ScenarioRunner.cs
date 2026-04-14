@@ -1,8 +1,9 @@
+using AvBench.Core.Collectors;
 using AvBench.Core.Environment;
+using AvBench.Core.Internal;
 using AvBench.Core.Models;
 using AvBench.Core.Output;
 using AvBench.Core.Runner;
-using AvBench.Core.Internal;
 
 namespace AvBench.Core.Scenarios;
 
@@ -13,14 +14,16 @@ public sealed class ScenarioRunner
     private readonly string _runnerVersion;
     private readonly string _suiteManifestSha;
     private readonly AvInfo _avInfo;
+    private readonly bool _enableCounters;
 
-    public ScenarioRunner(string avName, string outputRoot, string runnerVersion, string suiteManifestSha)
+    public ScenarioRunner(string avName, string outputRoot, string runnerVersion, string suiteManifestSha, bool enableCounters = false)
     {
         _avName = avName;
         _outputRoot = outputRoot;
         _runnerVersion = runnerVersion;
         _suiteManifestSha = suiteManifestSha;
         _avInfo = SystemInfoProvider.CollectAvInfo();
+        _enableCounters = enableCounters;
     }
 
     public async Task<List<RunResult>> ExecuteScenarioAsync(
@@ -71,48 +74,72 @@ public sealed class ScenarioRunner
         Directory.CreateDirectory(Path.GetDirectoryName(stdoutPath)!);
         Directory.CreateDirectory(Path.GetDirectoryName(stderrPath)!);
 
-        var execution = await ProcessTreeRunner.RunAsync(
-            scenario.FileName,
-            scenario.Arguments,
-            scenario.WorkingDirectory,
-            stdoutPath,
-            stderrPath,
-            TimeSpan.FromHours(2),
-            cancellationToken);
-
-        var result = new RunResult
+        var collectors = new List<IOptInCollector>();
+        try
         {
-            ScenarioId = scenario.Id,
-            AvName = _avName,
-            AvProduct = _avInfo.Product,
-            AvVersion = _avInfo.Version,
-            TimestampUtc = DateTime.UtcNow,
-            Command = string.IsNullOrWhiteSpace(scenario.Arguments) ? scenario.FileName : $"{scenario.FileName} {scenario.Arguments}",
-            WorkingDir = scenario.WorkingDirectory,
-            ExitCode = execution.ExitCode,
-            WallMs = execution.WallMs,
-            UserCpuMs = execution.Accounting.TotalUserTimeMs,
-            KernelCpuMs = execution.Accounting.TotalKernelTimeMs,
-            PeakJobMemoryMb = (long)(execution.Accounting.PeakJobMemoryBytes / (1024 * 1024)),
-            IoReadBytes = execution.Accounting.IoReadBytes,
-            IoWriteBytes = execution.Accounting.IoWriteBytes,
-            IoReadOps = execution.Accounting.IoReadOps,
-            IoWriteOps = execution.Accounting.IoWriteOps,
-            TotalProcesses = execution.Accounting.TotalProcesses,
-            Machine = SystemInfoProvider.CollectMachineInfo(),
-            RunnerVersion = _runnerVersion,
-            SuiteManifestSha = _suiteManifestSha
-        };
+            if (_enableCounters && outputDirectory is not null)
+            {
+                var collector = new TypeperfCollector();
+                collector.Start(outputDirectory);
+                collectors.Add(collector);
+            }
 
-        scenario.EnrichResultFromLogs?.Invoke(result, stdoutPath, stderrPath);
+            var execution = await ProcessTreeRunner.RunAsync(
+                scenario.FileName,
+                scenario.Arguments,
+                scenario.WorkingDirectory,
+                stdoutPath,
+                stderrPath,
+                TimeSpan.FromHours(2),
+                cancellationToken);
 
-        if (outputDirectory is null)
-        {
-            TryDelete(stdoutPath);
-            TryDelete(stderrPath);
+            var result = new RunResult
+            {
+                ScenarioId = scenario.Id,
+                AvName = _avName,
+                AvProduct = _avInfo.Product,
+                AvVersion = _avInfo.Version,
+                TimestampUtc = DateTime.UtcNow,
+                Command = string.IsNullOrWhiteSpace(scenario.Arguments) ? scenario.FileName : $"{scenario.FileName} {scenario.Arguments}",
+                WorkingDir = scenario.WorkingDirectory,
+                ExitCode = execution.ExitCode,
+                WallMs = execution.WallMs,
+                UserCpuMs = execution.Accounting.TotalUserTimeMs,
+                KernelCpuMs = execution.Accounting.TotalKernelTimeMs,
+                PeakJobMemoryMb = (long)(execution.Accounting.PeakJobMemoryBytes / (1024 * 1024)),
+                IoReadBytes = execution.Accounting.IoReadBytes,
+                IoWriteBytes = execution.Accounting.IoWriteBytes,
+                IoReadOps = execution.Accounting.IoReadOps,
+                IoWriteOps = execution.Accounting.IoWriteOps,
+                TotalProcesses = execution.Accounting.TotalProcesses,
+                Machine = SystemInfoProvider.CollectMachineInfo(),
+                RunnerVersion = _runnerVersion,
+                SuiteManifestSha = _suiteManifestSha
+            };
+
+            scenario.EnrichResultFromLogs?.Invoke(result, stdoutPath, stderrPath);
+            return result;
         }
+        finally
+        {
+            foreach (var collector in collectors)
+            {
+                try
+                {
+                    collector.Stop();
+                }
+                finally
+                {
+                    collector.Dispose();
+                }
+            }
 
-        return result;
+            if (outputDirectory is null)
+            {
+                TryDelete(stdoutPath);
+                TryDelete(stderrPath);
+            }
+        }
     }
 
     private static void TryDelete(string path)
