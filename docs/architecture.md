@@ -4,7 +4,7 @@
 
 `avbench` measures the performance cost that antivirus / endpoint-security software adds to everyday Windows workloads. It runs identical work inside **two or more VM snapshots** — one with no AV (baseline) and one with each AV product under test — then compares the results.
 
-The suite produces **machine-readable JSON/CSV** and a **Markdown comparison report**, so teams can objectively quantify AV overhead before deploying a product across their fleet.
+The suite produces **machine-readable JSON/CSV** and a **Markdown comparison report**, so teams can quantify AV overhead before deploying a product across their fleet.
 
 ## High-level workflow
 
@@ -25,7 +25,7 @@ The suite produces **machine-readable JSON/CSV** and a **Markdown comparison rep
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-**One run per VM session.** The external orchestrator (you, or a CI script) restores a clean VM snapshot before each session and collects results afterwards. No `--repetitions` flag — repeat measurements by restoring the snapshot and running again.
+**One run per VM session.** The external orchestrator (you, or a CI script) restores a clean VM snapshot before each session and collects results afterwards. Repeat measurements by restoring the snapshot and running again — there is no `--repetitions` flag.
 
 ## Two executables
 
@@ -34,7 +34,7 @@ The suite produces **machine-readable JSON/CSV** and a **Markdown comparison rep
 | `avbench.exe` | `AvBench.Cli` | Runs inside the VM. Installs toolchains (`setup`), executes benchmarks (`run`). |
 | `avbench-compare.exe` | `AvBench.Compare` | Runs on the host (or anywhere). Loads `run.json` files from multiple runs and produces comparison outputs. |
 
-Both are **.NET 8 self-contained single-file** executables targeting `win-x64`.
+Both are [.NET 8](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) self-contained single-file executables targeting `win-x64`.
 
 ## Solution structure
 
@@ -83,7 +83,7 @@ src/
 │   │   └── ProcessTreeRunResult.cs    # Exit code + accounting snapshot
 │   ├── Scenarios/
 │   │   ├── ScenarioRunner.cs          # Orchestrator: prepare → run → record
-│   │   ├── MicrobenchScenarioFactory.cs  # Creates 28 ScenarioDefinitions
+│   │   ├── MicrobenchScenarioFactory.cs  # Creates 27 ScenarioDefinitions
 │   │   ├── RipgrepScenarioFactory.cs  # clean-build + incremental-build
 │   │   ├── RoslynScenarioFactory.cs   # clean-build + incremental-build
 │   │   ├── ScenarioSupport.cs         # File/dir validation helpers
@@ -113,22 +113,22 @@ src/
 
 ### Windows Job Objects for measurement
 
-Every out-of-process scenario (compile builds) runs inside a Win32 Job Object with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`. The Job Object provides:
+Every out-of-process scenario (compile builds) runs inside a [Win32 Job Object](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects) with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`. The Job Object provides:
 
 - **User CPU time** and **kernel CPU time** (summed across all processes in the tree)
 - **Peak memory** of the entire process tree
 - **I/O counters** — bytes and operations for read/write
 - **Total process count** spawned
 
-This captures the full cost of multi-process build tools (MSBuild, cargo) and their child processes. CPU time granularity is ~15.625 ms (one scheduler tick), which is coarse for micro-operations but accurate at the whole-build level.
+This captures the full cost of multi-process build tools (MSBuild, cargo) and their child processes. CPU time accounting granularity defaults to the system timer tick (~15.6 ms), though modern Windows versions can use cycle-based accounting for finer precision. At the whole-build level this granularity is immaterial.
 
 ### In-process microbench execution
 
-API microbenchmarks run **in-process** (not spawned as child processes) via `MicrobenchWorker.Execute()`. Each bench uses `Stopwatch` (QPC-based, sub-microsecond) for wall time and a `LatencyHistogram` to record per-operation tick counts for percentile computation (p50/p95/p99/max).
+API microbenchmarks run **in-process** (not spawned as child processes) via `MicrobenchWorker.Execute()`. Each bench uses [`Stopwatch`](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.stopwatch) (QPC-backed, sub-microsecond resolution) for wall time and a `LatencyHistogram` to record per-operation tick counts for percentile computation (p50/p95/p99/max).
 
 ### TypeperfCollector (always-on)
 
-Every scenario gets a `typeperf` process that samples 6 counters at 1-second intervals into a `counters.csv` file:
+Every scenario gets a [`typeperf`](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/typeperf) process that samples 6 counters at 1-second intervals into a `counters.csv` file:
 
 - `\Processor(_Total)\% Processor Time`
 - `\PhysicalDisk(_Total)\Disk Bytes/sec`
@@ -141,15 +141,15 @@ These are diagnostic — useful for explaining noisy runs or identifying thermal
 
 ### Idle check before run
 
-Before running any scenarios, `IdleChecker.VerifyAsync()` samples CPU via `typeperf` for 3 seconds and aborts if average CPU usage exceeds 20%. This prevents AV background scans from contaminating results.
+Before running any scenarios, `IdleChecker.VerifyAsync()` samples CPU via `typeperf` for 3 seconds and aborts if average CPU usage exceeds 20 %. This prevents AV background scans or system tasks from contaminating results.
 
 ### AV auto-detection
 
-`AvDetector` queries `root\SecurityCenter2\AntiVirusProduct` via WMI. When multiple products are registered (e.g., Defender + third-party), it preferentially selects the **non-Defender** product. Product version is read from `FileVersionInfo` of the exe path. Both can be overridden with `--av-product` and `--av-version`.
+`AvDetector` queries [`root\SecurityCenter2`](https://learn.microsoft.com/en-us/windows/win32/wmisdk/--securitycenter2) `AntiVirusProduct` via WMI. When multiple products are registered (e.g., Defender + a third-party product), it selects the **non-Defender** product. Product version is read from `FileVersionInfo` of the reported exe path. Both can be overridden with `--av-product` and `--av-version`.
 
 ### Scenario ordering
 
-`RunCommand` uses a **Fisher-Yates shuffle** on scenario family groups (ripgrep, roslyn, microbench families) at the start of each session. This distributes systematic ordering effects (e.g., AV cache warm-up, thermal throttling) across multiple sessions.
+`RunCommand` uses a **Fisher-Yates shuffle** on scenario family groups (ripgrep, roslyn, microbench families) at the start of each session. This distributes systematic ordering effects (AV cache warm-up, thermal drift) across multiple sessions rather than letting them accumulate in a fixed order.
 
 ### Suite manifest
 
