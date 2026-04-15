@@ -1,16 +1,35 @@
 using System.Diagnostics;
 using System.Management;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using AvBench.Core.Internal;
 using AvBench.Core.Models;
 
-namespace AvBench.Cli.Commands;
+namespace AvBench.Core.Microbench;
 
-[SupportedOSPlatform("windows")]
-internal static partial class InternalMicrobenchAdditionalBenches
+public static partial class MicrobenchWorker
 {
-    public static MicrobenchMetrics ExecuteComCreateInstance(int totalOperations)
+    private static MicrobenchMetrics ExecuteThreadCreate(int totalOperations)
+    {
+        var histogram = new LatencyHistogram(totalOperations);
+        var stopwatch = Stopwatch.StartNew();
+
+        for (var index = 0; index < totalOperations; index++)
+        {
+            var start = Stopwatch.GetTimestamp();
+            var thread = new Thread(NoOpThreadStart)
+            {
+                IsBackground = true
+            };
+            thread.Start();
+            thread.Join();
+            histogram.Record(Stopwatch.GetTimestamp() - start);
+        }
+
+        stopwatch.Stop();
+        return BuildMetrics(1, totalOperations, stopwatch.Elapsed, histogram);
+    }
+
+    private static MicrobenchMetrics ExecuteComCreateInstance(int totalOperations)
     {
         var progIdType = Type.GetTypeFromProgID("Scripting.FileSystemObject", throwOnError: false)
             ?? throw new InvalidOperationException("COM ProgID 'Scripting.FileSystemObject' is not registered on this VM.");
@@ -36,9 +55,9 @@ internal static partial class InternalMicrobenchAdditionalBenches
         return BuildMetrics(1, totalOperations, stopwatch.Elapsed, histogram);
     }
 
-    public static MicrobenchMetrics ExecuteWmiQuery(int totalOperations)
+    private static MicrobenchMetrics ExecuteWmiQuery(int totalOperations)
     {
-        var processId = Environment.ProcessId;
+        var processId = System.Environment.ProcessId;
         var query = $"SELECT ProcessId, Name FROM Win32_Process WHERE ProcessId = {processId}";
         var histogram = new LatencyHistogram(totalOperations);
         var stopwatch = Stopwatch.StartNew();
@@ -61,7 +80,7 @@ internal static partial class InternalMicrobenchAdditionalBenches
         return BuildMetrics(1, totalOperations, stopwatch.Elapsed, histogram);
     }
 
-    public static MicrobenchMetrics ExecuteFsWatcher(string root, int totalOperations)
+    private static MicrobenchMetrics ExecuteFsWatcher(string root, int totalOperations)
     {
         var watchDirectory = Path.Combine(root, "watched");
         Directory.CreateDirectory(watchDirectory);
@@ -98,5 +117,9 @@ internal static partial class InternalMicrobenchAdditionalBenches
         GC.KeepAlive(notificationsReceived);
         Directory.Delete(watchDirectory, recursive: true);
         return BuildMetrics(1, totalOperations, stopwatch.Elapsed, histogram);
+    }
+
+    private static void NoOpThreadStart()
+    {
     }
 }

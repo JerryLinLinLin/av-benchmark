@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Runtime.Versioning;
 using AvBench.Core;
+using AvBench.Core.Detection;
 using AvBench.Core.Environment;
 using AvBench.Core.Models;
 using AvBench.Core.Output;
@@ -40,11 +41,23 @@ public static class RunCommand
             DefaultValueFactory = _ => []
         };
 
-        var command = new Command("run", "Execute benchmark scenarios for the configured M1-M3 workload set.");
+        var avProductOption = new Option<string?>("--av-product")
+        {
+            Description = "Override the auto-detected AV product name."
+        };
+
+        var avVersionOption = new Option<string?>("--av-version")
+        {
+            Description = "Override the auto-detected AV product version."
+        };
+
+        var command = new Command("run", "Execute benchmark scenarios for the configured M1-M4 workload set.");
         command.Options.Add(nameOption);
         command.Options.Add(benchDirOption);
         command.Options.Add(outputOption);
         command.Options.Add(workloadOption);
+        command.Options.Add(avProductOption);
+        command.Options.Add(avVersionOption);
 
         command.SetAction(async parseResult =>
         {
@@ -53,6 +66,8 @@ public static class RunCommand
                 var avName = parseResult.GetValue(nameOption)!;
                 var benchDir = parseResult.GetValue(benchDirOption)!;
                 var outputRoot = parseResult.GetValue(outputOption)!;
+                var avProductOverride = parseResult.GetValue(avProductOption);
+                var avVersionOverride = parseResult.GetValue(avVersionOption);
                 if (!BenchmarkWorkloads.TryNormalize(parseResult.GetValue(workloadOption), out var selectedWorkloads, out var error))
                 {
                     Console.Error.WriteLine($"ERROR: {error}");
@@ -82,11 +97,19 @@ public static class RunCommand
 
                 await IdleChecker.VerifyAsync(CancellationToken.None);
 
+                var detectedAv = AvDetector.Detect();
+                var effectiveAv = new AvInfo(
+                    NormalizeOverride(avProductOverride) ?? detectedAv.ProductName,
+                    NormalizeOverride(avVersionOverride) ?? detectedAv.ProductVersion);
+
+                Console.WriteLine($"[run] AV: {effectiveAv.ProductName} v{effectiveAv.ProductVersion}");
+
                 var runner = new ScenarioRunner(
                     avName.Trim(),
                     outputRoot.FullName,
                     SystemInfoProvider.GetRunnerVersion(),
-                    SetupService.ComputeManifestSha(manifestPath));
+                    SetupService.ComputeManifestSha(manifestPath),
+                    effectiveAv);
 
                 var scenarios = new List<ScenarioDefinition>();
                 if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Ripgrep))
@@ -194,4 +217,7 @@ public static class RunCommand
 
         return scenarioId;
     }
+
+    private static string? NormalizeOverride(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

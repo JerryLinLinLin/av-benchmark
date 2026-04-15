@@ -1,6 +1,5 @@
 using System.Text.Json;
-using System.IO.Compression;
-using AvBench.Core.Internal;
+using AvBench.Core.Microbench;
 using AvBench.Core.Models;
 using AvBench.Core.Serialization;
 
@@ -47,7 +46,7 @@ public static class MicrobenchScenarioFactory
                 runRoot,
                 "file-create-delete",
                 $"--operations {FileCreateDeleteOperations} --batch-size {FileCreateDeleteBatchSize}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "file-create-delete", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "file-create-delete", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
@@ -55,33 +54,33 @@ public static class MicrobenchScenarioFactory
                 $"--iterations {ArchiveExtractIterations} --zip-path \"{archiveZipPath}\"",
                 async ct =>
                 {
-                    await EnsureArchiveZipAsync(supportRoot, archiveZipPath, ct);
-                    await PrepareWorkingDirectoryAsync(runRoot, "archive-extract", ct);
+                    await MicrobenchSupport.EnsureArchiveZipAsync(supportRoot, archiveZipPath, ct);
+                    await MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "archive-extract", ct);
                 }),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "file-enum-large-dir",
                 $"--iterations {FileEnumLargeDirIterations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "file-enum-large-dir", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "file-enum-large-dir", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "file-copy-large",
                 $"--iterations {FileCopyLargeIterations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "file-copy-large", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "file-copy-large", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "hardlink-create",
                 $"--operations {HardlinkCreateOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "hardlink-create", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "hardlink-create", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "junction-create",
                 $"--operations {JunctionCreateOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "junction-create", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "junction-create", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
@@ -89,8 +88,8 @@ public static class MicrobenchScenarioFactory
                 $"--operations {ProcessCreateOperations} --unsigned-exe \"{unsignedExePath}\"",
                 async ct =>
                 {
-                    await EnsureUnsignedNoopExeAsync(supportRoot, unsignedExePath, ct);
-                    await PrepareWorkingDirectoryAsync(runRoot, "process-create-wait", ct);
+                    await MicrobenchSupport.EnsureUnsignedNoopExeAsync(supportRoot, unsignedExePath, ct);
+                    await MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "process-create-wait", ct);
                 }),
             CreateExtensionSensitivityScenario(executablePath, runRoot, ".exe"),
             CreateExtensionSensitivityScenario(executablePath, runRoot, ".dll"),
@@ -101,7 +100,7 @@ public static class MicrobenchScenarioFactory
                 runRoot,
                 "dll-load-unique",
                 $"--operations {DllLoadOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "dll-load-unique", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "dll-load-unique", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
@@ -109,8 +108,8 @@ public static class MicrobenchScenarioFactory
                 $"--operations {FileWriteContentOperations} --unsigned-exe \"{unsignedExePath}\"",
                 async ct =>
                 {
-                    await EnsureUnsignedNoopExeAsync(supportRoot, unsignedExePath, ct);
-                    await PrepareWorkingDirectoryAsync(runRoot, "file-write-content", ct);
+                    await MicrobenchSupport.EnsureUnsignedNoopExeAsync(supportRoot, unsignedExePath, ct);
+                    await MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "file-write-content", ct);
                 }),
             CreateScenario(
                 executablePath,
@@ -119,8 +118,8 @@ public static class MicrobenchScenarioFactory
                 $"--operations {MotwOperations} --unsigned-exe \"{unsignedExePath}\"",
                 async ct =>
                 {
-                    await EnsureUnsignedNoopExeAsync(supportRoot, unsignedExePath, ct);
-                    await PrepareWorkingDirectoryAsync(runRoot, "motw-exe-no-motw", ct);
+                    await MicrobenchSupport.EnsureUnsignedNoopExeAsync(supportRoot, unsignedExePath, ct);
+                    await MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "motw-exe-no-motw", ct);
                 }),
             CreateScenario(
                 executablePath,
@@ -129,81 +128,81 @@ public static class MicrobenchScenarioFactory
                 $"--operations {MotwOperations} --unsigned-exe \"{unsignedExePath}\" --apply-motw",
                 async ct =>
                 {
-                    await EnsureUnsignedNoopExeAsync(supportRoot, unsignedExePath, ct);
-                    await PrepareWorkingDirectoryAsync(runRoot, "motw-exe-motw-zone3", ct);
+                    await MicrobenchSupport.EnsureUnsignedNoopExeAsync(supportRoot, unsignedExePath, ct);
+                    await MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "motw-exe-motw-zone3", ct);
                 }),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "thread-create",
                 $"--operations {ThreadCreateOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "thread-create", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "thread-create", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "mem-alloc-protect",
                 $"--operations {MemAllocProtectOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "mem-alloc-protect", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "mem-alloc-protect", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "mem-map-file",
                 $"--operations {MemMapFileOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "mem-map-file", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "mem-map-file", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "net-connect-loopback",
                 $"--operations {NetConnectLoopbackOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "net-connect-loopback", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "net-connect-loopback", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "net-dns-resolve",
                 $"--operations {NetDnsResolveOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "net-dns-resolve", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "net-dns-resolve", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "registry-crud",
                 $"--operations {RegistryCrudOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "registry-crud", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "registry-crud", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "pipe-roundtrip",
                 $"--operations {PipeRoundtripOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "pipe-roundtrip", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "pipe-roundtrip", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "token-query",
                 $"--operations {TokenQueryOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "token-query", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "token-query", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "crypto-hash-verify",
                 $"--operations {CryptoHashVerifyOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "crypto-hash-verify", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "crypto-hash-verify", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "com-create-instance",
                 $"--operations {ComCreateInstanceOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "com-create-instance", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "com-create-instance", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "wmi-query",
                 $"--operations {WmiQueryOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "wmi-query", ct)),
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "wmi-query", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
                 "fs-watcher",
                 $"--operations {FsWatcherOperations}",
-                ct => PrepareWorkingDirectoryAsync(runRoot, "fs-watcher", ct))
+                ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, "fs-watcher", ct))
         ];
     }
 
@@ -215,7 +214,7 @@ public static class MicrobenchScenarioFactory
             runRoot,
             scenarioId,
             $"--operations {ExtensionSensitivityOperations} --extension {extension}",
-            ct => PrepareWorkingDirectoryAsync(runRoot, scenarioId, ct));
+            ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, scenarioId, ct));
     }
 
     private static ScenarioDefinition CreateScenario(
@@ -255,101 +254,4 @@ public static class MicrobenchScenarioFactory
         };
     }
 
-    private static Task PrepareWorkingDirectoryAsync(string runRoot, string scenarioId, CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        var workingDirectory = Path.Combine(runRoot, scenarioId);
-        FileSystemUtil.DeletePathIfExists(workingDirectory);
-        Directory.CreateDirectory(workingDirectory);
-        return Task.CompletedTask;
-    }
-
-    private static async Task EnsureArchiveZipAsync(string supportRoot, string archiveZipPath, CancellationToken cancellationToken)
-    {
-        if (File.Exists(archiveZipPath))
-        {
-            return;
-        }
-
-        var archiveDirectory = Path.GetDirectoryName(archiveZipPath)
-            ?? throw new InvalidOperationException("Archive zip path does not have a parent directory.");
-        Directory.CreateDirectory(archiveDirectory);
-
-        var stageDirectory = Path.Combine(archiveDirectory, "stage");
-        FileSystemUtil.DeletePathIfExists(stageDirectory);
-        Directory.CreateDirectory(stageDirectory);
-
-        try
-        {
-            var rng = new Random(42);
-            string[] extensions = [".cs", ".js", ".json", ".xml", ".dll", ".exe", ".txt", ".md"];
-            int[] sizes = [64, 256, 1024, 4096, 16384, 65536];
-
-            for (var index = 0; index < 2_000; index++)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var extension = extensions[index % extensions.Length];
-                var size = sizes[index % sizes.Length];
-                var subDirectory = Path.Combine(stageDirectory, $"pkg_{index / 100:D2}");
-                Directory.CreateDirectory(subDirectory);
-
-                var content = new byte[size];
-                rng.NextBytes(content);
-                if ((extension == ".dll" || extension == ".exe") && size >= 2)
-                {
-                    content[0] = 0x4D;
-                    content[1] = 0x5A;
-                }
-
-                await File.WriteAllBytesAsync(Path.Combine(subDirectory, $"file_{index:D4}{extension}"), content, cancellationToken);
-            }
-
-            ZipFile.CreateFromDirectory(stageDirectory, archiveZipPath);
-        }
-        finally
-        {
-            FileSystemUtil.DeletePathIfExists(stageDirectory);
-        }
-    }
-
-    private static async Task EnsureUnsignedNoopExeAsync(string supportRoot, string unsignedExePath, CancellationToken cancellationToken)
-    {
-        if (File.Exists(unsignedExePath))
-        {
-            return;
-        }
-
-        var projectDirectory = Path.Combine(supportRoot, "procbench");
-        var outputDirectory = Path.Combine(projectDirectory, "out");
-        Directory.CreateDirectory(projectDirectory);
-        Directory.CreateDirectory(outputDirectory);
-
-        var programPath = Path.Combine(projectDirectory, "Program.cs");
-        var projectPath = Path.Combine(projectDirectory, "noop.csproj");
-
-        await File.WriteAllTextAsync(programPath, "return 0;" + System.Environment.NewLine, cancellationToken);
-        await File.WriteAllTextAsync(
-            projectPath,
-            """
-            <Project Sdk="Microsoft.NET.Sdk">
-              <PropertyGroup>
-                <OutputType>Exe</OutputType>
-                <TargetFramework>net8.0</TargetFramework>
-              </PropertyGroup>
-            </Project>
-            """,
-            cancellationToken);
-
-        await ProcessUtil.EnsureSuccessAsync(
-            "dotnet",
-            $"build \"{projectPath}\" -c Release -o \"{outputDirectory}\"",
-            projectDirectory,
-            "Build unsigned noop.exe",
-            cancellationToken);
-
-        if (!File.Exists(unsignedExePath))
-        {
-            throw new InvalidOperationException($"Unsigned noop.exe was not produced at {unsignedExePath}.");
-        }
-    }
 }

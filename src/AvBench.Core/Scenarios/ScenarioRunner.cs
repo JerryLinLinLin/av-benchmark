@@ -1,4 +1,5 @@
 using AvBench.Core.Collectors;
+using AvBench.Core.Detection;
 using AvBench.Core.Environment;
 using AvBench.Core.Internal;
 using AvBench.Core.Models;
@@ -15,13 +16,13 @@ public sealed class ScenarioRunner
     private readonly string _suiteManifestSha;
     private readonly AvInfo _avInfo;
 
-    public ScenarioRunner(string avName, string outputRoot, string runnerVersion, string suiteManifestSha)
+    public ScenarioRunner(string avName, string outputRoot, string runnerVersion, string suiteManifestSha, AvInfo avInfo)
     {
         _avName = avName;
         _outputRoot = outputRoot;
         _runnerVersion = runnerVersion;
         _suiteManifestSha = suiteManifestSha;
-        _avInfo = SystemInfoProvider.CollectAvInfo();
+        _avInfo = avInfo;
     }
 
     public async Task<List<RunResult>> ExecuteScenariosAsync(
@@ -90,8 +91,8 @@ public sealed class ScenarioRunner
             {
                 ScenarioId = scenario.Id,
                 AvName = _avName,
-                AvProduct = _avInfo.Product,
-                AvVersion = _avInfo.Version,
+                AvProduct = _avInfo.ProductName,
+                AvVersion = _avInfo.ProductVersion,
                 TimestampUtc = DateTime.UtcNow,
                 Command = string.IsNullOrWhiteSpace(scenario.Arguments) ? scenario.FileName : $"{scenario.FileName} {scenario.Arguments}",
                 WorkingDir = scenario.WorkingDirectory,

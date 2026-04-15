@@ -1,25 +1,22 @@
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using Microsoft.Win32;
 using AvBench.Core.Internal;
 using AvBench.Core.Models;
 
-namespace AvBench.Cli.Commands;
+namespace AvBench.Core.Microbench;
 
-[SupportedOSPlatform("windows")]
-internal static partial class InternalMicrobenchAdditionalBenches
+public static partial class MicrobenchWorker
 {
     private const uint TokenQueryAccess = 0x0008;
     private const int TokenQueryBufferSize = 1024;
     private const int CryptoPayloadSize = 64 * 1024;
 
-    public static MicrobenchMetrics ExecuteNetConnectLoopback(int totalOperations)
+    private static MicrobenchMetrics ExecuteNetConnectLoopback(int totalOperations)
     {
         var payload = new byte[1024];
         var response = new byte[payload.Length];
@@ -44,6 +41,7 @@ internal static partial class InternalMicrobenchAdditionalBenches
                 stream.Write(payload, 0, payload.Length);
                 ReadExact(stream, response, response.Length);
             }
+
             histogram.Record(Stopwatch.GetTimestamp() - start);
         }
 
@@ -52,7 +50,7 @@ internal static partial class InternalMicrobenchAdditionalBenches
         return BuildMetrics(1, totalOperations, stopwatch.Elapsed, histogram);
     }
 
-    public static MicrobenchMetrics ExecuteDnsResolve(int totalOperations)
+    private static MicrobenchMetrics ExecuteDnsResolve(int totalOperations)
     {
         var histogram = new LatencyHistogram(totalOperations);
         var stopwatch = Stopwatch.StartNew();
@@ -73,7 +71,7 @@ internal static partial class InternalMicrobenchAdditionalBenches
         return BuildMetrics(1, totalOperations, stopwatch.Elapsed, histogram);
     }
 
-    public static MicrobenchMetrics ExecuteRegistryCrud(int totalOperations)
+    private static MicrobenchMetrics ExecuteRegistryCrud(int totalOperations)
     {
         const string BasePath = @"Software\AvBench\Temp";
         var histogram = new LatencyHistogram(totalOperations);
@@ -109,7 +107,7 @@ internal static partial class InternalMicrobenchAdditionalBenches
         return BuildMetrics(1, totalOperations, stopwatch.Elapsed, histogram);
     }
 
-    public static MicrobenchMetrics ExecutePipeRoundtrip(int totalOperations)
+    private static MicrobenchMetrics ExecutePipeRoundtrip(int totalOperations)
     {
         var payload = new byte[4096];
         var response = new byte[payload.Length];
@@ -120,7 +118,7 @@ internal static partial class InternalMicrobenchAdditionalBenches
 
         for (var index = 0; index < totalOperations; index++)
         {
-            var pipeName = $"avbench-pipe-{Environment.ProcessId}-{index:D5}";
+            var pipeName = $"avbench-pipe-{System.Environment.ProcessId}-{index:D5}";
             var serverTask = Task.Run(() =>
             {
                 using var server = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.None);
@@ -145,7 +143,7 @@ internal static partial class InternalMicrobenchAdditionalBenches
         return BuildMetrics(1, totalOperations, stopwatch.Elapsed, histogram);
     }
 
-    public static MicrobenchMetrics ExecuteTokenQuery(int totalOperations)
+    private static MicrobenchMetrics ExecuteTokenQuery(int totalOperations)
     {
         var processHandle = Process.GetCurrentProcess().Handle;
         var histogram = new LatencyHistogram(totalOperations);
@@ -156,7 +154,7 @@ internal static partial class InternalMicrobenchAdditionalBenches
             var start = Stopwatch.GetTimestamp();
             if (!OpenProcessToken(processHandle, TokenQueryAccess, out var tokenHandle))
             {
-                throw new Win32Exception(Marshal.GetLastWin32Error(), "OpenProcessToken failed.");
+                throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), "OpenProcessToken failed.");
             }
 
             try
@@ -164,7 +162,7 @@ internal static partial class InternalMicrobenchAdditionalBenches
                 var buffer = new byte[TokenQueryBufferSize];
                 if (!GetTokenInformation(tokenHandle, TokenInformationClass.TokenPrivileges, buffer, buffer.Length, out _))
                 {
-                    throw new Win32Exception(Marshal.GetLastWin32Error(), "GetTokenInformation failed.");
+                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error(), "GetTokenInformation failed.");
                 }
             }
             finally
@@ -179,7 +177,7 @@ internal static partial class InternalMicrobenchAdditionalBenches
         return BuildMetrics(1, totalOperations, stopwatch.Elapsed, histogram);
     }
 
-    public static MicrobenchMetrics ExecuteCryptoHashVerify(int totalOperations)
+    private static MicrobenchMetrics ExecuteCryptoHashVerify(int totalOperations)
     {
         var data = new byte[CryptoPayloadSize];
         Random.Shared.NextBytes(data);
