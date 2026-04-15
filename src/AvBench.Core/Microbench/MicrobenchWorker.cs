@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -36,12 +37,12 @@ public static partial class MicrobenchWorker
                 request.RootPath,
                 request.UnsignedExePath ?? throw new InvalidOperationException("--unsigned-exe is required for file-write-content."),
                 request.Operations),
-            "motw-exe-no-motw" => ExecuteMotw(
+            "new-exe-run" => ExecuteMotw(
                 request.RootPath,
                 request.UnsignedExePath ?? throw new InvalidOperationException("--unsigned-exe is required for MOTW scenarios."),
                 request.Operations,
                 applyMotw: false),
-            "motw-exe-motw-zone3" => ExecuteMotw(
+            "new-exe-run-motw" => ExecuteMotw(
                 request.RootPath,
                 request.UnsignedExePath ?? throw new InvalidOperationException("--unsigned-exe is required for MOTW scenarios."),
                 request.Operations,
@@ -204,6 +205,8 @@ public static partial class MicrobenchWorker
                 File.Copy(supportFile, Path.Combine(opDirectory, Path.GetFileName(supportFile)), overwrite: true);
             }
 
+            PatchIterationBytes(destExe, index);
+
             if (applyMotw)
             {
                 File.WriteAllText(destExe + ":Zone.Identifier", "[ZoneTransfer]\r\nZoneId=3\r\n");
@@ -216,6 +219,15 @@ public static partial class MicrobenchWorker
 
         stopwatch.Stop();
         return BuildMetrics(1, totalOperations, stopwatch.Elapsed, histogram);
+    }
+
+    private static void PatchIterationBytes(string exePath, int index)
+    {
+        using var stream = new FileStream(exePath, FileMode.Open, FileAccess.Write, FileShare.Read);
+        stream.Seek(0x40, SeekOrigin.Begin);
+        Span<byte> buffer = stackalloc byte[sizeof(int)];
+        BinaryPrimitives.WriteInt32LittleEndian(buffer, index);
+        stream.Write(buffer);
     }
 
     private static void RunBatchedFileCreateDelete(string root, int totalOperations, int batchSize, LatencyHistogram histogram)

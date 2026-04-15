@@ -186,7 +186,7 @@ public static class RunCommand
 
         foreach (var scenario in scenarios)
         {
-            var family = GetScenarioFamily(scenario.Id);
+            var family = ScenarioSupport.GetScenarioFamily(scenario.Id);
             if (currentGroup is null || !string.Equals(currentFamily, family, StringComparison.OrdinalIgnoreCase))
             {
                 currentGroup = [];
@@ -197,28 +197,29 @@ public static class RunCommand
             currentGroup.Add(scenario);
         }
 
+        var microbenchGroups = groups
+            .Where(group => !ScenarioSupport.IsCompilationFamily(ScenarioSupport.GetScenarioFamily(group[0].Id)))
+            .ToList();
+        var compilationGroups = groups
+            .Where(group => ScenarioSupport.IsCompilationFamily(ScenarioSupport.GetScenarioFamily(group[0].Id)))
+            .ToList();
+
+        Shuffle(microbenchGroups);
+        Shuffle(compilationGroups);
+
+        return microbenchGroups
+            .Concat(compilationGroups)
+            .SelectMany(static group => group)
+            .ToList();
+    }
+
+    private static void Shuffle(List<List<ScenarioDefinition>> groups)
+    {
         for (var index = groups.Count - 1; index > 0; index--)
         {
             var swapIndex = Random.Shared.Next(index + 1);
             (groups[index], groups[swapIndex]) = (groups[swapIndex], groups[index]);
         }
-
-        return groups.SelectMany(static group => group).ToList();
-    }
-
-    private static string GetScenarioFamily(string scenarioId)
-    {
-        if (scenarioId.StartsWith("ripgrep-", StringComparison.OrdinalIgnoreCase))
-        {
-            return "ripgrep";
-        }
-
-        if (scenarioId.StartsWith("roslyn-", StringComparison.OrdinalIgnoreCase))
-        {
-            return "roslyn";
-        }
-
-        return scenarioId;
     }
 
     private static string? NormalizeOverride(string? value)

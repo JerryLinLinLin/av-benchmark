@@ -23,8 +23,8 @@ public static class MicrobenchScenarioFactory
         "ext-sensitivity-ps1",
         "dll-load-unique",
         "file-write-content",
-        "motw-exe-no-motw",
-        "motw-exe-motw-zone3",
+        "new-exe-run",
+        "new-exe-run-motw",
         "thread-create",
         "mem-alloc-protect",
         "mem-map-file",
@@ -147,17 +147,17 @@ public static class MicrobenchScenarioFactory
                 Operations = FileWriteContentOperations,
                 UnsignedExePath = support.UnsignedExePath
             }),
-            CreateScenario(runRoot, support, "motw-exe-no-motw", new MicrobenchRequest
+            CreateScenario(runRoot, support, "new-exe-run", new MicrobenchRequest
             {
-                ScenarioId = "motw-exe-no-motw",
-                RootPath = Path.Combine(runRoot, "motw-exe-no-motw"),
+                ScenarioId = "new-exe-run",
+                RootPath = Path.Combine(runRoot, "new-exe-run"),
                 Operations = MotwOperations,
                 UnsignedExePath = support.UnsignedExePath
             }),
-            CreateScenario(runRoot, support, "motw-exe-motw-zone3", new MicrobenchRequest
+            CreateScenario(runRoot, support, "new-exe-run-motw", new MicrobenchRequest
             {
-                ScenarioId = "motw-exe-motw-zone3",
-                RootPath = Path.Combine(runRoot, "motw-exe-motw-zone3"),
+                ScenarioId = "new-exe-run-motw",
+                RootPath = Path.Combine(runRoot, "new-exe-run-motw"),
                 Operations = MotwOperations,
                 UnsignedExePath = support.UnsignedExePath,
                 ApplyMotw = true

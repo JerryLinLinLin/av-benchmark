@@ -32,8 +32,9 @@ public sealed class ScenarioRunner
         CancellationToken cancellationToken)
     {
         var results = new List<RunResult>(scenarios.Count);
-        foreach (var scenario in scenarios)
+        for (var index = 0; index < scenarios.Count; index++)
         {
+            var scenario = scenarios[index];
             var scenarioDirectory = Path.Combine(_outputRoot, scenario.Id);
             FileSystemUtil.DeletePathIfExists(scenarioDirectory);
             Directory.CreateDirectory(scenarioDirectory);
@@ -51,6 +52,17 @@ public sealed class ScenarioRunner
             if (scenario.ValidateAsync is not null)
             {
                 await scenario.ValidateAsync(cancellationToken);
+            }
+
+            if (index < scenarios.Count - 1)
+            {
+                var nextScenario = scenarios[index + 1];
+                var cooldownMilliseconds = ScenarioSupport.GetCooldownMilliseconds(scenario.Id, nextScenario.Id);
+                if (cooldownMilliseconds > 0)
+                {
+                    Console.WriteLine($"[run] Cooldown: waiting {cooldownMilliseconds / 1000}s before {nextScenario.Id}");
+                    await Task.Delay(cooldownMilliseconds, cancellationToken);
+                }
             }
         }
 
