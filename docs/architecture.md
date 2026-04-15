@@ -82,11 +82,11 @@ src/
 │   │   ├── ProcessTreeRunner.cs       # Spawn + measure in Job Object
 │   │   └── ProcessTreeRunResult.cs    # Exit code + accounting snapshot
 │   ├── Scenarios/
-│   │   ├── ScenarioRunner.cs          # Orchestrator: prepare → run → record
+│   │   ├── ScenarioRunner.cs          # Orchestrator: prepare → cooldown → run → record
 │   │   ├── MicrobenchScenarioFactory.cs  # Creates 27 ScenarioDefinitions
 │   │   ├── RipgrepScenarioFactory.cs  # clean-build + incremental-build
 │   │   ├── RoslynScenarioFactory.cs   # clean-build + incremental-build
-│   │   ├── ScenarioSupport.cs         # File/dir validation helpers
+│   │   ├── ScenarioSupport.cs         # Family classification, cooldowns, validation helpers
 │   │   └── SourceFileToucher.cs       # Touch file for incremental builds
 │   ├── Serialization/
 │   │   └── AvBenchJsonContext.cs      # Source-generated JSON context
@@ -105,7 +105,7 @@ src/
     ├── Program.cs
     ├── CompareCommand.cs              # CLI: --baseline, --input, --output
     ├── CompareEngine.cs               # Stat computation + slowdown %
-    ├── CompareCsvWriter.cs            # compare.csv (16 columns)
+    ├── CompareCsvWriter.cs            # compare.csv (20 columns)
     └── SummaryRenderer.cs             # summary.md (Markdown tables)
 ```
 
