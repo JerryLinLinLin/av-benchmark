@@ -11,11 +11,27 @@ public static class MicrobenchScenarioFactory
     private const int FileCreateDeleteOperations = 5_000;
     private const int FileCreateDeleteBatchSize = 100;
     private const int ArchiveExtractIterations = 10;
+    private const int FileEnumLargeDirIterations = 50;
+    private const int FileCopyLargeIterations = 10;
+    private const int HardlinkCreateOperations = 5_000;
+    private const int JunctionCreateOperations = 2_000;
     private const int ProcessCreateOperations = 500;
     private const int ExtensionSensitivityOperations = 10_000;
     private const int DllLoadOperations = 2_000;
     private const int FileWriteContentOperations = 10_000;
     private const int MotwOperations = 500;
+    private const int ThreadCreateOperations = 5_000;
+    private const int MemAllocProtectOperations = 50_000;
+    private const int MemMapFileOperations = 10_000;
+    private const int NetConnectLoopbackOperations = 2_000;
+    private const int NetDnsResolveOperations = 5_000;
+    private const int RegistryCrudOperations = 5_000;
+    private const int PipeRoundtripOperations = 2_000;
+    private const int TokenQueryOperations = 50_000;
+    private const int CryptoHashVerifyOperations = 5_000;
+    private const int ComCreateInstanceOperations = 5_000;
+    private const int WmiQueryOperations = 500;
+    private const int FsWatcherOperations = 5_000;
 
     public static IReadOnlyList<ScenarioDefinition> Create(string executablePath, string benchDirectory)
     {
@@ -42,6 +58,30 @@ public static class MicrobenchScenarioFactory
                     await EnsureArchiveZipAsync(supportRoot, archiveZipPath, ct);
                     await PrepareWorkingDirectoryAsync(runRoot, "archive-extract", ct);
                 }),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "file-enum-large-dir",
+                $"--iterations {FileEnumLargeDirIterations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "file-enum-large-dir", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "file-copy-large",
+                $"--iterations {FileCopyLargeIterations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "file-copy-large", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "hardlink-create",
+                $"--operations {HardlinkCreateOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "hardlink-create", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "junction-create",
+                $"--operations {JunctionCreateOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "junction-create", ct)),
             CreateScenario(
                 executablePath,
                 runRoot,
@@ -91,7 +131,79 @@ public static class MicrobenchScenarioFactory
                 {
                     await EnsureUnsignedNoopExeAsync(supportRoot, unsignedExePath, ct);
                     await PrepareWorkingDirectoryAsync(runRoot, "motw-exe-motw-zone3", ct);
-                })
+                }),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "thread-create",
+                $"--operations {ThreadCreateOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "thread-create", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "mem-alloc-protect",
+                $"--operations {MemAllocProtectOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "mem-alloc-protect", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "mem-map-file",
+                $"--operations {MemMapFileOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "mem-map-file", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "net-connect-loopback",
+                $"--operations {NetConnectLoopbackOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "net-connect-loopback", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "net-dns-resolve",
+                $"--operations {NetDnsResolveOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "net-dns-resolve", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "registry-crud",
+                $"--operations {RegistryCrudOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "registry-crud", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "pipe-roundtrip",
+                $"--operations {PipeRoundtripOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "pipe-roundtrip", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "token-query",
+                $"--operations {TokenQueryOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "token-query", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "crypto-hash-verify",
+                $"--operations {CryptoHashVerifyOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "crypto-hash-verify", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "com-create-instance",
+                $"--operations {ComCreateInstanceOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "com-create-instance", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "wmi-query",
+                $"--operations {WmiQueryOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "wmi-query", ct)),
+            CreateScenario(
+                executablePath,
+                runRoot,
+                "fs-watcher",
+                $"--operations {FsWatcherOperations}",
+                ct => PrepareWorkingDirectoryAsync(runRoot, "fs-watcher", ct))
         ];
     }
 

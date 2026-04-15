@@ -2,6 +2,7 @@ using System.CommandLine;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using AvBench.Core.Internal;
 using AvBench.Core.Models;
@@ -9,6 +10,7 @@ using AvBench.Core.Serialization;
 
 namespace AvBench.Cli.Commands;
 
+[SupportedOSPlatform("windows")]
 public static class InternalMicrobenchCommand
 {
     public static Command Create()
@@ -98,11 +100,27 @@ public static class InternalMicrobenchCommand
             {
                 "file-create-delete" => ExecuteFileCreateDelete(root.FullName, operations, batchSize),
                 "archive-extract" => ExecuteArchiveExtract(root.FullName, zipPath?.FullName ?? throw new InvalidOperationException("--zip-path is required for archive-extract."), iterations),
+                "file-enum-large-dir" => InternalMicrobenchAdditionalBenches.ExecuteFileEnumLargeDir(root.FullName, iterations),
+                "file-copy-large" => InternalMicrobenchAdditionalBenches.ExecuteFileCopyLarge(root.FullName, iterations),
+                "hardlink-create" => InternalMicrobenchAdditionalBenches.ExecuteHardlinkCreate(root.FullName, operations),
+                "junction-create" => InternalMicrobenchAdditionalBenches.ExecuteJunctionCreate(root.FullName, operations),
                 "process-create-wait" => ExecuteProcessCreateWait(unsignedExe?.FullName ?? throw new InvalidOperationException("--unsigned-exe is required for process-create-wait."), operations),
                 "dll-load-unique" => ExecuteDllLoadUnique(root.FullName, operations),
-                "file-write-content" => ExecuteFileWriteContent(root.FullName, unsignedExe?.FullName ?? throw new InvalidOperationException("--unsigned-exe is required for file-write-content."), operations),
+                "file-write-content" or "file-write-pe" => ExecuteFileWriteContent(root.FullName, unsignedExe?.FullName ?? throw new InvalidOperationException("--unsigned-exe is required for file-write-content."), operations),
                 "motw-exe-no-motw" => ExecuteMotw(root.FullName, unsignedExe?.FullName ?? throw new InvalidOperationException("--unsigned-exe is required for MOTW scenarios."), operations, applyMotw: false),
                 "motw-exe-motw-zone3" => ExecuteMotw(root.FullName, unsignedExe?.FullName ?? throw new InvalidOperationException("--unsigned-exe is required for MOTW scenarios."), operations, applyMotw: true),
+                "thread-create" => InternalMicrobenchAdditionalBenches.ExecuteThreadCreate(operations),
+                "mem-alloc-protect" => InternalMicrobenchAdditionalBenches.ExecuteMemAllocProtect(operations),
+                "mem-map-file" => InternalMicrobenchAdditionalBenches.ExecuteMemMapFile(root.FullName, operations),
+                "net-connect-loopback" => InternalMicrobenchAdditionalBenches.ExecuteNetConnectLoopback(operations),
+                "net-dns-resolve" => InternalMicrobenchAdditionalBenches.ExecuteDnsResolve(operations),
+                "registry-crud" => InternalMicrobenchAdditionalBenches.ExecuteRegistryCrud(operations),
+                "pipe-roundtrip" => InternalMicrobenchAdditionalBenches.ExecutePipeRoundtrip(operations),
+                "token-query" => InternalMicrobenchAdditionalBenches.ExecuteTokenQuery(operations),
+                "crypto-hash-verify" => InternalMicrobenchAdditionalBenches.ExecuteCryptoHashVerify(operations),
+                "com-create-instance" => InternalMicrobenchAdditionalBenches.ExecuteComCreateInstance(operations),
+                "wmi-query" => InternalMicrobenchAdditionalBenches.ExecuteWmiQuery(operations),
+                "fs-watcher" => InternalMicrobenchAdditionalBenches.ExecuteFsWatcher(root.FullName, operations),
                 _ when scenario.StartsWith("ext-sensitivity-", StringComparison.OrdinalIgnoreCase)
                     => ExecuteExtensionSensitivity(root.FullName, operations, extension ?? throw new InvalidOperationException("--extension is required for ext-sensitivity scenarios.")),
                 _ => throw new InvalidOperationException($"Unknown internal microbench scenario '{scenario}'.")
