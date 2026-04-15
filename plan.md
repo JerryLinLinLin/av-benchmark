@@ -110,22 +110,139 @@ Restore is always untimed and belongs in suite setup.
 
 ### API microbench workloads
 
-Split by behavior, not collapsed into one mega-loop.
+Split by behavior, not collapsed into one mega-loop. Each bench exercises a different Windows API category — file system operations, process/thread management, memory mapping, networking, registry, IPC, COM, and more. These are general-purpose Win32 APIs that common Windows applications call heavily. Some of these APIs are also known to be sensitive to security-software monitoring (user-mode hooks, kernel callbacks, minifilter I/O), which makes them useful for measuring AV overhead — but the primary selection criterion is **how commonly applications use these APIs**, not which ones are hooked by any particular product.
 
-First families:
+> **Reference**: For public data on which ntdll APIs are commonly intercepted by security software, see the [Mr-Un1k0d3r/EDRs](https://github.com/Mr-Un1k0d3r/EDRs) repository.
 
-- `file-create-delete` — create and delete small temp files (M1)
-- `archive-extract` — extract ~2K-file zip with mixed extensions/sizes (simulates NuGet/npm/pip restore)
-- `ext-sensitivity` — create+write+delete with .exe / .dll / .js / .ps1 extensions (same content)
-- `process-create-wait` — spawn an unsigned noop.exe (forces full AV scan, no trust-cache)
-- `dll-load-unique` — copy system DLL to unique temp path then load (bypasses section cache)
-- `file-write-content` — create→write→close→delete with pool of unique-hash unsigned PEs (forces full AV content inspection every iteration)
-- `motw` — copy + execute real unsigned exe, with vs without Zone.Identifier ADS (ZoneId=3 Internet origin)
+**Windows API interception layers** (each bench notes which layer it exercises):
 
-Later additions (not in v1):
+| Layer | Mechanism | What fires |
+|---|---|---|
+| **File minifilter** | `FltRegisterFilter` / `IRP_MJ_*` | Every file open, read, write, close |
+| **Process notify** | `PsSetCreateProcessNotifyRoutineEx` | Every process create/exit |
+| **Thread notify** | `PsSetCreateThreadNotifyRoutine` | Every thread create/exit |
+| **Image load notify** | `PsSetLoadImageNotifyRoutine` | Every DLL/EXE image load |
+| **Object callbacks** | `ObRegisterCallbacks` | Every `OpenProcess`/`OpenThread` |
+| **Registry callbacks** | `CmRegisterCallbackEx` | Every registry create/open/query/set/delete |
+| **WFP callout** | `FwpsCalloutRegister` | Every TCP connect, accept, DNS query |
+| **User-mode hooks** | ntdll inline patching | Varies — `NtAllocateVirtualMemory`, `NtMapViewOfSection`, etc. |
+| **ETW threat intel** | `EtwEventWrite` | Memory protection changes, image loads |
 
-- named pipe operations
-- memory-mapped file operations
+#### Tier 1 — File I/O & PE content (minifilter layer)
+
+These exercise the kernel file system minifilter — the single biggest source of AV overhead for file-heavy workloads. Security software typically registers a minifilter for on-access scanning.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| File create-delete | `file-create-delete` | Create + delete small temp files in a loop (M1) | Minifilter |
+| Archive extract | `archive-extract` | Extract ~2K-file zip with mixed extensions/sizes, then delete tree. Simulates NuGet/npm/pip restore | Minifilter |
+| Extension sensitivity | `ext-sensitivity-{ext}` | Create+write+delete with .exe/.dll/.js/.ps1 extensions (same content). Isolates extension-based dispatch | Minifilter |
+| File write PE content | `file-write-pe` | Create→write→close→delete unique-hash unsigned PEs (clone+patch noop.exe per iteration). Forces full PE inspection | Minifilter + content scan |
+| File enumerate large dir | `file-enum-large-dir` | Enumerate a pre-created directory with ~10K files. Exercises `NtQueryDirectoryFile` through minifilter. Common in IDE file indexing, `git status`, `dir /s` | Minifilter |
+| File copy large | `file-copy-large` | Copy a single ~100 MB file. Sustained minifilter read+write scan overhead on bulk data transfer | Minifilter |
+| Hardlink and junction | `hardlink-junction` | Create hard links and directory junctions in a loop. npm/pnpm use hard links for deduplication; junctions for node_modules hoisting | Minifilter |
+
+#### Tier 2 — Process, thread, DLL/image (kernel notify callbacks)
+
+These exercise the kernel `PsSetCreate*NotifyRoutine` and `PsSetLoadImageNotifyRoutine` callbacks plus user-mode ntdll hooks. Common in any application that spawns processes, loads libraries, or creates threads.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| Process create-wait | `process-create-wait` | Spawn unsigned noop.exe, wait for exit. Forces full AV on-execute scan (no trust-cache) | Process notify + user hooks |
+| DLL load unique | `dll-load-unique` | Copy system DLL to unique temp path, LoadLibrary, FreeLibrary. Bypasses section cache | Image load notify + user hooks |
+| MOTW exe (no mark) | `motw-exe-no-motw` | Copy + execute real unsigned noop.exe without Zone.Identifier | Process notify |
+| MOTW exe (Zone 3) | `motw-exe-motw-zone3` | Copy + stamp Zone.Identifier ZoneId=3 + execute. Triggers SmartScreen checks | Process notify + SmartScreen |
+| Thread create | `thread-create` | Rapid `new Thread()` → `Start()` → `Join()` cycle. Exercises `NtCreateThreadEx` + kernel thread notify | Thread notify + user hooks |
+
+#### Tier 3 — Memory (user-mode hooks, near-universal)
+
+Memory operations are the core primitives that security software monitors for process injection patterns (VirtualAlloc → VirtualProtect(RX) → CreateRemoteThread). These APIs are also used by JIT compilers (.NET, V8), code-generation tools, and memory-mapped databases.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| Memory alloc-protect | `mem-alloc-protect` | `VirtualAlloc(RW)` → `VirtualProtect(RX)` → `VirtualFree` loop. The RW→RX transition is a well-known sensitive pattern for security software | User hooks + ETW TI |
+| Memory map file | `mem-map-file` | `CreateFileMapping` → `MapViewOfFile` → `UnmapViewOfFile` loop. Exercises `NtMapViewOfSection` — widely monitored by security software | User hooks |
+
+#### Tier 4 — Network (WFP callout drivers)
+
+Network filtering happens in kernel mode via WFP callout drivers. User-mode Winsock calls transit the kernel where WFP callouts inspect at ALE connect/accept and stream layers. Every application that makes HTTP requests, downloads packages, or communicates over the network uses these APIs.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| TCP connect loopback | `net-connect-loopback` | TCP connect → send 1 KB → recv → close against a local echo listener. Each connection triggers WFP ALE_AUTH_CONNECT callout. Common in: git push/pull, npm install, NuGet restore, API calls | WFP callout |
+| DNS resolve | `net-dns-resolve` | `Dns.GetHostEntry` loop for non-cached hostnames. AV with DNS filtering inspects queries for C2 domain blocking. Common in: package managers, git, curl, browsers | WFP + DNS filter |
+
+#### Tier 5 — Registry (kernel CmRegisterCallbackEx)
+
+Security software registers kernel registry callbacks via `CmRegisterCallbackEx` — these fire on every registry operation. Installers, application settings, COM registration lookups, and many system tools perform heavy registry I/O.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| Registry CRUD | `registry-crud` | Create key → set 5 values (REG_SZ, REG_DWORD, REG_BINARY, REG_MULTI_SZ, REG_EXPAND_SZ) → query each → enumerate → delete. Under `HKCU\Software\AvBench\Temp` | Registry callbacks + user hooks |
+
+#### Tier 6 — IPC (minifilter for named pipes, ALPC hooks)
+
+Named pipes are a widely used IPC mechanism in Windows. ALPC (Advanced Local Procedure Call) underlies COM, RPC, and many Windows services. Applications that coordinate multiple processes (build tools, database servers, service hosts) use these heavily.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| Named pipe roundtrip | `pipe-roundtrip` | Create named pipe server → client connect → write 4 KB → read → disconnect. Exercises `NtCreateFile` (pipe) + `NtWriteFile` + `NtReadFile` through minifilter | Minifilter (named pipes) |
+
+#### Tier 7 — Security & crypto (common app usage)
+
+Token operations and cryptographic verification are exercised by every elevated application, installer, package manager (signature verification), and HTTPS connection. These are standard Win32 APIs that many applications call routinely.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| Token query | `token-query` | `OpenProcessToken` → `GetTokenInformation(TokenPrivileges)` → `CloseHandle` loop. Exercises `NtOpenProcessToken` and token query APIs monitored by security software | Object callbacks + user hooks |
+| Crypto hash+verify | `crypto-hash-verify` | SHA-256 hash a 64 KB buffer + RSA-2048 `VerifyData`. Simulates package signature verification. Not directly hooked, but AV's own signature verification shares CPU/cache | CPU-bound (contention) |
+
+#### Tier 8 — COM & WMI (common Windows infrastructure)
+
+COM activation underlies Office, shell extensions, management consoles, and many Windows applications. WMI queries are used by system monitoring, hardware inventory, and management tools.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| COM activation | `com-create-instance` | `Activator.CreateInstance(Type.GetTypeFromProgID("Scripting.FileSystemObject"))` in a loop. Exercises COM class factory + DLL loading + registry lookup | Image load notify + registry callbacks |
+| WMI query | `wmi-query` | `ManagementObjectSearcher("SELECT * FROM Win32_Process WHERE ProcessId = {pid}")` in a loop. Exercises WMI provider infrastructure + COM + named pipes (DCOM) | Multiple layers |
+
+#### Tier 9 — File system notifications
+
+File system watchers (`ReadDirectoryChangesW`) are used by IDEs, file sync tools, cloud storage clients, and build systems. AV minifilters sit in the notification path.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| Directory watcher throughput | `fs-watcher` | Set up `FileSystemWatcher` on a directory, then create+modify+delete 1000 files rapidly. Measure notification delivery latency. Exercises minifilter notification path | Minifilter |
+
+#### Summary — complete bench matrix
+
+| # | Scenario ID | Category | Tier | AV layer exercised |
+|---|---|---|---|---|
+| 1 | `file-create-delete` | File I/O | 1 | Minifilter |
+| 2 | `archive-extract` | File I/O | 1 | Minifilter |
+| 3 | `ext-sensitivity-{ext}` | File I/O | 1 | Minifilter |
+| 4 | `file-write-pe` | File I/O | 1 | Minifilter + content scan |
+| 5 | `file-enum-large-dir` | File I/O | 1 | Minifilter |
+| 6 | `file-copy-large` | File I/O | 1 | Minifilter |
+| 7 | `hardlink-junction` | File I/O | 1 | Minifilter |
+| 8 | `process-create-wait` | Process | 2 | Process notify + user hooks |
+| 9 | `dll-load-unique` | DLL/Image | 2 | Image load notify + user hooks |
+| 10 | `motw-exe-no-motw` | MOTW | 2 | Process notify |
+| 11 | `motw-exe-motw-zone3` | MOTW | 2 | Process notify + SmartScreen |
+| 12 | `thread-create` | Thread | 2 | Thread notify + user hooks |
+| 13 | `mem-alloc-protect` | Memory | 3 | User hooks + ETW TI |
+| 14 | `mem-map-file` | Memory | 3 | User hooks |
+| 15 | `net-connect-loopback` | Network | 4 | WFP callout |
+| 16 | `net-dns-resolve` | Network | 4 | WFP + DNS filter |
+| 17 | `registry-crud` | Registry | 5 | Registry callbacks + user hooks |
+| 18 | `pipe-roundtrip` | IPC | 6 | Minifilter (named pipes) |
+| 19 | `token-query` | Security | 7 | Object callbacks + user hooks |
+| 20 | `crypto-hash-verify` | Crypto | 7 | CPU contention |
+| 21 | `com-create-instance` | COM | 8 | Image load + registry callbacks |
+| 22 | `wmi-query` | WMI | 8 | Multiple layers |
+| 23 | `fs-watcher` | FS notify | 9 | Minifilter |
+
+All Tier 1–6 benches are implemented in Milestone 3. Tier 7–9 are also included in M3 but may be deferred to a follow-up if implementation complexity warrants it.
 
 ## Benchmark Matrix
 
@@ -549,8 +666,9 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 
 ### Milestone 3
 
-- Add remaining API microbench families
+- Add all API microbench families (23 benches across 9 tiers / 11 categories)
 - Integrate `TypeperfCollector` (always-on system counter sampling)
+- Categories: File I/O (7), Process/Thread/DLL (5), Memory (2), Network (2), Registry (1), IPC (1), Security/Crypto (2), COM/WMI (2), FS Notifications (1)
 
 ### Milestone 4
 
