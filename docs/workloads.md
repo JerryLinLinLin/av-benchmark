@@ -1,233 +1,232 @@
 # Workloads
 
-`avbench` has three workload families, each targeting a different aspect of how AV impacts Windows use.
+`avbench` uses three workload families and 31 scenarios in total:
+
+- 2 `ripgrep` build scenarios
+- 2 `roslyn` build scenarios
+- 27 microbench scenarios
+
+The design is deliberate. Real builds answer the question users actually care about: "does this AV configuration slow down normal work?" Microbench scenarios answer the follow-up question at a lower level: "which Windows API call paths got slower, and are the biggest regressions showing up on ordinary APIs or on security-sensitive ones?" You need both views. Build workloads are realistic but messy. Microbench workloads are narrower, but much easier to attribute.
 
 ## Workload families at a glance
 
-| Workload ID | Type | Scenarios | What it measures |
-|---|---|---|---|
-| `ripgrep` | Compile (Rust/cargo) | 2 | Full native-code build pipeline via LLVM |
-| `roslyn` | Compile (C#/dotnet) | 2 | Managed-code build pipeline via MSBuild |
-| `microbench` | API micro-operations | 27 | Individual Windows API call overhead |
-
----
+| Family | Scenarios | What it is good at |
+|---|---:|---|
+| `ripgrep` | 2 | Native-code build behavior with `cargo` |
+| `roslyn` | 2 | Large managed-code build behavior with `dotnet` and MSBuild |
+| `microbench` | 27 | Measuring API-call overhead across common Windows paths and security-sensitive call paths |
 
 ## Compile workloads
 
-### Why compile builds?
+Builds are useful benchmark targets because they combine several things security products often care about at the same time:
 
-Compilation is one of the most AV-sensitive activities on a developer or CI machine. A single build:
+- lots of file creation, reads, writes, and deletes
+- repeated process launches
+- many DLL and toolchain loads
+- enough total runtime for small overheads to become visible
 
-- Creates, reads, writes, and deletes **thousands of files** (source, objects, intermediates, outputs)
-- Spawns **dozens of processes** (compiler, linker, MSBuild workers)
-- Loads **hundreds of DLLs** (SDK, toolchain, analyzers)
-- Performs **heavy I/O**: reading source from disk, writing object files, linking final binaries
+That makes build workloads a good first check for whether a product is meaningfully affecting developer or CI work.
 
-Every one of these operations passes through the AV kernel [minifilter](https://learn.microsoft.com/en-us/windows-hardware/drivers/ifs/filter-manager-concepts), process-notify callbacks, and image-load-notify callbacks. The aggregate overhead on a large build is measurable.
+Each build family has two scenarios:
 
-Two languages with different toolchains cover distinct AV interaction patterns:
+- **clean build**: delete the main build output directories and build from scratch
+- **incremental build**: ensure outputs already exist, touch one source file, then measure the rebuild
 
-### `ripgrep` — Rust / cargo / LLVM
+That staging matters. The incremental scenario is not "whatever happened after the last run." The runner first performs an untimed prerequisite build when needed, then advances the touched source file's last-write timestamp by at least two seconds so the build system sees a real change.
+
+### `ripgrep`
 
 **Repository:** [BurntSushi/ripgrep](https://github.com/BurntSushi/ripgrep)  
-**Toolchain:** Rust 1.85.0, cargo, LLVM backend  
-**Build command:** `cargo build --release`
+**Source policy:** latest release by default, or a user-specified ref via `--ripgrep-ref`  
+**Toolchain:** Rust `1.85.0`, `cargo`  
+**Measured command:** `cargo build --release`
 
-| Scenario | ID | What happens |
-|---|---|---|
-| Clean build | `ripgrep-clean-build` | Delete `target/`, then `cargo build --release`. Compiles ~300 crates from scratch. |
-| Incremental build | `ripgrep-incremental-build` | Touch a core `.rs` source file, then `cargo build --release`. Recompiles only the changed crate and downstream dependents. |
+| Scenario ID | What the runner does |
+|---|---|
+| `ripgrep-clean-build` | Deletes `target/`, then runs `cargo build --release` |
+| `ripgrep-incremental-build` | Ensures a previous build exists, touches a Rust source file, then runs `cargo build --release` again |
 
-**Why ripgrep?**
-- Medium-sized Rust project (~300 crates) — large enough to stress AV, small enough to finish in minutes.
-- Pure Rust with no C/C++ dependencies — isolates the cargo/LLVM toolchain.
-- Deterministic: pinned toolchain version (1.85.0), `cargo fetch` during setup pre-downloads all crate sources.
+Why this workload is in the suite:
 
-**AV interception exercised:**
-- **File minifilter:** thousands of `.rlib`, `.rmeta`, `.o`, `.d` files created/read/written/deleted.
-- **Process notify:** cargo spawns per-crate `rustc` processes.
-- **Image load notify:** `rustc` loads LLVM codegen DLLs.
-- **Registry callbacks:** `rustc` and LLVM read toolchain configuration paths.
+- It is a real, nontrivial Rust codebase, not a synthetic compiler stress test.
+- The build creates a large number of intermediate artifacts, which makes file-path overhead visible.
+- `cargo` fans work out across repeated compiler invocations, so process and image-load cost can also matter.
+- Setup runs `cargo fetch` first, which removes dependency download noise from the measured build itself.
 
-### `roslyn` — C# / dotnet / MSBuild
+One practical detail matters here: `ripgrep` is fairly stable by default because setup resolves it from the latest release unless you override the revision. The exact commit used for a run is recorded in `suite-manifest.json`.
+
+### `roslyn`
 
 **Repository:** [dotnet/roslyn](https://github.com/dotnet/roslyn)  
-**Toolchain:** .NET SDK (per repo's `global.json`), MSBuild, Visual Studio Build Tools  
-**Build command:** `dotnet build "Roslyn.slnx" -c Release /m /nr:false`
+**Source policy:** default branch head at setup time  
+**Toolchain:** `.NET` SDK from the repo's `global.json`, plus Visual Studio Build Tools as required by that repo state  
+**Setup hydration:** `Restore.cmd`  
+**Measured command:** `dotnet build "Roslyn.slnx" -c Release /m /nr:false`
 
-| Scenario | ID | What happens |
-|---|---|---|
-| Clean build | `roslyn-clean-build` | Delete `artifacts/bin` and `artifacts/obj`, then build the full solution. |
-| Incremental build | `roslyn-incremental-build` | Touch a core `.cs` file in `Compilers/Core/Portable/`, triggering a cascade rebuild through downstream assemblies. |
-
-**Why Roslyn?**
-- Large managed-code solution (~180 projects) — representative of upper-end .NET builds.
-- Heavy MSBuild parallelism (`/m`) spawns many worker processes.
-- Exercises both the compiler (`csc.dll` in-process) and analyzer infrastructure.
-- `/nr:false` (no node reuse) forces fresh MSBuild worker processes each build — no cached AV verdicts from prior sessions.
-
-**AV interception exercised:**
-- **File minifilter:** massive `.dll`, `.pdb`, `.cs`, `.xml` I/O across hundreds of project output directories.
-- **Process notify:** MSBuild spawns worker nodes, dotnet SDK host processes.
-- **Image load notify:** hundreds of SDK/analyzer DLLs loaded per build.
-- **Registry callbacks:** MSBuild reads the registry for toolset resolution.
-
-### Incremental builds — why they matter
-
-The incremental scenario simulates the most common developer action: **edit one file, rebuild**. It measures per-file AV marginal cost by touching a "core" source file that cascades through dependent projects/crates. The `SourceFileToucher` advances the file's last-write time by at least 2 seconds to reliably trigger the build system's change detection.
-
-If AV adds 5 seconds to a 90-second clean build, that is 5.5 %. If AV adds 3 seconds to a 4-second incremental build, that is 75 % — far more disruptive to the edit-build-test loop.
-
----
-
-## API microbenchmarks
-
-### Design philosophy
-
-The microbench suite tests **individual Windows API call costs** in isolation. Each bench:
-
-1. Calls one API (or a small API sequence) in a tight loop for a fixed number of operations.
-2. Records per-operation latency via [`Stopwatch.GetTimestamp()`](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.stopwatch.gettimestamp) (QPC-backed, sub-microsecond resolution on modern hardware).
-3. Computes throughput (ops/sec) and latency percentiles (p50/p95/p99/max).
-
-API selection criteria:
-
-- **Primary:** Operations commonly performed by Windows applications — file managers, browsers, installers, Office, IDEs, cloud sync tools, databases.
-- **Secondary:** APIs known to be intercepted by security software (kernel callbacks, user-mode hooks), where AV overhead is expected to be measurable.
-- **Not a goal:** Exhaustive coverage of every hookable API. The focus is on operations that real applications perform frequently.
-
-> **Reference:** For public data on which ntdll/kernel32 APIs are commonly intercepted by endpoint security products, see [Mr-Un1k0d3r/EDRs](https://github.com/Mr-Un1k0d3r/EDRs).
-
-### No warmup
-
-Every iteration is measured cold. A discarded warmup would prime the AV cache and hide the real overhead users experience on first launch, first file access, or first network connection.
-
-### Complete microbench catalog
-
-#### Tier 1 — File I/O (minifilter layer)
-
-These exercise the kernel file system [minifilter](https://learn.microsoft.com/en-us/windows-hardware/drivers/ifs/filter-manager-concepts) — the single largest source of AV overhead for file-heavy workloads.
-
-| Scenario ID | Ops | Description | Why this test |
-|---|---:|---|---|
-| `file-create-delete` | 5,000 | Create + delete small temp files in batches of 100. | The most basic file operation. Every application creates temp files. Directly measures per-file minifilter overhead for [`IRP_MJ_CREATE`](https://learn.microsoft.com/en-us/windows-hardware/drivers/ifs/irp-mj-create) + `IRP_MJ_CLEANUP`. |
-| `archive-extract` | 10 iters | Extract a pre-built zip with ~2,000 mixed files (`.cs`, `.js`, `.dll`, `.exe`, `.json`, `.xml`, sizes 64 B–64 KB), then delete the tree. | Simulates package restore (NuGet, npm, pip) and installer extraction. The burst of heterogeneous file creates with mixed extensions stresses AV extension-based dispatch and content scanning. Varying file content prevents verdict caching. |
-| `ext-sensitivity-exe` | 10,000 | Create + write + delete files with `.exe` extension (random content). | `.exe` files trigger PE header parsing and signature checks in the minifilter. |
-| `ext-sensitivity-dll` | 10,000 | Same with `.dll` extension. | `.dll` files also trigger PE content scanning. |
-| `ext-sensitivity-js` | 10,000 | Same with `.js` extension. | `.js` files trigger script heuristic scanning in some AV products. |
-| `ext-sensitivity-ps1` | 10,000 | Same with `.ps1` extension. | `.ps1` files trigger PowerShell script heuristic scanning. |
-| `file-write-content` | 10,000 | Clone the unsigned `noop.exe` template, patch 4 bytes to create a unique hash, write as `.exe`/`.dll`, delete. | Forces **full PE content inspection** on every write. The unique hash means AV cannot cache the verdict — it must parse the PE header, compute the hash, and check signature status for every operation. Isolates worst-case AV cost for writing executable content. |
-| `file-enum-large-dir` | 50 iters | Enumerate a pre-created directory with ~10,000 files. | IDEs, `git status`, file sync tools, and search indexers enumerate large directories constantly. Exercises [`NtQueryDirectoryFile`](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntquerydirectoryfile) through the minifilter. |
-| `file-copy-large` | 10 iters | Copy a ~100 MB file, then delete the copy. | Measures sustained minifilter overhead on bulk data transfer. Build outputs, installer packages, and large artifacts follow this pattern. |
-| `hardlink-create` | 5,000 | Create a hard link then delete it. | npm/pnpm use hard links for package deduplication. Each hard link traverses the minifilter via `NtSetInformationFile(FileLinkInformation)`. |
-| `junction-create` | 2,000 | Create a directory junction then delete it. | Used for monorepo workspace linking and `node_modules` hoisting. Exercises [`FSCTL_SET_REPARSE_POINT`](https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ni-winioctl-fsctl_set_reparse_point) through the minifilter. |
-
-#### Tier 2 — Process, thread, DLL/image (kernel notify callbacks)
-
-These exercise the kernel [`PsSetCreateProcessNotifyRoutineEx`](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-pssetcreateprocessnotifyroutineex), [`PsSetCreateThreadNotifyRoutine`](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-pssetcreatethreadnotifyroutine), and [`PsSetLoadImageNotifyRoutine`](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-pssetloadimagenotifyroutine) callbacks.
-
-| Scenario ID | Ops | Description | Why this test |
-|---|---:|---|---|
-| `process-create-wait` | 500 | Spawn an unsigned `noop.exe`, wait for exit. | An unsigned exe forces a full on-execute AV scan — no trust-cache shortcut. Measures the per-process-create cost that impacts build tools, CI pipelines, and application launchers. |
-| `dll-load-unique` | 2,000 | Copy a system DLL to a unique temp path, `LoadLibrary`, `FreeLibrary`, delete. | Bypasses the Windows section cache and forces AV to scan each copy as a "new" DLL. Applications that generate or extract DLLs at runtime (plugin systems, build tools) hit this path. |
-| `motw-exe-no-motw` | 500 | Copy unsigned exe to temp path, execute, delete. No `Zone.Identifier`. | Baseline for comparing MOTW overhead. Tests the process-create path for locally-created binaries. |
-| `motw-exe-motw-zone3` | 500 | Same as above, but stamp `Zone.Identifier` with `ZoneId=3` (Internet zone) before executing. | Triggers [SmartScreen](https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/) reputation lookup. The delta vs. no-motw isolates the cost of executing "downloaded from the internet" binaries — exactly what happens with CI artifacts, GitHub releases, and package-extracted tools. |
-| `thread-create` | 5,000 | `new Thread()` → `Start()` → `Join()`. | Exercises `NtCreateThreadEx` and the kernel thread-notify callback. The .NET runtime, browser engines, and database servers all create threads dynamically. |
-
-#### Tier 3 — Memory (user-mode hooks)
-
-Memory operations are core primitives that security software monitors for process injection patterns.
-
-| Scenario ID | Ops | Description | Why this test |
-|---|---:|---|---|
-| `mem-alloc-protect` | 50,000 | `VirtualAlloc(RW)` → `VirtualProtect(RX)` → `VirtualFree`. | The RW→RX transition is a pattern security software watches for. The .NET JIT, V8 JIT, and any code-generation engine perform this on every method compilation. `NtAllocateVirtualMemory` and `NtProtectVirtualMemory` are among the most widely intercepted ntdll APIs. |
-| `mem-map-file` | 10,000 | `CreateFileMapping` → `MapViewOfFile` → read → `UnmapViewOfFile`. | Exercises `NtCreateSection` / `NtMapViewOfSection` — the same path used for DLL loading, PE image mapping, and memory-mapped databases (SQLite, LMDB). |
-
-#### Tier 4 — Network ([WFP](https://learn.microsoft.com/en-us/windows/win32/fwp/windows-filtering-platform-start-page) callout drivers)
-
-Network filtering happens in kernel mode via Windows Filtering Platform callout drivers.
-
-| Scenario ID | Ops | Description | Why this test |
-|---|---:|---|---|
-| `net-connect-loopback` | 2,000 | TCP connect → send 1 KB → recv → close against a local echo server. | Each connection triggers the WFP `FWPM_LAYER_ALE_AUTH_CONNECT` callout. This is the hot path for every HTTP request, package download, API call, and database connection. Loopback isolates AV WFP overhead from actual network latency. |
-| `net-dns-resolve` | 5,000 | `Dns.GetHostEntry("localhost")` in a loop. | DNS queries transit the WFP layer. Applications that connect to remote services resolve hostnames constantly. |
-
-#### Tier 5 — Registry ([kernel callbacks](https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/filtering-registry-calls))
-
-| Scenario ID | Ops | Description | Why this test |
-|---|---:|---|---|
-| `registry-crud` | 5,000 | Create key → set 5 values (REG_SZ, DWORD, BINARY, MULTI_SZ, EXPAND_SZ) → query each → enumerate → delete. Under `HKCU\Software\AvBench\Temp`. | Security software monitors registry operations via [`CmRegisterCallbackEx`](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-cmregistercallbackex). Installers, application settings, COM registration lookups, and system tools all perform heavy registry I/O. Five value types cover the major registry data paths. |
-
-#### Tier 6 — IPC (named pipes through minifilter)
-
-| Scenario ID | Ops | Description | Why this test |
-|---|---:|---|---|
-| `pipe-roundtrip` | 2,000 | Create named pipe server → client connect → write 4 KB → read → disconnect. | Named pipes are file system objects (`\Device\NamedPipe\`) and transit the minifilter stack. Build tools, database servers, Docker, and many Windows services use pipes for inter-process communication. |
-
-#### Tier 7 — Security & crypto
-
-| Scenario ID | Ops | Description | Why this test |
-|---|---:|---|---|
-| `token-query` | 50,000 | `OpenProcessToken` → `GetTokenInformation(TokenPrivileges)` → `CloseHandle`. | Every elevated application, installer, service, and UAC-aware tool queries token privileges. Security software may intercept the underlying `NtOpenProcessToken` syscall via SSDT hooks or user-mode detours. |
-| `crypto-hash-verify` | 5,000 | SHA-256 hash a 64 KB buffer + RSA-2048 signature verification. | Simulates package signature verification, Authenticode checks, and HTTPS handshake crypto. Not directly hooked, but AV's own concurrent signature verification competes for CPU and cache resources. |
-
-#### Tier 8 — COM & WMI
-
-| Scenario ID | Ops | Description | Why this test |
-|---|---:|---|---|
-| `com-create-instance` | 5,000 | `Activator.CreateInstance(Type.GetTypeFromProgID("Scripting.FileSystemObject"))` + `Marshal.ReleaseComObject`. | COM activation exercises the class factory, DLL loading (image-load notify), and registry CLSID lookup (registry callbacks). Office applications, shell extensions, management tools, and many Windows applications use COM extensively. |
-| `wmi-query` | 500 | `ManagementObjectSearcher("SELECT ProcessId, Name FROM Win32_Process WHERE ProcessId = {pid}")`. | WMI exercises COM + named pipes (DCOM) + registry + process enumeration. System monitoring, hardware inventory, and management tools use WMI. |
-
-#### Tier 9 — File system notifications
-
-| Scenario ID | Ops | Description | Why this test |
-|---|---:|---|---|
-| `fs-watcher` | 5,000 | Set up `FileSystemWatcher`, then create + delete files rapidly. Measures per-operation latency under an active watcher. | IDEs, file sync tools, cloud storage clients, and build systems use [`ReadDirectoryChangesW`](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-readdirectorychangesw). The minifilter sits in the notification delivery path. Measures whether AV adds latency to the combined file-operation + notification pipeline. |
-
----
-
-## Microbench operation counts
-
-Operation counts balance **statistical stability** (enough ops for reliable percentiles) against **total runtime** (all 27 scenarios complete in roughly 5–10 minutes):
-
-| Range | Rationale |
+| Scenario ID | What the runner does |
 |---|---|
-| 50,000 ops | Very fast operations (VirtualAlloc, token query) — microsecond-scale, need many ops for stable distributions |
-| 5,000–10,000 ops | Standard-speed operations (file create, registry, thread create, crypto) — tens-of-microseconds-scale |
-| 2,000 ops | Moderate operations (DLL load, pipe, TCP connect) — sub-millisecond |
-| 500 ops | Slow operations (process spawn, MOTW execute, WMI query) — millisecond-scale |
-| 10–50 iterations | Batch operations (archive extract, large file copy, directory enum) — multi-millisecond each |
+| `roslyn-clean-build` | Deletes `artifacts/bin` and `artifacts/obj`, then builds the solution |
+| `roslyn-incremental-build` | Ensures build outputs already exist, touches a C# source file under `src/Compilers/Core/Portable` when possible, then rebuilds |
 
----
+Why this workload is in the suite:
 
-## Summary — scenario ID reference
+- It represents a large .NET/MSBuild build rather than a small app template.
+- It stresses a different toolchain shape than `ripgrep`: more MSBuild coordination, different file types, different loader behavior, and different restore/build steps.
+- `/m` enables parallel build execution, which makes scheduler and process-tree overhead easier to surface.
+- `/nr:false` disables MSBuild node reuse, which keeps each measured build closer to a fresh process-launch workload.
 
-| # | Scenario ID | Family | Tier |
-|---|---|---|---|
-| 1 | `file-create-delete` | File I/O | 1 |
-| 2 | `archive-extract` | File I/O | 1 |
-| 3 | `ext-sensitivity-exe` | File I/O | 1 |
-| 4 | `ext-sensitivity-dll` | File I/O | 1 |
-| 5 | `ext-sensitivity-js` | File I/O | 1 |
-| 6 | `ext-sensitivity-ps1` | File I/O | 1 |
-| 7 | `file-write-content` | File I/O | 1 |
-| 8 | `file-enum-large-dir` | File I/O | 1 |
-| 9 | `file-copy-large` | File I/O | 1 |
-| 10 | `hardlink-create` | File I/O | 1 |
-| 11 | `junction-create` | File I/O | 1 |
-| 12 | `process-create-wait` | Process | 2 |
-| 13 | `dll-load-unique` | DLL/Image | 2 |
-| 14 | `motw-exe-no-motw` | MOTW | 2 |
-| 15 | `motw-exe-motw-zone3` | MOTW | 2 |
-| 16 | `thread-create` | Thread | 2 |
-| 17 | `mem-alloc-protect` | Memory | 3 |
-| 18 | `mem-map-file` | Memory | 3 |
-| 19 | `net-connect-loopback` | Network | 4 |
-| 20 | `net-dns-resolve` | Network | 4 |
-| 21 | `registry-crud` | Registry | 5 |
-| 22 | `pipe-roundtrip` | IPC | 6 |
-| 23 | `token-query` | Security | 7 |
-| 24 | `crypto-hash-verify` | Crypto | 7 |
-| 25 | `com-create-instance` | COM | 8 |
-| 26 | `wmi-query` | WMI | 8 |
-| 27 | `fs-watcher` | FS notify | 9 |
+The main logistical difference from `ripgrep` is source stability. By default, `roslyn` is taken from the repository's default branch head at setup time, so it is not a fixed workload across calendar time unless you preserve and reuse the same prepared benchmark image. The exact repo URL and commit SHA are recorded in the suite manifest so runs remain auditable.
+
+### Why both build families matter
+
+Using both families is more valuable than running either one alone.
+
+- `ripgrep` gives a native-code build with `cargo` orchestration.
+- `roslyn` gives a large managed-code build with MSBuild orchestration.
+
+If both move in the same direction, confidence increases that the result reflects a broad build-time effect rather than a quirk of one toolchain. If they diverge, that is also useful: it often means the product interacts differently with file churn, process launch patterns, or framework-specific build behavior.
+
+## Microbench workloads
+
+The microbench suite exists to measure how AV affects the performance of calling Windows APIs, or thin runtime wrappers over those APIs.
+
+That goal has two parts:
+
+- cover APIs that ordinary Windows applications call all the time
+- cover APIs and call patterns that are often more security-sensitive, and therefore more likely to be inspected, filtered, or hooked by AV and endpoint products
+
+That is why the suite includes both mundane paths such as file create/delete, directory enumeration, named pipes, DNS resolution, and COM activation, and more sensitive paths such as process launch, DLL load, protection changes, executable-content writes, registry churn, and MOTW-marked execution.
+
+The suite complements the build workloads rather than replacing them. If a build gets slower, microbench scenarios help identify which API families are likely responsible. If a build does not get slower, microbench scenarios can still expose narrow API-level regressions that only show up on certain call paths.
+
+### Design rules
+
+The microbench suite follows a few simple rules:
+
+- Each scenario targets one Windows API family, or one small call sequence built around a specific API path.
+- Inputs are prepared locally so the benchmark does not depend on network downloads during the measured phase.
+- Each scenario runs in a fresh working directory.
+- Operation counts are high enough to produce stable percentile data without making the whole suite take too long.
+- The suite does not perform a benchmark warmup pass that would deliberately hide first-touch cost.
+
+Support assets are generated locally during setup:
+
+- a zip archive containing 2,000 mixed files with extensions such as `.cs`, `.js`, `.json`, `.xml`, `.dll`, `.exe`, `.txt`, and `.md`
+- an unsigned `noop.exe` built from a tiny local `net8.0` project
+- a 10,000-file enumeration dataset for the large-directory test
+- a 100 MB source file for the large-copy test
+
+That keeps the scenarios reproducible and makes it clear what API path is actually being measured.
+
+### How to read the microbench suite
+
+The suite is best read as a set of API-path probes rather than as a flat list of 27 tests.
+
+#### File-system and content-path APIs
+
+These scenarios probe file-system API paths that are both common in normal software and frequently inspected by security products.
+
+| Scenario ID | What it does | Why it is in the suite |
+|---|---|---|
+| `file-create-delete` | Creates and deletes 5,000 small temp files in batches of 100 | Baseline file-create/file-delete overhead on a very common API path |
+| `archive-extract` | Extracts the generated mixed-file zip 10 times, deleting the extracted tree each time | Stresses the bursty multi-file create/write path seen in restore, unpack, and installer workflows |
+| `file-enum-large-dir` | Enumerates a generated directory containing 10,000 files, 50 times | Measures directory-enumeration cost on a path hit by IDEs, sync clients, and source-control tools |
+| `file-copy-large` | Copies a generated 100 MB file 10 times, deleting the copy after each run | Measures bulk file-copy behavior rather than tiny metadata-only operations |
+| `hardlink-create` | Creates and deletes 5,000 hard links | Covers link-creation APIs used by package managers and workspace tooling |
+| `junction-create` | Creates and deletes 2,000 directory junctions | Covers reparse-point creation on a path that some developer workflows use heavily |
+| `ext-sensitivity-exe` | Writes and deletes 10,000 randomly generated `.exe` files | Tests whether executable-looking filenames change the cost of the write path |
+| `ext-sensitivity-dll` | Writes and deletes 10,000 randomly generated `.dll` files | Same idea for library-like payloads |
+| `ext-sensitivity-js` | Writes and deletes 10,000 randomly generated `.js` files | Same idea for script-like payloads |
+| `ext-sensitivity-ps1` | Writes and deletes 10,000 randomly generated `.ps1` files | Same idea for PowerShell-style payloads |
+| `file-write-content` | Rewrites a local unsigned PE template with small byte changes and writes it as alternating `.exe` and `.dll` files | Tests the file-write path with executable-like content, not just executable-like extensions |
+
+Two of these scenarios deserve special attention:
+
+- `archive-extract` is intentionally a short API sequence rather than one isolated syscall. The point is to capture the file-create and file-write path under realistic burst conditions.
+- `file-write-content` is intentionally different from `ext-sensitivity-*`: it does not just change the extension, it writes PE-like content derived from a real executable image so the write path is closer to something security software may classify as executable content.
+
+#### Process, image-load, and execution APIs
+
+These scenarios focus on API paths around process creation, image loading, execution, and related metadata.
+
+| Scenario ID | What it does | Why it is in the suite |
+|---|---|---|
+| `process-create-wait` | Launches the local unsigned `noop.exe` 500 times and waits for exit | Measures the small-process-launch path directly |
+| `dll-load-unique` | Copies a system DLL to a unique path, loads it, unloads it, and deletes it 2,000 times | Measures repeated load-from-new-path behavior on the image-load path |
+| `motw-exe-no-motw` | Copies the unsigned `noop.exe` to a temp directory, runs it, and deletes the directory | Baseline for executing a locally created binary |
+| `motw-exe-motw-zone3` | Same as above, but adds a `Zone.Identifier` alternate data stream with `ZoneId=3` before execution | Measures whether internet-origin marking changes the cost of the execute path |
+| `thread-create` | Creates, starts, and joins 5,000 managed threads | Measures a simple thread-creation path that some products also watch closely |
+
+The MOTW pair is especially useful because it creates a controlled A/B comparison on the same execution path. The executable payload is the same; the difference is the presence of the `Zone.Identifier` stream. Any delta can reflect Windows security features, reputation checks, product policy, or other handling tied to internet-origin metadata.[1]
+
+#### Memory and mapping APIs
+
+These scenarios target memory-management API paths that show up in JITs, loaders, and code-generation engines, and that security products may watch more closely than ordinary heap activity.
+
+| Scenario ID | What it does | Why it is in the suite |
+|---|---|---|
+| `mem-alloc-protect` | Repeats `VirtualAlloc` -> write -> `VirtualProtect` -> `VirtualFree` 50,000 times | Measures a compact allocate/change-protection/free path that is often security-sensitive |
+| `mem-map-file` | Creates a memory-mapped view over a 4 KB backing file, writes one byte, reads one byte, then disposes it 10,000 times | Measures repeated file-backed section mapping rather than ordinary buffered I/O |
+
+These are not whole-application models. They are API-path probes for behaviors that often receive more security scrutiny than plain file reads and writes.
+
+#### Network and registry APIs
+
+These scenarios cover two API surfaces that matter to ordinary software and to security tooling.
+
+| Scenario ID | What it does | Why it is in the suite |
+|---|---|---|
+| `net-connect-loopback` | Connects to a local echo server 2,000 times, sends 1 KB, reads 1 KB back, and closes | Measures connect/send/receive/close overhead without internet noise dominating the result |
+| `net-dns-resolve` | Resolves `localhost` 5,000 times | Measures a lightweight lookup-oriented networking path |
+| `registry-crud` | Creates a key, writes five value types, reads them back, enumerates names, and deletes the key 5,000 times | Measures a registry API sequence that is common in installers, apps, and management tooling |
+
+The networking scenarios should be read carefully. They are API-path probes, not network benchmarks. They are useful for exposing relative differences in local networking or inspection overhead, not for predicting end-to-end internet latency.
+
+#### IPC, identity, crypto, and management APIs
+
+These scenarios cover a set of Windows-facing API paths that show up in tools, services, and management software.
+
+| Scenario ID | What it does | Why it is in the suite |
+|---|---|---|
+| `pipe-roundtrip` | Creates a named-pipe server/client pair, exchanges 4 KB, and tears it down 2,000 times | Measures a compact local IPC path |
+| `token-query` | Opens the current process token and reads privileges 50,000 times | Measures a repeated security-context query path |
+| `crypto-hash-verify` | Hashes a 64 KB buffer with SHA-256 and verifies an RSA-2048 signature 5,000 times | Acts as a security-related local compute path rather than a file or process path |
+| `com-create-instance` | Creates and releases `Scripting.FileSystemObject` 5,000 times | Measures COM activation and teardown |
+| `wmi-query` | Runs a `Win32_Process` query 500 times | Measures a heavier management-oriented query path than raw COM alone |
+| `fs-watcher` | Enables a `FileSystemWatcher`, then repeatedly creates, appends to, and deletes files | Measures file activity while the change-notification path is active |
+
+`crypto-hash-verify` is the outlier in this group. It is less direct than the file/process/registry scenarios as a Windows API probe, but it is still useful as a security-adjacent path: it shows whether a configuration changes the cost of local hash-and-verify work enough to matter.
+
+## Operation counts
+
+Operation counts are tuned by scenario type rather than by one fixed rule:
+
+- 50,000 operations for very cheap paths
+- 5,000 to 10,000 for ordinary short operations
+- 2,000 for moderately heavier paths
+- 500 for obviously slower operations such as process launch or WMI query
+- 10 to 50 iterations for multi-file or large-transfer scenarios
+
+That keeps the suite long enough to produce meaningful percentile data, but short enough to run repeatedly as part of a multi-session comparison workflow.
+
+## What the suite is optimized for
+
+This workload set is optimized for one job: comparing the performance impact of AV or endpoint-security configurations on developer-style Windows activity, with microbench scenarios specifically aimed at Windows API call paths.
+
+It is not trying to be:
+
+- a malware-evasion lab
+- a generic OS microbenchmark suite
+- a single-number "system performance" score
+- an exhaustive catalog of every Windows API a security product might touch
+
+That focus is a feature. The suite is intentionally opinionated: it favors workloads that are easy to rerun, easy to explain, and plausible enough to matter to real users.
+
+## References
+
+1. [Microsoft Defender SmartScreen](https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/)
+2. [Filter Manager concepts](https://learn.microsoft.com/en-us/windows-hardware/drivers/ifs/filter-manager-concepts)
+3. [Filtering Registry Calls](https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/filtering-registry-calls)
+4. [About Windows Filtering Platform](https://learn.microsoft.com/en-us/windows/win32/fwp/about-windows-filtering-platform)
+5. [BurntSushi/ripgrep](https://github.com/BurntSushi/ripgrep)
+6. [dotnet/roslyn](https://github.com/dotnet/roslyn)
