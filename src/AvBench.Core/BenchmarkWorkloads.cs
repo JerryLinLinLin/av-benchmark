@@ -73,7 +73,8 @@ public static class BenchmarkWorkloads
         => Contains(selectedWorkloads, Roslyn);
 
     public static bool RequiresDotNetSdk(IReadOnlyCollection<string> selectedWorkloads)
-        => Contains(selectedWorkloads, Roslyn);
+        => Contains(selectedWorkloads, Roslyn)
+            || Contains(selectedWorkloads, Microbench);
 
     public static bool IncludesSourceTree(IReadOnlyCollection<string> selectedWorkloads)
         => Contains(selectedWorkloads, Ripgrep)

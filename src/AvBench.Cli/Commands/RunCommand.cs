@@ -122,11 +122,9 @@ public static class RunCommand
                     scenarios.AddRange(RoslynScenarioFactory.Create(manifest));
                 }
 
-                var executablePath = Environment.ProcessPath
-                    ?? throw new InvalidOperationException("Unable to resolve the current executable path.");
                 if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Microbench))
                 {
-                    scenarios.AddRange(MicrobenchScenarioFactory.Create(executablePath, benchDir.FullName));
+                    scenarios.AddRange(MicrobenchScenarioFactory.Create(manifest));
                 }
 
                 var orderedScenarios = OrderScenariosForSession(scenarios);
@@ -164,6 +162,7 @@ public static class RunCommand
             if (string.Equals(workload, BenchmarkWorkloads.Microbench, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(workload, BenchmarkWorkloads.FileCreateDelete, StringComparison.OrdinalIgnoreCase))
             {
+                manifest.GetRequiredMicrobenchSupport();
                 continue;
             }
 

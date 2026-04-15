@@ -78,39 +78,47 @@ public sealed class ScenarioRunner
                 collector.Start(outputDirectory);
             }
 
-            var execution = await ProcessTreeRunner.RunAsync(
-                scenario.FileName,
-                scenario.Arguments,
-                scenario.WorkingDirectory,
-                stdoutPath,
-                stderrPath,
-                TimeSpan.FromHours(2),
-                cancellationToken);
-
-            var result = new RunResult
+            ScenarioExecutionResult execution;
+            if (scenario.ExecuteInProcessAsync is not null)
             {
-                ScenarioId = scenario.Id,
-                AvName = _avName,
-                AvProduct = _avInfo.ProductName,
-                AvVersion = _avInfo.ProductVersion,
-                TimestampUtc = DateTime.UtcNow,
-                Command = string.IsNullOrWhiteSpace(scenario.Arguments) ? scenario.FileName : $"{scenario.FileName} {scenario.Arguments}",
-                WorkingDir = scenario.WorkingDirectory,
-                ExitCode = execution.ExitCode,
-                WallMs = execution.WallMs,
-                UserCpuMs = execution.Accounting.TotalUserTimeMs,
-                KernelCpuMs = execution.Accounting.TotalKernelTimeMs,
-                PeakJobMemoryMb = (long)(execution.Accounting.PeakJobMemoryBytes / (1024 * 1024)),
-                IoReadBytes = execution.Accounting.IoReadBytes,
-                IoWriteBytes = execution.Accounting.IoWriteBytes,
-                IoReadOps = execution.Accounting.IoReadOps,
-                IoWriteOps = execution.Accounting.IoWriteOps,
-                TotalProcesses = execution.Accounting.TotalProcesses,
-                Machine = SystemInfoProvider.CollectMachineInfo(),
-                RunnerVersion = _runnerVersion,
-                SuiteManifestSha = _suiteManifestSha
-            };
+                execution = await scenario.ExecuteInProcessAsync(cancellationToken);
+                await File.WriteAllTextAsync(stdoutPath, execution.Stdout, cancellationToken);
+                await File.WriteAllTextAsync(stderrPath, execution.Stderr, cancellationToken);
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(scenario.FileName))
+                {
+                    throw new InvalidOperationException($"Scenario {scenario.Id} does not define a process command or an in-process executor.");
+                }
 
+                var processExecution = await ProcessTreeRunner.RunAsync(
+                    scenario.FileName,
+                    scenario.Arguments,
+                    scenario.WorkingDirectory,
+                    stdoutPath,
+                    stderrPath,
+                    TimeSpan.FromHours(2),
+                    cancellationToken);
+
+                execution = new ScenarioExecutionResult
+                {
+                    Command = string.IsNullOrWhiteSpace(scenario.Arguments) ? scenario.FileName : $"{scenario.FileName} {scenario.Arguments}",
+                    WorkingDirectory = scenario.WorkingDirectory,
+                    ExitCode = processExecution.ExitCode,
+                    WallMs = processExecution.WallMs,
+                    UserCpuMs = processExecution.Accounting.TotalUserTimeMs,
+                    KernelCpuMs = processExecution.Accounting.TotalKernelTimeMs,
+                    PeakJobMemoryMb = (long)(processExecution.Accounting.PeakJobMemoryBytes / (1024 * 1024)),
+                    IoReadBytes = processExecution.Accounting.IoReadBytes,
+                    IoWriteBytes = processExecution.Accounting.IoWriteBytes,
+                    IoReadOps = processExecution.Accounting.IoReadOps,
+                    IoWriteOps = processExecution.Accounting.IoWriteOps,
+                    TotalProcesses = processExecution.Accounting.TotalProcesses
+                };
+            }
+
+            var result = CreateRunResult(scenario, execution);
             scenario.EnrichResultFromLogs?.Invoke(result, stdoutPath, stderrPath);
             return result;
         }
@@ -134,6 +142,44 @@ public sealed class ScenarioRunner
                 TryDelete(stderrPath);
             }
         }
+    }
+
+    private RunResult CreateRunResult(ScenarioDefinition scenario, ScenarioExecutionResult execution)
+    {
+        var result = new RunResult
+        {
+            ScenarioId = scenario.Id,
+            AvName = _avName,
+            AvProduct = _avInfo.ProductName,
+            AvVersion = _avInfo.ProductVersion,
+            TimestampUtc = DateTime.UtcNow,
+            Command = execution.Command,
+            WorkingDir = execution.WorkingDirectory,
+            ExitCode = execution.ExitCode,
+            WallMs = execution.WallMs,
+            UserCpuMs = execution.UserCpuMs,
+            KernelCpuMs = execution.KernelCpuMs,
+            PeakJobMemoryMb = execution.PeakJobMemoryMb,
+            IoReadBytes = execution.IoReadBytes,
+            IoWriteBytes = execution.IoWriteBytes,
+            IoReadOps = execution.IoReadOps,
+            IoWriteOps = execution.IoWriteOps,
+            TotalProcesses = execution.TotalProcesses,
+            Machine = SystemInfoProvider.CollectMachineInfo(),
+            RunnerVersion = _runnerVersion,
+            SuiteManifestSha = _suiteManifestSha,
+            Microbench = execution.Microbench
+        };
+
+        if (execution.Microbench is not null)
+        {
+            result.P50Us = execution.Microbench.P50Us;
+            result.P95Us = execution.Microbench.P95Us;
+            result.P99Us = execution.Microbench.P99Us;
+            result.MaxUs = execution.Microbench.MaxUs;
+        }
+
+        return result;
     }
 
     private static void TryDelete(string path)

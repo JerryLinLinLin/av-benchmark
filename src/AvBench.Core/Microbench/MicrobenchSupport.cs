@@ -1,10 +1,45 @@
 using System.IO.Compression;
 using AvBench.Core.Internal;
+using AvBench.Core.Models;
 
 namespace AvBench.Core.Microbench;
 
 public static class MicrobenchSupport
 {
+    public const string SupportVersion = "m3-support-v2";
+    public const string RequiredDotNetSdkVersion = "8.0.303";
+
+    private const string VersionMarkerFileName = "support-version.txt";
+
+    public static async Task<MicrobenchSupportEntry> PrepareAsync(string benchDirectory, CancellationToken cancellationToken)
+    {
+        var supportRoot = Path.Combine(benchDirectory, "microbench-support");
+        var runRoot = Path.Combine(benchDirectory, "microbench");
+        var archiveZipPath = Path.Combine(supportRoot, "archive", "bench_archive.zip");
+        var unsignedExePath = Path.Combine(supportRoot, "procbench", "out", "noop.exe");
+
+        if (NeedsRefresh(supportRoot, archiveZipPath, unsignedExePath))
+        {
+            FileSystemUtil.DeletePathIfExists(supportRoot);
+            Directory.CreateDirectory(supportRoot);
+
+            await CreateArchiveZipAsync(archiveZipPath, cancellationToken);
+            await BuildUnsignedNoopExeAsync(supportRoot, unsignedExePath, cancellationToken);
+            await File.WriteAllTextAsync(Path.Combine(supportRoot, VersionMarkerFileName), SupportVersion, cancellationToken);
+        }
+
+        Directory.CreateDirectory(runRoot);
+
+        return new MicrobenchSupportEntry
+        {
+            Version = SupportVersion,
+            SupportRoot = supportRoot,
+            RunRoot = runRoot,
+            ArchiveZipPath = archiveZipPath,
+            UnsignedExePath = unsignedExePath
+        };
+    }
+
     public static Task PrepareWorkingDirectoryAsync(string runRoot, string scenarioId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -14,13 +49,45 @@ public static class MicrobenchSupport
         return Task.CompletedTask;
     }
 
-    public static async Task EnsureArchiveZipAsync(string supportRoot, string archiveZipPath, CancellationToken cancellationToken)
+    public static void ValidateManifestEntry(MicrobenchSupportEntry support)
     {
-        if (File.Exists(archiveZipPath))
+        if (!string.Equals(support.Version, SupportVersion, StringComparison.Ordinal))
         {
-            return;
+            throw new InvalidOperationException(
+                $"Microbench support version '{support.Version}' does not match runner support version '{SupportVersion}'. Run `avbench setup --workload microbench` again.");
         }
 
+        if (!File.Exists(support.ArchiveZipPath) || !File.Exists(support.UnsignedExePath))
+        {
+            throw new InvalidOperationException(
+                "Microbench support assets are missing from disk. Run `avbench setup --workload microbench` again.");
+        }
+    }
+
+    private static bool NeedsRefresh(string supportRoot, string archiveZipPath, string unsignedExePath)
+    {
+        if (!Directory.Exists(supportRoot))
+        {
+            return true;
+        }
+
+        var markerPath = Path.Combine(supportRoot, VersionMarkerFileName);
+        if (!File.Exists(markerPath))
+        {
+            return true;
+        }
+
+        var version = File.ReadAllText(markerPath).Trim();
+        if (!string.Equals(version, SupportVersion, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return !File.Exists(archiveZipPath) || !File.Exists(unsignedExePath);
+    }
+
+    private static async Task CreateArchiveZipAsync(string archiveZipPath, CancellationToken cancellationToken)
+    {
         var archiveDirectory = Path.GetDirectoryName(archiveZipPath)
             ?? throw new InvalidOperationException("Archive zip path does not have a parent directory.");
         Directory.CreateDirectory(archiveDirectory);
@@ -62,13 +129,8 @@ public static class MicrobenchSupport
         }
     }
 
-    public static async Task EnsureUnsignedNoopExeAsync(string supportRoot, string unsignedExePath, CancellationToken cancellationToken)
+    private static async Task BuildUnsignedNoopExeAsync(string supportRoot, string unsignedExePath, CancellationToken cancellationToken)
     {
-        if (File.Exists(unsignedExePath))
-        {
-            return;
-        }
-
         var projectDirectory = Path.Combine(supportRoot, "procbench");
         var outputDirectory = Path.Combine(projectDirectory, "out");
         Directory.CreateDirectory(projectDirectory);

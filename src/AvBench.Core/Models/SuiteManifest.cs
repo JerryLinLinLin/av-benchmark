@@ -19,6 +19,10 @@ public sealed class SuiteManifest
     [JsonPropertyName("workloads")]
     public List<WorkloadEntry> Workloads { get; set; } = [];
 
+    [JsonPropertyName("microbench_support")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public MicrobenchSupportEntry? MicrobenchSupport { get; set; }
+
     [JsonPropertyName("tools")]
     public Dictionary<string, string> Tools { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
@@ -32,6 +36,12 @@ public sealed class SuiteManifest
     {
         return Workloads.SingleOrDefault(entry => string.Equals(entry.Name, name, StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException($"Suite manifest does not contain the '{name}' workload.");
+    }
+
+    public MicrobenchSupportEntry GetRequiredMicrobenchSupport()
+    {
+        return MicrobenchSupport
+            ?? throw new InvalidOperationException("Suite manifest does not contain microbench support metadata. Run `avbench setup --workload microbench` first.");
     }
 }
 
@@ -80,4 +90,22 @@ public sealed class WorkloadEntry
     [JsonPropertyName("incremental_touch_path")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? IncrementalTouchPath { get; set; }
+}
+
+public sealed class MicrobenchSupportEntry
+{
+    [JsonPropertyName("version")]
+    public string Version { get; set; } = string.Empty;
+
+    [JsonPropertyName("support_root")]
+    public string SupportRoot { get; set; } = string.Empty;
+
+    [JsonPropertyName("run_root")]
+    public string RunRoot { get; set; } = string.Empty;
+
+    [JsonPropertyName("archive_zip_path")]
+    public string ArchiveZipPath { get; set; } = string.Empty;
+
+    [JsonPropertyName("unsigned_exe_path")]
+    public string UnsignedExePath { get; set; } = string.Empty;
 }

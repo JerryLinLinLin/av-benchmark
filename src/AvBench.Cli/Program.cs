@@ -21,7 +21,6 @@ KnownToolPaths.EnsureCommonToolPaths();
 var rootCommand = new RootCommand("AV benchmark suite for Windows build and API activity measurement.");
 rootCommand.Subcommands.Add(SetupCommand.Create());
 rootCommand.Subcommands.Add(RunCommand.Create());
-rootCommand.Subcommands.Add(InternalMicrobenchCommand.Create());
 
 return rootCommand.Parse(args).Invoke();
 
