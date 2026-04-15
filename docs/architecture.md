@@ -138,9 +138,15 @@ Before running any scenarios, `IdleChecker.VerifyAsync()` samples CPU via `Perfo
 
 `AvDetector` queries [`root\SecurityCenter2`](https://learn.microsoft.com/en-us/windows/win32/wmisdk/--securitycenter2) `AntiVirusProduct` via WMI. When multiple products are registered (e.g., Defender + a third-party product), it selects the **non-Defender** product. Product version is read from `FileVersionInfo` of the reported exe path. Both can be overridden with `--av-product` and `--av-version`.
 
-### Scenario ordering
+### Scenario ordering and cooldowns
 
-`RunCommand` uses a **Fisher-Yates shuffle** on scenario family groups (ripgrep, roslyn, microbench families) at the start of each session. This distributes systematic ordering effects (AV cache warm-up, thermal drift) across multiple sessions rather than letting them accumulate in a fixed order.
+`RunCommand` runs all **microbench scenarios first**, then **compilation scenarios last**. Within each phase, family groups are shuffled using a Fisher-Yates shuffle. This ensures latency-sensitive microbenchmarks run on a settled system, before heavy multi-minute builds leave the system hot (warm disk cache, populated AV caches, thermal state changes).
+
+Between scenarios, `ScenarioRunner` inserts a cooldown pause to let AV background activity (scan cache writes, cloud verdict callbacks) settle before the next measurement begins:
+
+- **10 seconds** between microbench scenarios
+- **10 seconds** between the last microbench and the first compilation scenario
+- **20 seconds** between compilation scenarios
 
 ### Suite manifest
 
