@@ -20,6 +20,10 @@ public static class CompareCsvWriter
         "baseline_kernel_cpu_pct",
         "kernel_cpu_slowdown_pct",
         "peak_memory_mb",
+        "system_disk_read_mb",
+        "baseline_system_disk_read_mb",
+        "system_disk_write_mb",
+        "baseline_system_disk_write_mb",
         "slowdown_pct",
         "cv_pct",
         "status"
@@ -46,6 +50,10 @@ public static class CompareCsvWriter
                 row.BaselineKernelCpuPct.ToString("F1", CultureInfo.InvariantCulture),
                 row.KernelCpuSlowdownPct.ToString("F1", CultureInfo.InvariantCulture),
                 row.PeakMemoryMb.ToString(CultureInfo.InvariantCulture),
+                BytesToMb(row.SystemDiskReadBytes).ToString("F1", CultureInfo.InvariantCulture),
+                BytesToMb(row.BaselineSystemDiskReadBytes).ToString("F1", CultureInfo.InvariantCulture),
+                BytesToMb(row.SystemDiskWriteBytes).ToString("F1", CultureInfo.InvariantCulture),
+                BytesToMb(row.BaselineSystemDiskWriteBytes).ToString("F1", CultureInfo.InvariantCulture),
                 row.SlowdownPct.ToString("F1", CultureInfo.InvariantCulture),
                 row.CvPct.ToString("F1", CultureInfo.InvariantCulture),
                 Escape(row.Status)));
@@ -63,4 +71,7 @@ public static class CompareCsvWriter
 
         return value;
     }
+
+    private static double BytesToMb(long bytes)
+        => bytes / (1024d * 1024d);
 }

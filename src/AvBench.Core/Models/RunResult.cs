@@ -40,20 +40,11 @@ public sealed class RunResult
     [JsonPropertyName("peak_job_memory_mb")]
     public long PeakJobMemoryMb { get; set; }
 
-    [JsonPropertyName("io_read_bytes")]
-    public ulong IoReadBytes { get; set; }
+    [JsonPropertyName("system_disk_read_bytes")]
+    public long SystemDiskReadBytes { get; set; }
 
-    [JsonPropertyName("io_write_bytes")]
-    public ulong IoWriteBytes { get; set; }
-
-    [JsonPropertyName("io_read_ops")]
-    public ulong IoReadOps { get; set; }
-
-    [JsonPropertyName("io_write_ops")]
-    public ulong IoWriteOps { get; set; }
-
-    [JsonPropertyName("total_processes")]
-    public uint TotalProcesses { get; set; }
+    [JsonPropertyName("system_disk_write_bytes")]
+    public long SystemDiskWriteBytes { get; set; }
 
     [JsonPropertyName("p50_us")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

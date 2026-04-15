@@ -40,7 +40,7 @@ public static class SetupCommand
             {
                 var benchDir = parseResult.GetValue(benchDirOption)!;
                 var ripgrepRef = parseResult.GetValue(ripgrepRefOption);
-                if (!BenchmarkWorkloads.TryNormalize(parseResult.GetValue(workloadOption), out var workloads, out var error))
+                if (!BenchmarkWorkloads.TryNormalizeSetup(parseResult.GetValue(workloadOption), out var workloads, out var error))
                 {
                     Console.Error.WriteLine($"ERROR: {error}");
                     return 1;

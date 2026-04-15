@@ -5,9 +5,11 @@ using AvBench.Core.Internal;
 using AvBench.Core.Models;
 using AvBench.Core.Output;
 using AvBench.Core.Runner;
+using System.Runtime.Versioning;
 
 namespace AvBench.Core.Scenarios;
 
+[SupportedOSPlatform("windows")]
 public sealed class ScenarioRunner
 {
     private readonly string _avName;
@@ -69,19 +71,20 @@ public sealed class ScenarioRunner
         Directory.CreateDirectory(Path.GetDirectoryName(stdoutPath)!);
         Directory.CreateDirectory(Path.GetDirectoryName(stderrPath)!);
 
-        TypeperfCollector? collector = null;
+        using var diskIoSnapshot = new DiskIoSnapshot();
         try
         {
-            if (outputDirectory is not null)
-            {
-                collector = new TypeperfCollector();
-                collector.Start(outputDirectory);
-            }
-
             ScenarioExecutionResult execution;
             if (scenario.ExecuteInProcessAsync is not null)
             {
+                diskIoSnapshot.SnapshotBefore();
                 execution = await scenario.ExecuteInProcessAsync(cancellationToken);
+                var (readBytes, writeBytes) = diskIoSnapshot.SnapshotAfter();
+                execution = execution with
+                {
+                    SystemDiskReadBytes = readBytes,
+                    SystemDiskWriteBytes = writeBytes
+                };
                 await File.WriteAllTextAsync(stdoutPath, execution.Stdout, cancellationToken);
                 await File.WriteAllTextAsync(stderrPath, execution.Stderr, cancellationToken);
             }
@@ -92,6 +95,7 @@ public sealed class ScenarioRunner
                     throw new InvalidOperationException($"Scenario {scenario.Id} does not define a process command or an in-process executor.");
                 }
 
+                diskIoSnapshot.SnapshotBefore();
                 var processExecution = await ProcessTreeRunner.RunAsync(
                     scenario.FileName,
                     scenario.Arguments,
@@ -100,6 +104,7 @@ public sealed class ScenarioRunner
                     stderrPath,
                     TimeSpan.FromHours(2),
                     cancellationToken);
+                var (readBytes, writeBytes) = diskIoSnapshot.SnapshotAfter();
 
                 execution = new ScenarioExecutionResult
                 {
@@ -110,11 +115,8 @@ public sealed class ScenarioRunner
                     UserCpuMs = processExecution.Accounting.TotalUserTimeMs,
                     KernelCpuMs = processExecution.Accounting.TotalKernelTimeMs,
                     PeakJobMemoryMb = (long)(processExecution.Accounting.PeakJobMemoryBytes / (1024 * 1024)),
-                    IoReadBytes = processExecution.Accounting.IoReadBytes,
-                    IoWriteBytes = processExecution.Accounting.IoWriteBytes,
-                    IoReadOps = processExecution.Accounting.IoReadOps,
-                    IoWriteOps = processExecution.Accounting.IoWriteOps,
-                    TotalProcesses = processExecution.Accounting.TotalProcesses
+                    SystemDiskReadBytes = readBytes,
+                    SystemDiskWriteBytes = writeBytes
                 };
             }
 
@@ -124,18 +126,6 @@ public sealed class ScenarioRunner
         }
         finally
         {
-            if (collector is not null)
-            {
-                try
-                {
-                    collector.Stop();
-                }
-                finally
-                {
-                    collector.Dispose();
-                }
-            }
-
             if (outputDirectory is null)
             {
                 TryDelete(stdoutPath);
@@ -160,11 +150,8 @@ public sealed class ScenarioRunner
             UserCpuMs = execution.UserCpuMs,
             KernelCpuMs = execution.KernelCpuMs,
             PeakJobMemoryMb = execution.PeakJobMemoryMb,
-            IoReadBytes = execution.IoReadBytes,
-            IoWriteBytes = execution.IoWriteBytes,
-            IoReadOps = execution.IoReadOps,
-            IoWriteOps = execution.IoWriteOps,
-            TotalProcesses = execution.TotalProcesses,
+            SystemDiskReadBytes = execution.SystemDiskReadBytes,
+            SystemDiskWriteBytes = execution.SystemDiskWriteBytes,
             Machine = SystemInfoProvider.CollectMachineInfo(),
             RunnerVersion = _runnerVersion,
             SuiteManifestSha = _suiteManifestSha,
