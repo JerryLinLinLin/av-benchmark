@@ -179,6 +179,6 @@ After comparison:
 
 ```
 compare-out/
-├── compare.csv                         # 16-column comparison spreadsheet
+├── compare.csv                         # Comparison spreadsheet
 └── summary.md                          # Markdown report with per-AV tables
 ```

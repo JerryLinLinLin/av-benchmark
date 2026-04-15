@@ -67,12 +67,16 @@ AV product and version are auto-detected from Windows Security Center. To overri
 avbench run --name eset-default --bench-dir C:\bench --output C:\results --av-product "ESET Security" --av-version "19.1.12.0"
 ```
 
-### 4. Run only specific workloads
+### 4. Run only specific workloads or scenarios
 
 ```powershell
 avbench run --name defender-default --bench-dir C:\bench --output C:\results -w microbench
 avbench run --name defender-default --bench-dir C:\bench --output C:\results -w ripgrep,roslyn
+avbench run --name defender-default --bench-dir C:\bench --output C:\results -w file-create-delete
 ```
+
+`avbench setup` accepts workload families only: `ripgrep`, `roslyn`, `microbench`, or `all`.
+`avbench run` accepts those workload families plus specific microbench scenario IDs such as `file-create-delete`.
 
 ### 5. Compare — host machine (or any machine with the result folders)
 
@@ -92,7 +96,7 @@ avbench-compare --baseline C:\compare\baseline-os --input C:\compare\defender-de
 
 | File | Description |
 |---|---|
-| `compare.csv` | 16-column spreadsheet with per-scenario slowdown %, kernel CPU shift, CV, status |
+| `compare.csv` | Comparison spreadsheet with per-scenario slowdown %, kernel CPU shift, system disk deltas, CV, and status |
 | `summary.md` | Markdown report with tables sorted by worst slowdown, highlights noisy/failed |
 
 ---
@@ -127,7 +131,7 @@ C:\results\                              # --output directory
 │   └── ...
 ├── mem-alloc-protect\
 │   └── ...
-└── ... (32 scenario folders total)
+└── ... (31 scenario folders total)
 ```
 
 ---
@@ -140,7 +144,7 @@ C:\results\                              # --output directory
 |---|---|---|
 | `--bench-dir` | `C:\bench` | Root directory for repos and manifests |
 | `--ripgrep-ref` | latest release | Optional branch/tag/SHA for ripgrep |
-| `-w`, `--workload` | all | `ripgrep`, `roslyn`, `microbench`, or `all` |
+| `-w`, `--workload` | all | Workload families only: `ripgrep`, `roslyn`, `microbench`, or `all` |
 
 Exit codes: `0` = success, `1` = error, `2` = reboot required (re-run setup after reboot).
 
@@ -151,7 +155,7 @@ Exit codes: `0` = success, `1` = error, `2` = reboot required (re-run setup afte
 | `--name` | *required* | Label for this AV config (e.g., `baseline-os`, `defender-default`) |
 | `--bench-dir` | `C:\bench` | Where setup stored repos and manifest |
 | `--output` | `./results` | Where to write result folders |
-| `-w`, `--workload` | all | Which workloads to run |
+| `-w`, `--workload` | all | Workload families to run, or specific microbench scenario IDs such as `file-create-delete` |
 | `--av-product` | auto-detect | Override AV product name |
 | `--av-version` | auto-detect | Override AV version string |
 

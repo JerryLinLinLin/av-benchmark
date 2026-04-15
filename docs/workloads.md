@@ -16,6 +16,23 @@ The design is deliberate. Real builds answer the question users actually care ab
 | `roslyn` | 2 | Large managed-code build behavior with `dotnet` and MSBuild |
 | `microbench` | 27 | Measuring API-call overhead across common Windows paths and security-sensitive call paths |
 
+## Selector behavior
+
+`avbench setup` accepts workload families only:
+
+- `ripgrep`
+- `roslyn`
+- `microbench`
+- `all`
+
+`avbench run` accepts those same family IDs and also accepts specific microbench scenario IDs when you want to run a narrower slice of the suite. For example:
+
+- `--workload microbench` runs all 27 microbench scenarios
+- `--workload file-create-delete` runs only the `file-create-delete` scenario
+- `--workload ripgrep,file-create-delete` runs both ripgrep build scenarios plus the single named microbench scenario
+
+Legacy shortcuts such as `--workload file` are not supported.
+
 ## Compile workloads
 
 Builds are useful benchmark targets because they combine several things security products often care about at the same time:
