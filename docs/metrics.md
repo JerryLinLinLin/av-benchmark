@@ -6,7 +6,7 @@
 2. Where did that extra cost show up?
 3. Is the result clean enough to trust?
 
-The metrics are easiest to read when you keep those questions separate. `wall_ms` and `slowdown_pct` answer the first one. CPU split, memory, I/O, and latency distribution help with the second. `cv_pct`, `status`, and `counters.csv` help with the third.
+The metrics are easiest to read when you keep those questions separate. `wall_ms` and `slowdown_pct` answer the first one. CPU split, memory, system disk I/O, and latency distribution help with the second. `cv_pct` and `status` help with the third.
 
 The tool also has two measurement paths:
 
@@ -22,7 +22,7 @@ For most readers, the right order is:
 1. `wall_ms` or `slowdown_pct`
 2. `p95_us` and `p99_us` for microbench scenarios
 3. `kernel_cpu_pct`, `peak_memory_mb`, and the I/O counters
-4. `cv_pct`, `status`, and `counters.csv`
+4. `cv_pct` and `status`
 
 That order matters. A benchmark can show a large kernel CPU shift and still have little user-visible slowdown. It can also show a dramatic p99 regression while the mean barely moves. The document is easier to read when the top-line answer comes first and the diagnostic clues come second.
 
@@ -31,9 +31,9 @@ That order matters. A benchmark can show a large kernel CPU shift and still have
 Each scenario directory contains:
 
 - `run.json`: the result for one scenario run
-- `counters.csv`: 1-second system samples collected with `typeperf`[5]
+- `stdout.log` / `stderr.log`: captured process output
 
-`run.json` is the comparison input. `counters.csv` is supporting evidence when a run looks noisy or unexpectedly slow.
+`run.json` is the comparison input.
 
 ## `run.json`
 
@@ -64,11 +64,19 @@ These fields are populated for external-process workloads:
 | `user_cpu_ms` | Total user-mode CPU time across the whole Job Object tree |
 | `kernel_cpu_ms` | Total kernel-mode CPU time across the whole Job Object tree |
 | `peak_job_memory_mb` | Peak committed memory for the Job Object, converted to MiB |
-| `io_read_bytes` / `io_write_bytes` | Total bytes read and written by processes in the job |
-| `io_read_ops` / `io_write_ops` | Total read and write operations issued by processes in the job |
-| `total_processes` | Total processes associated with the job during its lifetime |
 
 Windows defines these totals over the full lifetime of the job, including terminated child processes.[2][3] That is why they are useful for parallel builds.
+
+### System-wide disk I/O
+
+These fields are populated for **all** scenarios (compile and microbench):
+
+| Field | Meaning |
+|---|---|
+| `system_disk_read_bytes` | Total bytes read from disk across the entire system during the scenario |
+| `system_disk_write_bytes` | Total bytes written to disk across the entire system during the scenario |
+
+These are captured via .NET `PerformanceCounter` snapshots (before and after the scenario) of the cumulative `PhysicalDisk(_Total)` counters. Unlike the Job Object I/O counters, these include disk activity from **all processes on the machine** — including AV service processes that scan files, read signature databases, write scan caches, or communicate with cloud verdict services. The baseline-vs-AV delta directly reveals AV-attributed disk overhead.
 
 ### Microbench metrics
 
@@ -140,18 +148,13 @@ This is a peak, not an average. It is useful for spotting whether a configuratio
 
 Treat it as a supporting signal. A memory increase can matter, but it usually matters less than wall time unless it is large enough to push the system into pressure or paging.
 
-### `io_read_*` and `io_write_*`
+### `system_disk_read_bytes` and `system_disk_write_bytes`
 
-These fields describe I/O issued by the benchmarked processes in the job.[1][3] They are good for answering questions like:
+These fields capture total disk I/O across the entire system during a scenario. They are the primary disk metric for AV analysis because AV overhead I/O — signature database reads, scan cache writes, cloud verdict traffic — happens in AV service processes that run **outside** the benchmarked process tree.
 
-- Did the workload itself perform more reads or writes?
-- Did the operation count jump even when bytes moved did not?
+Comparing baseline vs. AV system disk writes directly answers "how much extra disk activity did AV cause?" For example, if a Roslyn clean build produces 3 GB of system-wide disk writes on baseline and 4.5 GB with AV enabled, the 1.5 GB difference is AV-attributed.
 
-They are **not** a full accounting of everything the AV product did on the machine. They do not directly include work performed by a kernel driver or by AV service processes running outside the job.
-
-### `total_processes`
-
-This is mostly a context field. It tells you how much process fan-out the workload created. It helps explain why some scenarios are naturally more exposed to process-creation and image-load overhead than others.
+Because these are system-wide, they include background OS activity (indexer, updater). The idle checker mitigates this, and across multiple sessions the background noise averages out. Absolute values matter less than the delta between configurations.
 
 ## `compare.csv` and `summary.md`
 
@@ -203,31 +206,13 @@ This is the simplest way to ask whether repeated runs are stable. A 2% slowdown 
 - `noisy` means the scenario likely needs more investigation or more runs.
 - `failed` means you should not treat the comparison row as clean evidence.
 
-### `counters.csv`
-
-`counters.csv` is there to explain suspicious runs, not to replace the primary metrics. The current collector records:
-
-| Counter | What it helps diagnose |
-|---|---|
-| `\Processor(_Total)\% Processor Time` | CPU saturation |
-| `\PhysicalDisk(_Total)\Disk Bytes/sec` | Total disk throughput |
-| `\PhysicalDisk(_Total)\Disk Read Bytes/sec` | Read throughput |
-| `\PhysicalDisk(_Total)\Disk Write Bytes/sec` | Write throughput |
-| `\Memory\Available MBytes` | Whether available RAM fell low enough to suggest memory pressure[10] |
-| `\Memory\Pages/sec` | Paging traffic to resolve hard page faults; useful when correlated with low available memory[11] |
-
-Two cautions matter here:
-
-- `\Memory\Pages/sec` is not the same thing as "hard faults per second."
-- A counter spike is evidence of pressure, not automatic proof that AV caused it.
-
 ## The shortest useful reading of a result
 
 If you only have a minute, read a result like this:
 
 1. Did `wall_ms` or `slowdown_pct` move enough to matter?
 2. If this is a microbench, did `p95_us` or `p99_us` get much worse?
-3. Did `kernel_cpu_pct`, memory, or I/O move in the same direction and support the story?
+3. Did `kernel_cpu_pct`, memory, or system disk I/O move in the same direction and support the story?
 4. Is `cv_pct` low enough, and is `status` clean enough, to trust the conclusion?
 
 That sequence usually gets you to the right interpretation faster than reading every field one by one.
@@ -238,10 +223,8 @@ That sequence usually gets you to the right interpretation faster than reading e
 2. [JOBOBJECT_BASIC_ACCOUNTING_INFORMATION](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_accounting_information)
 3. [JOBOBJECT_EXTENDED_LIMIT_INFORMATION](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_extended_limit_information)
 4. [Acquiring high-resolution time stamps](https://learn.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps)
-5. [typeperf](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/typeperf)
+5. [PerformanceCounter class](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.performancecounter)
 6. [Filter Manager and minifilter concepts](https://learn.microsoft.com/en-us/windows-hardware/drivers/ifs/filter-manager-concepts)
 7. [PsSetCreateProcessNotifyRoutineEx](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-pssetcreateprocessnotifyroutineex)
 8. [CmRegisterCallbackEx](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-cmregistercallbackex)
 9. [About Windows Filtering Platform](https://learn.microsoft.com/en-us/windows/win32/fwp/about-windows-filtering-platform)
-10. [Troubleshoot performance problems in Windows](https://learn.microsoft.com/en-us/troubleshoot/windows-server/performance/troubleshoot-performance-problems-in-windows)
-11. [Useful Performance Counters](https://learn.microsoft.com/en-us/host-integration-server/core/useful-performance-counters2)

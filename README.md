@@ -2,7 +2,7 @@
 
 Measure the performance cost of antivirus software on Windows workloads.
 
-**Docs:** [Architecture](doc/architecture.md) · [Metrics](doc/metrics.md) · [Workloads](doc/workloads.md)
+**Docs:** [Architecture](docs/architecture.md) · [Metrics](docs/metrics.md) · [Workloads](docs/workloads.md)
 
 ---
 
@@ -118,8 +118,7 @@ C:\results\                              # --output directory
 ├── ripgrep-clean-build\
 │   ├── run.json
 │   ├── stdout.log
-│   ├── stderr.log
-│   └── counters.csv
+│   └── stderr.log
 ├── ripgrep-incremental-build\
 │   └── ...
 ├── roslyn-clean-build\

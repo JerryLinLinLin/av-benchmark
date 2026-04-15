@@ -52,7 +52,7 @@ src/
 ├── AvBench.Core/                      # Shared library
 │   ├── BenchmarkWorkloads.cs          # Workload ID registry (ripgrep, roslyn, microbench)
 │   ├── Collectors/
-│   │   └── TypeperfCollector.cs       # Always-on perf counter sampling
+│   │   └── DiskIoSnapshot.cs          # System-wide disk I/O before/after
 │   ├── Detection/
 │   │   ├── AvDetector.cs              # WMI SecurityCenter2 query
 │   │   └── AvInfo.cs                  # Product name + version record
@@ -75,7 +75,7 @@ src/
 │   │   ├── ScenarioDefinition.cs      # What/how to run a scenario
 │   │   └── SuiteManifest.cs           # Setup output: repos, tools, paths
 │   ├── Output/
-│   │   ├── CsvResultWriter.cs         # runs.csv (25 columns)
+│   │   ├── CsvResultWriter.cs         # runs.csv
 │   │   └── JsonResultWriter.cs        # run.json per scenario
 │   ├── Runner/
 │   │   ├── JobObject.cs               # Win32 Job Object wrapper
@@ -117,8 +117,6 @@ Every out-of-process scenario (compile builds) runs inside a [Win32 Job Object](
 
 - **User CPU time** and **kernel CPU time** (summed across all processes in the tree)
 - **Peak memory** of the entire process tree
-- **I/O counters** — bytes and operations for read/write
-- **Total process count** spawned
 
 This captures the full cost of multi-process build tools (MSBuild, cargo) and their child processes. CPU time accounting granularity defaults to the system timer tick (~15.6 ms), though modern Windows versions can use cycle-based accounting for finer precision. At the whole-build level this granularity is immaterial.
 
@@ -126,22 +124,15 @@ This captures the full cost of multi-process build tools (MSBuild, cargo) and th
 
 API microbenchmarks run **in-process** (not spawned as child processes) via `MicrobenchWorker.Execute()`. Each bench uses [`Stopwatch`](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.stopwatch) (QPC-backed, sub-microsecond resolution) for wall time and a `LatencyHistogram` to record per-operation tick counts for percentile computation (p50/p95/p99/max).
 
-### TypeperfCollector (always-on)
+### System-wide disk I/O measurement
 
-Every scenario gets a [`typeperf`](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/typeperf) process that samples 6 counters at 1-second intervals into a `counters.csv` file:
+Every scenario captures total system disk read and write bytes using .NET [`PerformanceCounter`](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.performancecounter) snapshots before and after execution. The `DiskIoSnapshot` class reads the cumulative raw values of `PhysicalDisk(_Total)\Disk Read Bytes/sec` and `Disk Write Bytes/sec` — despite the name, the raw counter is cumulative, so the delta gives total bytes transferred during the scenario.
 
-- `\Processor(_Total)\% Processor Time`
-- `\PhysicalDisk(_Total)\Disk Bytes/sec`
-- `\PhysicalDisk(_Total)\Disk Read Bytes/sec`
-- `\PhysicalDisk(_Total)\Disk Write Bytes/sec`
-- `\Memory\Available MBytes`
-- `\Memory\Pages/sec`
-
-These are diagnostic — useful for explaining noisy runs or identifying thermal throttling.
+These system-wide counters capture all disk I/O on the machine, including activity from AV service processes (e.g., signature database reads, scan cache writes) that run outside the Job Object. The baseline-vs-AV delta directly reveals AV-attributed disk overhead.
 
 ### Idle check before run
 
-Before running any scenarios, `IdleChecker.VerifyAsync()` samples CPU via `typeperf` for 3 seconds and aborts if average CPU usage exceeds 20 %. This prevents AV background scans or system tasks from contaminating results.
+Before running any scenarios, `IdleChecker.VerifyAsync()` samples CPU via `PerformanceCounter` for 3 seconds and aborts if average CPU usage exceeds 20%. This prevents AV background scans or system tasks from contaminating results.
 
 ### AV auto-detection
 
@@ -166,8 +157,7 @@ results/
 ├── ripgrep-clean-build/
 │   ├── run.json                        # Full result record
 │   ├── stdout.log
-│   ├── stderr.log
-│   └── counters.csv                    # typeperf samples
+│   └── stderr.log
 ├── ripgrep-incremental-build/
 │   └── ...
 ├── roslyn-clean-build/
