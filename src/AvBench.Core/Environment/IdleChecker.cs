@@ -1,8 +1,10 @@
-using System.Globalization;
-using AvBench.Core.Internal;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Runtime.Versioning;
 
 namespace AvBench.Core.Environment;
 
+[SupportedOSPlatform("windows")]
 public static class IdleChecker
 {
     private const double CpuThresholdPercent = 20.0;
@@ -23,66 +25,34 @@ public static class IdleChecker
 
     private static async Task<double> MeasureAverageCpuPercentAsync(CancellationToken cancellationToken)
     {
-        var result = await ProcessUtil.RunAsync(
-            "typeperf",
-            $"\"\\Processor(_Total)\\% Processor Time\" -si 1 -sc {SampleCount}",
-            Directory.GetCurrentDirectory(),
-            cancellationToken);
+        try
+        {
+            using var cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total", readOnly: true);
+            _ = cpuCounter.NextValue();
 
-        if (result.ExitCode != 0)
+            var samples = new List<float>(SampleCount);
+            for (var i = 0; i < SampleCount; i++)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                samples.Add(cpuCounter.NextValue());
+            }
+
+            if (samples.Count == 0)
+            {
+                throw new InvalidOperationException("PerformanceCounter did not return any CPU samples.");
+            }
+
+            return samples.Average();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or Win32Exception or PlatformNotSupportedException)
         {
             throw BuildIdleCheckFailure(
-                $"typeperf exited with code {result.ExitCode}.",
-                result.Stdout,
-                result.Stderr);
+                $"PerformanceCounter CPU sampling failed: {ex.Message}");
         }
-
-        var samples = new List<double>(SampleCount);
-        foreach (var rawLine in result.Stdout.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
-        {
-            if (!rawLine.StartsWith('"'))
-            {
-                continue;
-            }
-
-            var columns = rawLine.Split("\",\"", StringSplitOptions.None);
-            if (columns.Length < 2)
-            {
-                continue;
-            }
-
-            var rawValue = columns[^1].Trim().Trim('"');
-            if (double.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var invariantValue)
-                || double.TryParse(rawValue, NumberStyles.Float, CultureInfo.CurrentCulture, out invariantValue))
-            {
-                samples.Add(invariantValue);
-            }
-        }
-
-        if (samples.Count == 0)
-        {
-            throw BuildIdleCheckFailure(
-                "typeperf did not return any CPU samples.",
-                result.Stdout,
-                result.Stderr);
-        }
-
-        return samples.Average();
     }
 
-    private static InvalidOperationException BuildIdleCheckFailure(string message, string stdout, string stderr)
+    private static InvalidOperationException BuildIdleCheckFailure(string message)
     {
-        var details = new List<string> { $"Idle check could not measure CPU usage: {message}" };
-        if (!string.IsNullOrWhiteSpace(stdout))
-        {
-            details.Add($"stdout:{System.Environment.NewLine}{stdout.Trim()}");
-        }
-
-        if (!string.IsNullOrWhiteSpace(stderr))
-        {
-            details.Add($"stderr:{System.Environment.NewLine}{stderr.Trim()}");
-        }
-
-        return new InvalidOperationException(string.Join(System.Environment.NewLine + System.Environment.NewLine, details));
+        return new InvalidOperationException($"Idle check could not measure CPU usage: {message}");
     }
 }

@@ -48,10 +48,14 @@ public static class CompareEngine
                 var wallSamples = successfulRuns.Select(static run => (double)run.WallMs).ToArray();
                 var cpuSamples = successfulRuns.Select(static run => (double)(run.UserCpuMs + run.KernelCpuMs)).ToArray();
                 var kernelCpuSamples = successfulRuns.Select(static run => (double)run.KernelCpuMs).ToArray();
+                var systemDiskReadSamples = successfulRuns.Select(static run => (double)run.SystemDiskReadBytes).ToArray();
+                var systemDiskWriteSamples = successfulRuns.Select(static run => (double)run.SystemDiskWriteBytes).ToArray();
 
                 var meanWall = wallSamples.Average();
                 var meanCpu = cpuSamples.Average();
                 var meanKernelCpu = kernelCpuSamples.Average();
+                var meanSystemDiskReadBytes = systemDiskReadSamples.Average();
+                var meanSystemDiskWriteBytes = systemDiskWriteSamples.Average();
                 var cvPct = wallSamples.Length > 1
                     ? StandardDeviation(wallSamples) / meanWall * 100.0
                     : 0.0;
@@ -61,6 +65,8 @@ public static class CompareEngine
                 var baselineMeanWall = baselineScenarioRuns?.Average(static run => (double)run.WallMs) ?? 0.0;
                 var baselineMeanCpu = baselineScenarioRuns?.Average(static run => (double)(run.UserCpuMs + run.KernelCpuMs)) ?? 0.0;
                 var baselineMeanKernelCpu = baselineScenarioRuns?.Average(static run => (double)run.KernelCpuMs) ?? 0.0;
+                var baselineMeanSystemDiskReadBytes = baselineScenarioRuns?.Average(static run => (double)run.SystemDiskReadBytes) ?? 0.0;
+                var baselineMeanSystemDiskWriteBytes = baselineScenarioRuns?.Average(static run => (double)run.SystemDiskWriteBytes) ?? 0.0;
                 var baselineKernelCpuPct = CalculatePercent(baselineMeanKernelCpu, baselineMeanCpu);
 
                 rows.Add(new ComparisonRow
@@ -78,6 +84,10 @@ public static class CompareEngine
                     BaselineKernelCpuPct = Math.Round(baselineKernelCpuPct, 1),
                     KernelCpuSlowdownPct = Math.Round(kernelCpuPct - baselineKernelCpuPct, 1),
                     PeakMemoryMb = successfulRuns.Max(static run => run.PeakJobMemoryMb),
+                    SystemDiskReadBytes = (long)Math.Round(meanSystemDiskReadBytes, MidpointRounding.AwayFromZero),
+                    BaselineSystemDiskReadBytes = (long)Math.Round(baselineMeanSystemDiskReadBytes, MidpointRounding.AwayFromZero),
+                    SystemDiskWriteBytes = (long)Math.Round(meanSystemDiskWriteBytes, MidpointRounding.AwayFromZero),
+                    BaselineSystemDiskWriteBytes = (long)Math.Round(baselineMeanSystemDiskWriteBytes, MidpointRounding.AwayFromZero),
                     SlowdownPct = baselineMeanWall > 0
                         ? Math.Round((meanWall - baselineMeanWall) / baselineMeanWall * 100.0, 1)
                         : 0.0,
@@ -141,6 +151,14 @@ public sealed class ComparisonRow
     public double KernelCpuSlowdownPct { get; init; }
 
     public long PeakMemoryMb { get; init; }
+
+    public long SystemDiskReadBytes { get; init; }
+
+    public long BaselineSystemDiskReadBytes { get; init; }
+
+    public long SystemDiskWriteBytes { get; init; }
+
+    public long BaselineSystemDiskWriteBytes { get; init; }
 
     public double SlowdownPct { get; init; }
 

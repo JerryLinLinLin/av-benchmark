@@ -8,6 +8,37 @@ namespace AvBench.Core.Scenarios;
 [SupportedOSPlatform("windows")]
 public static class MicrobenchScenarioFactory
 {
+    private static readonly string[] AllScenarioIds =
+    [
+        "file-create-delete",
+        "archive-extract",
+        "file-enum-large-dir",
+        "file-copy-large",
+        "hardlink-create",
+        "junction-create",
+        "process-create-wait",
+        "ext-sensitivity-exe",
+        "ext-sensitivity-dll",
+        "ext-sensitivity-js",
+        "ext-sensitivity-ps1",
+        "dll-load-unique",
+        "file-write-content",
+        "motw-exe-no-motw",
+        "motw-exe-motw-zone3",
+        "thread-create",
+        "mem-alloc-protect",
+        "mem-map-file",
+        "net-connect-loopback",
+        "net-dns-resolve",
+        "registry-crud",
+        "pipe-roundtrip",
+        "token-query",
+        "crypto-hash-verify",
+        "com-create-instance",
+        "wmi-query",
+        "fs-watcher"
+    ];
+
     private const int FileCreateDeleteOperations = 5_000;
     private const int FileCreateDeleteBatchSize = 100;
     private const int ArchiveExtractIterations = 10;
@@ -33,14 +64,19 @@ public static class MicrobenchScenarioFactory
     private const int WmiQueryOperations = 500;
     private const int FsWatcherOperations = 5_000;
 
-    public static IReadOnlyList<ScenarioDefinition> Create(SuiteManifest manifest)
+    public static IReadOnlyList<string> ScenarioIds => AllScenarioIds;
+
+    public static bool ContainsScenarioId(string value)
+        => AllScenarioIds.Contains(value.Trim().ToLowerInvariant(), StringComparer.OrdinalIgnoreCase);
+
+    public static IReadOnlyList<ScenarioDefinition> Create(SuiteManifest manifest, IReadOnlyCollection<string>? selectedScenarioIds = null)
     {
         var support = manifest.GetRequiredMicrobenchSupport();
         MicrobenchSupport.ValidateManifestEntry(support);
         var runRoot = support.RunRoot;
 
-        return
-        [
+        var scenarios = new[]
+        {
             CreateScenario(
                 runRoot,
                 support,
@@ -198,7 +234,17 @@ public static class MicrobenchScenarioFactory
                 RootPath = Path.Combine(runRoot, "fs-watcher"),
                 Operations = FsWatcherOperations
             })
-        ];
+        };
+
+        if (selectedScenarioIds is null || selectedScenarioIds.Count == 0)
+        {
+            return scenarios;
+        }
+
+        var selected = selectedScenarioIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return scenarios
+            .Where(scenario => selected.Contains(scenario.Id))
+            .ToArray();
     }
 
     private static ScenarioDefinition CreateExtensionSensitivityScenario(string runRoot, MicrobenchSupportEntry support, string extension)
@@ -220,7 +266,6 @@ public static class MicrobenchScenarioFactory
         MicrobenchRequest request)
     {
         var workingDirectory = request.RootPath;
-        Directory.CreateDirectory(workingDirectory);
 
         return new ScenarioDefinition
         {

@@ -5,6 +5,8 @@ namespace AvBench.Compare;
 
 public static class SummaryRenderer
 {
+    private const double SignificantDiskDeltaMb = 100.0;
+
     public static async Task WriteAsync(IReadOnlyList<ComparisonRow> rows, string path, CancellationToken cancellationToken)
     {
         var builder = new StringBuilder();
@@ -64,6 +66,34 @@ public static class SummaryRenderer
                     $"Largest kernel CPU shift: {largestKernelShift.ScenarioId} at {largestKernelShift.KernelCpuSlowdownPct:+0.0;-0.0;0.0}pp ({largestKernelShift.BaselineKernelCpuPct:F1}% -> {largestKernelShift.KernelCpuPct:F1}%)");
             }
 
+            var largestDiskWriteDelta = group
+                .OrderByDescending(static row => Math.Abs(row.SystemDiskWriteBytes - row.BaselineSystemDiskWriteBytes))
+                .FirstOrDefault();
+            if (largestDiskWriteDelta is not null)
+            {
+                var deltaMb = BytesToMb(largestDiskWriteDelta.SystemDiskWriteBytes - largestDiskWriteDelta.BaselineSystemDiskWriteBytes);
+                if (Math.Abs(deltaMb) >= SignificantDiskDeltaMb)
+                {
+                    builder.AppendLine();
+                    builder.AppendLine(
+                        $"Largest system disk write delta: {largestDiskWriteDelta.ScenarioId} at {deltaMb:+0.0;-0.0;0.0} MB ({BytesToMb(largestDiskWriteDelta.BaselineSystemDiskWriteBytes):F1} -> {BytesToMb(largestDiskWriteDelta.SystemDiskWriteBytes):F1} MB)");
+                }
+            }
+
+            var largestDiskReadDelta = group
+                .OrderByDescending(static row => Math.Abs(row.SystemDiskReadBytes - row.BaselineSystemDiskReadBytes))
+                .FirstOrDefault();
+            if (largestDiskReadDelta is not null)
+            {
+                var deltaMb = BytesToMb(largestDiskReadDelta.SystemDiskReadBytes - largestDiskReadDelta.BaselineSystemDiskReadBytes);
+                if (Math.Abs(deltaMb) >= SignificantDiskDeltaMb)
+                {
+                    builder.AppendLine();
+                    builder.AppendLine(
+                        $"Largest system disk read delta: {largestDiskReadDelta.ScenarioId} at {deltaMb:+0.0;-0.0;0.0} MB ({BytesToMb(largestDiskReadDelta.BaselineSystemDiskReadBytes):F1} -> {BytesToMb(largestDiskReadDelta.SystemDiskReadBytes):F1} MB)");
+                }
+            }
+
             var noisy = group.Where(static row => string.Equals(row.Status, "noisy", StringComparison.OrdinalIgnoreCase)).ToList();
             if (noisy.Count > 0)
             {
@@ -83,4 +113,7 @@ public static class SummaryRenderer
 
         await File.WriteAllTextAsync(path, builder.ToString(), cancellationToken);
     }
+
+    private static double BytesToMb(long bytes)
+        => bytes / (1024d * 1024d);
 }

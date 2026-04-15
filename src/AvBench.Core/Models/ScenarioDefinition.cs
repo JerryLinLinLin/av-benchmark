@@ -19,7 +19,7 @@ public sealed class ScenarioDefinition
     public Action<RunResult, string, string>? EnrichResultFromLogs { get; init; }
 }
 
-public sealed class ScenarioExecutionResult
+public sealed record ScenarioExecutionResult
 {
     public string Command { get; init; } = string.Empty;
 
@@ -35,15 +35,9 @@ public sealed class ScenarioExecutionResult
 
     public long PeakJobMemoryMb { get; init; }
 
-    public ulong IoReadBytes { get; init; }
+    public long SystemDiskReadBytes { get; init; }
 
-    public ulong IoWriteBytes { get; init; }
-
-    public ulong IoReadOps { get; init; }
-
-    public ulong IoWriteOps { get; init; }
-
-    public uint TotalProcesses { get; init; }
+    public long SystemDiskWriteBytes { get; init; }
 
     public string Stdout { get; init; } = string.Empty;
 

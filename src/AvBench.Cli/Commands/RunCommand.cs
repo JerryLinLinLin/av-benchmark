@@ -36,7 +36,7 @@ public static class RunCommand
 
         var workloadOption = new Option<string[]>("--workload", ["-w"])
         {
-            Description = $"One or more workload ids to run. Defaults to all supported workloads: {BenchmarkWorkloads.HelpText}.",
+            Description = $"One or more workload family ids or specific microbench scenario ids to run. Defaults to all workload families: {BenchmarkWorkloads.HelpText}.",
             AllowMultipleArgumentsPerToken = true,
             DefaultValueFactory = _ => []
         };
@@ -68,7 +68,7 @@ public static class RunCommand
                 var outputRoot = parseResult.GetValue(outputOption)!;
                 var avProductOverride = parseResult.GetValue(avProductOption);
                 var avVersionOverride = parseResult.GetValue(avVersionOption);
-                if (!BenchmarkWorkloads.TryNormalize(parseResult.GetValue(workloadOption), out var selectedWorkloads, out var error))
+                if (!BenchmarkWorkloads.TryNormalizeRun(parseResult.GetValue(workloadOption), out var selection, out var error))
                 {
                     Console.Error.WriteLine($"ERROR: {error}");
                     return 1;
@@ -90,7 +90,7 @@ public static class RunCommand
                     AvBenchJsonContext.Default.SuiteManifest)
                     ?? throw new InvalidOperationException("Suite manifest could not be parsed.");
 
-                ValidateRequestedWorkloads(manifest, selectedWorkloads);
+                ValidateRequestedWorkloads(manifest, selection);
 
                 Directory.CreateDirectory(outputRoot.FullName);
                 File.Copy(manifestPath, Path.Combine(outputRoot.FullName, SetupService.SuiteManifestFileName), overwrite: true);
@@ -112,19 +112,19 @@ public static class RunCommand
                     effectiveAv);
 
                 var scenarios = new List<ScenarioDefinition>();
-                if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Ripgrep))
+                if (selection.IncludesWorkloadFamily(BenchmarkWorkloads.Ripgrep))
                 {
                     scenarios.AddRange(RipgrepScenarioFactory.Create(manifest));
                 }
 
-                if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Roslyn))
+                if (selection.IncludesWorkloadFamily(BenchmarkWorkloads.Roslyn))
                 {
                     scenarios.AddRange(RoslynScenarioFactory.Create(manifest));
                 }
 
-                if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Microbench))
+                if (selection.IncludesWorkloadFamily(BenchmarkWorkloads.Microbench) || selection.IncludesAnyMicrobenchScenario())
                 {
-                    scenarios.AddRange(MicrobenchScenarioFactory.Create(manifest));
+                    scenarios.AddRange(MicrobenchScenarioFactory.Create(manifest, selection.MicrobenchScenarioIds));
                 }
 
                 var orderedScenarios = OrderScenariosForSession(scenarios);
@@ -151,16 +151,15 @@ public static class RunCommand
         return command;
     }
 
-    private static void ValidateRequestedWorkloads(SuiteManifest manifest, IReadOnlyCollection<string> selectedWorkloads)
+    private static void ValidateRequestedWorkloads(SuiteManifest manifest, BenchmarkRunSelection selection)
     {
         var availableWorkloads = manifest.Workloads
             .Select(workload => workload.Name)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var workload in selectedWorkloads)
+        foreach (var workload in selection.WorkloadFamilies)
         {
-            if (string.Equals(workload, BenchmarkWorkloads.Microbench, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(workload, BenchmarkWorkloads.FileCreateDelete, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(workload, BenchmarkWorkloads.Microbench, StringComparison.OrdinalIgnoreCase))
             {
                 manifest.GetRequiredMicrobenchSupport();
                 continue;
@@ -171,6 +170,11 @@ public static class RunCommand
                 throw new InvalidOperationException(
                     $"The suite manifest does not contain workload '{workload}'. Run `avbench setup --workload {workload}` first, or rerun setup with a broader workload selection.");
             }
+        }
+
+        if (selection.IncludesAnyMicrobenchScenario())
+        {
+            manifest.GetRequiredMicrobenchSupport();
         }
     }
 
