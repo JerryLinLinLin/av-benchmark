@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Runtime.Versioning;
 using AvBench.Core;
+using AvBench.Core.Detection;
 using AvBench.Core.Environment;
 using AvBench.Core.Models;
 using AvBench.Core.Output;
@@ -27,12 +28,6 @@ public static class RunCommand
             DefaultValueFactory = _ => new DirectoryInfo(@"C:\bench")
         };
 
-        var repetitionsOption = new Option<int>("--repetitions", ["-n"])
-        {
-            Description = "Number of measured repetitions per scenario.",
-            DefaultValueFactory = _ => 5
-        };
-
         var outputOption = new Option<DirectoryInfo>("--output")
         {
             Description = "Directory that receives benchmark result folders.",
@@ -41,17 +36,28 @@ public static class RunCommand
 
         var workloadOption = new Option<string[]>("--workload", ["-w"])
         {
-            Description = $"One or more workload ids to run. Defaults to all workloads present in the manifest plus {BenchmarkWorkloads.FileCreateDelete}: {BenchmarkWorkloads.HelpText}.",
+            Description = $"One or more workload ids to run. Defaults to all supported workloads: {BenchmarkWorkloads.HelpText}.",
             AllowMultipleArgumentsPerToken = true,
             DefaultValueFactory = _ => []
         };
 
-        var command = new Command("run", "Execute milestone 2 benchmark scenarios.");
+        var avProductOption = new Option<string?>("--av-product")
+        {
+            Description = "Override the auto-detected AV product name."
+        };
+
+        var avVersionOption = new Option<string?>("--av-version")
+        {
+            Description = "Override the auto-detected AV product version."
+        };
+
+        var command = new Command("run", "Execute benchmark scenarios for the configured M1-M4 workload set.");
         command.Options.Add(nameOption);
         command.Options.Add(benchDirOption);
-        command.Options.Add(repetitionsOption);
         command.Options.Add(outputOption);
         command.Options.Add(workloadOption);
+        command.Options.Add(avProductOption);
+        command.Options.Add(avVersionOption);
 
         command.SetAction(async parseResult =>
         {
@@ -59,8 +65,9 @@ public static class RunCommand
             {
                 var avName = parseResult.GetValue(nameOption)!;
                 var benchDir = parseResult.GetValue(benchDirOption)!;
-                var repetitions = parseResult.GetValue(repetitionsOption);
                 var outputRoot = parseResult.GetValue(outputOption)!;
+                var avProductOverride = parseResult.GetValue(avProductOption);
+                var avVersionOverride = parseResult.GetValue(avVersionOption);
                 if (!BenchmarkWorkloads.TryNormalize(parseResult.GetValue(workloadOption), out var selectedWorkloads, out var error))
                 {
                     Console.Error.WriteLine($"ERROR: {error}");
@@ -88,13 +95,21 @@ public static class RunCommand
                 Directory.CreateDirectory(outputRoot.FullName);
                 File.Copy(manifestPath, Path.Combine(outputRoot.FullName, SetupService.SuiteManifestFileName), overwrite: true);
 
-                Console.WriteLine("[run] Idle check: not yet enforced in milestone 1; proceeding with benchmark execution.");
+                await IdleChecker.VerifyAsync(CancellationToken.None);
+
+                var detectedAv = AvDetector.Detect();
+                var effectiveAv = new AvInfo(
+                    NormalizeOverride(avProductOverride) ?? detectedAv.ProductName,
+                    NormalizeOverride(avVersionOverride) ?? detectedAv.ProductVersion);
+
+                Console.WriteLine($"[run] AV: {effectiveAv.ProductName} v{effectiveAv.ProductVersion}");
 
                 var runner = new ScenarioRunner(
                     avName.Trim(),
                     outputRoot.FullName,
                     SystemInfoProvider.GetRunnerVersion(),
-                    SetupService.ComputeManifestSha(manifestPath));
+                    SetupService.ComputeManifestSha(manifestPath),
+                    effectiveAv);
 
                 var scenarios = new List<ScenarioDefinition>();
                 if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Ripgrep))
@@ -107,19 +122,13 @@ public static class RunCommand
                     scenarios.AddRange(RoslynScenarioFactory.Create(manifest));
                 }
 
-                var executablePath = Environment.ProcessPath
-                    ?? throw new InvalidOperationException("Unable to resolve the current executable path.");
-                if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.FileCreateDelete))
+                if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Microbench))
                 {
-                    var fileMicrobench = FileMicrobenchScenarioFactory.Create(executablePath, benchDir.FullName);
-                    scenarios.Add(fileMicrobench);
+                    scenarios.AddRange(MicrobenchScenarioFactory.Create(manifest));
                 }
 
-                var results = new List<RunResult>();
-                foreach (var scenario in scenarios)
-                {
-                    results.AddRange(await runner.ExecuteScenarioAsync(scenario, repetitions, CancellationToken.None));
-                }
+                var orderedScenarios = OrderScenariosForSession(scenarios);
+                var results = await runner.ExecuteScenariosAsync(orderedScenarios, CancellationToken.None);
 
                 var csvPath = Path.Combine(outputRoot.FullName, "runs.csv");
                 await CsvResultWriter.WriteAsync(results, csvPath, CancellationToken.None);
@@ -150,8 +159,10 @@ public static class RunCommand
 
         foreach (var workload in selectedWorkloads)
         {
-            if (string.Equals(workload, BenchmarkWorkloads.FileCreateDelete, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(workload, BenchmarkWorkloads.Microbench, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(workload, BenchmarkWorkloads.FileCreateDelete, StringComparison.OrdinalIgnoreCase))
             {
+                manifest.GetRequiredMicrobenchSupport();
                 continue;
             }
 
@@ -162,4 +173,50 @@ public static class RunCommand
             }
         }
     }
+
+    private static List<ScenarioDefinition> OrderScenariosForSession(IReadOnlyList<ScenarioDefinition> scenarios)
+    {
+        var groups = new List<List<ScenarioDefinition>>();
+        List<ScenarioDefinition>? currentGroup = null;
+        string? currentFamily = null;
+
+        foreach (var scenario in scenarios)
+        {
+            var family = GetScenarioFamily(scenario.Id);
+            if (currentGroup is null || !string.Equals(currentFamily, family, StringComparison.OrdinalIgnoreCase))
+            {
+                currentGroup = [];
+                groups.Add(currentGroup);
+                currentFamily = family;
+            }
+
+            currentGroup.Add(scenario);
+        }
+
+        for (var index = groups.Count - 1; index > 0; index--)
+        {
+            var swapIndex = Random.Shared.Next(index + 1);
+            (groups[index], groups[swapIndex]) = (groups[swapIndex], groups[index]);
+        }
+
+        return groups.SelectMany(static group => group).ToList();
+    }
+
+    private static string GetScenarioFamily(string scenarioId)
+    {
+        if (scenarioId.StartsWith("ripgrep-", StringComparison.OrdinalIgnoreCase))
+        {
+            return "ripgrep";
+        }
+
+        if (scenarioId.StartsWith("roslyn-", StringComparison.OrdinalIgnoreCase))
+        {
+            return "roslyn";
+        }
+
+        return scenarioId;
+    }
+
+    private static string? NormalizeOverride(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

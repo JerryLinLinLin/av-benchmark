@@ -4,6 +4,7 @@ public static class BenchmarkWorkloads
 {
     public const string Ripgrep = "ripgrep";
     public const string Roslyn = "roslyn";
+    public const string Microbench = "microbench";
     public const string FileCreateDelete = "file-create-delete";
     public const string All = "all";
 
@@ -11,7 +12,7 @@ public static class BenchmarkWorkloads
     [
         Ripgrep,
         Roslyn,
-        FileCreateDelete
+        Microbench
     ];
 
     public static IReadOnlyList<string> Defaults => AllWorkloads;
@@ -72,7 +73,8 @@ public static class BenchmarkWorkloads
         => Contains(selectedWorkloads, Roslyn);
 
     public static bool RequiresDotNetSdk(IReadOnlyCollection<string> selectedWorkloads)
-        => Contains(selectedWorkloads, Roslyn);
+        => Contains(selectedWorkloads, Roslyn)
+            || Contains(selectedWorkloads, Microbench);
 
     public static bool IncludesSourceTree(IReadOnlyCollection<string> selectedWorkloads)
         => Contains(selectedWorkloads, Ripgrep)
@@ -101,10 +103,13 @@ public static class BenchmarkWorkloads
                 normalized = Roslyn;
                 error = null;
                 return true;
+            case Microbench:
+                normalized = Microbench;
+                error = null;
+                return true;
             case FileCreateDelete:
-            case "microbench":
             case "file":
-                normalized = FileCreateDelete;
+                normalized = Microbench;
                 error = null;
                 return true;
             default:

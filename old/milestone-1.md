@@ -3,7 +3,7 @@
 ## Scope
 
 - `avbench setup` — install Git + Rust, clone ripgrep, run `cargo fetch`
-- `avbench run` — ripgrep compile scenarios (clean/incremental/noop) + `file-create-delete` API microbench
+- `avbench run` — ripgrep compile scenarios (clean/incremental) + `file-create-delete` API microbench
 - Job object process-tree runner with default metrics
 - JSON output (`run.json`) and CSV flattening (`runs.csv`)
 
@@ -49,7 +49,7 @@ av-benchmark/
         JobObject.cs              → P/Invoke wrapper for Windows Job objects
         ProcessTreeRunner.cs      → launch process under Job, collect metrics
       Scenarios/
-        ScenarioRunner.cs         → orchestrate repetitions
+        ScenarioRunner.cs         → orchestrate scenarios (one run per session)
         RipgrepScenario.cs
         FileMicrobenchScenario.cs
       Output/
@@ -178,11 +178,6 @@ public static class RunCommand
             Description = "Root directory for repos and builds",
             DefaultValueFactory = _ => new DirectoryInfo(@"C:\bench")
         };
-        var repetitionsOption = new Option<int>("--repetitions", "-n")
-        {
-            Description = "Number of timed repetitions per scenario",
-            DefaultValueFactory = _ => 5
-        };
         var outputOption = new Option<DirectoryInfo>("--output")
         {
             Description = "Output directory for results",
@@ -192,18 +187,16 @@ public static class RunCommand
         var command = new Command("run", "Execute benchmark scenarios and record metrics");
         command.Options.Add(nameOption);
         command.Options.Add(benchDirOption);
-        command.Options.Add(repetitionsOption);
         command.Options.Add(outputOption);
 
         command.SetAction(parseResult =>
         {
             var name = parseResult.GetValue(nameOption)!;
             var benchDir = parseResult.GetValue(benchDirOption)!;
-            var reps = parseResult.GetValue(repetitionsOption);
             var output = parseResult.GetValue(outputOption)!;
             // 1. Load manifest
             // 2. Idle check
-            // 3. For each scenario: N reps
+            // 3. For each scenario: run once
             // 4. Write runs.csv
             return 0;
         });
@@ -231,9 +224,6 @@ public sealed class RunResult
 
     [JsonPropertyName("av_name")]
     public string AvName { get; set; } = "";
-
-    [JsonPropertyName("repetition")]
-    public int Repetition { get; set; }
 
     [JsonPropertyName("timestamp_utc")]
     public DateTime TimestampUtc { get; set; }
@@ -960,12 +950,13 @@ Why not `CREATE_SUSPENDED`? `Process.Start()` in .NET doesn't expose `CREATE_SUS
 
 ### `ScenarioRunner.cs`
 
-Orchestrates repetitions and cleanup for a scenario.
+Orchestrates scenario execution. Each `avbench run` invocation runs every scenario once. Repetitions are achieved by restoring the VM snapshot and re-running.
 
 ```csharp
 using AvBench.Core.Models;
 using AvBench.Core.Runner;
 using AvBench.Core.Output;
+using AvBench.Core.Collectors;
 
 namespace AvBench.Core.Scenarios;
 
@@ -973,59 +964,51 @@ public sealed class ScenarioRunner
 {
     private readonly string _avName;
     private readonly string _outputRoot;
-    private readonly int _repetitions;
     private readonly string _runnerVersion;
 
-    public ScenarioRunner(string avName, string outputRoot, int repetitions, string runnerVersion)
+    public ScenarioRunner(string avName, string outputRoot, string runnerVersion)
     {
         _avName = avName;
         _outputRoot = outputRoot;
-        _repetitions = repetitions;
         _runnerVersion = runnerVersion;
     }
 
     /// <summary>
-    /// Run a full scenario block: idle check, N repetitions.
-    /// Returns all RunResults.
+    /// Run all scenarios once. Returns one RunResult per scenario.
     /// </summary>
-    public List<RunResult> Execute(ScenarioDefinition scenario)
+    public List<RunResult> Execute(List<ScenarioDefinition> scenarios)
     {
         IdleCheck();
 
         var results = new List<RunResult>();
-        for (int rep = 1; rep <= _repetitions; rep++)
+        foreach (var scenario in scenarios)
         {
-            Console.WriteLine($"[run] {scenario.Id} rep {rep}/{_repetitions}");
-            var result = RunOnce(scenario);
-            result.Repetition = rep;
+            Console.WriteLine($"[run] {scenario.Id}");
+
+            var scenarioDir = Path.Combine(_outputRoot, scenario.Id);
+            Directory.CreateDirectory(scenarioDir);
+
+            var result = RunOnce(scenario, scenarioDir);
             results.Add(result);
 
-            // Write run.json immediately
-            var repDir = Path.Combine(_outputRoot, scenario.Id, $"rep-{rep:D2}");
-            Directory.CreateDirectory(repDir);
-
-            // Move log files into rep dir
-            var stdoutDest = Path.Combine(repDir, "stdout.log");
-            var stderrDest = Path.Combine(repDir, "stderr.log");
-            if (File.Exists(result.Command + ".stdout.tmp"))
-                File.Move(result.Command + ".stdout.tmp", stdoutDest, overwrite: true);
-            if (File.Exists(result.Command + ".stderr.tmp"))
-                File.Move(result.Command + ".stderr.tmp", stderrDest, overwrite: true);
-
-            JsonResultWriter.Write(result, Path.Combine(repDir, "run.json"));
+            JsonResultWriter.Write(result, Path.Combine(scenarioDir, "run.json"));
         }
 
         return results;
     }
 
-    private RunResult RunOnce(ScenarioDefinition scenario)
+    private RunResult RunOnce(ScenarioDefinition scenario, string scenarioDir)
     {
         // Run pre-actions (e.g., clean build dir)
         foreach (var action in scenario.PreActions)
             RunShell(action, scenario.WorkingDirectory);
 
-        var stdoutLog = Path.GetTempFileName();
-        var stderrLog = Path.GetTempFileName();
+        var stdoutLog = Path.Combine(scenarioDir, "stdout.log");
+        var stderrLog = Path.Combine(scenarioDir, "stderr.log");
+
+        // Start typeperf (always-on)
+        using var typeperf = new TypeperfCollector();
+        typeperf.Start(scenarioDir);
 
         var treeResult = ProcessTreeRunner.Run(
             fileName: scenario.FileName,
@@ -1034,6 +1017,8 @@ public sealed class ScenarioRunner
             stdoutLogPath: stdoutLog,
             stderrLogPath: stderrLog,
             timeout: TimeSpan.FromHours(2));
+
+        typeperf.Stop();
 
         return new RunResult
         {
@@ -1137,22 +1122,15 @@ public static class RipgrepScenario
                 Arguments = "build --release",
                 WorkingDirectory = repoDir,
                 PreActions = [MutateIncrementalSourceCommand(repoDir)]
-            },
-            new ScenarioDefinition
-            {
-                Id = "ripgrep-noop-build",
-                FileName = "cargo",
-                Arguments = "build --release",
-                WorkingDirectory = repoDir,
-                PreActions = []  // no changes, just rebuild
             }
         ];
     }
 
     private static string MutateIncrementalSourceCommand(string repoDir)
     {
-        // Make a harmless source edit to trigger a real incremental rebuild
-        var target = Path.Combine(repoDir, "crates", "core", "main.rs");
+        // Touch a core source file in crates/searcher/ to trigger cascade rebuild
+        // searcher → printer → core → final binary (~4–5 crate recompiles)
+        var target = Path.Combine(repoDir, "crates", "searcher", "src", "lib.rs");
         return $"powershell -NoProfile -Command " +
                "\"$p='{target}'; " +
                "$marker='// avbench incremental marker: '; " +
@@ -1278,7 +1256,7 @@ public static class CsvResultWriter
 {
     private static readonly string[] Headers =
     [
-        "scenario_id", "av_name", "repetition", "timestamp_utc",
+        "scenario_id", "av_name", "timestamp_utc",
         "exit_code", "wall_ms", "user_cpu_ms", "kernel_cpu_ms",
         "peak_job_memory_mb", "io_read_bytes", "io_write_bytes",
         "io_read_ops", "io_write_ops", "total_processes"
@@ -1294,7 +1272,6 @@ public static class CsvResultWriter
             sb.AppendLine(string.Join(",",
                 Escape(r.ScenarioId),
                 Escape(r.AvName),
-                r.Repetition.ToString(CultureInfo.InvariantCulture),
                 r.TimestampUtc.ToString("o"),
                 r.ExitCode.ToString(CultureInfo.InvariantCulture),
                 r.WallMs.ToString(CultureInfo.InvariantCulture),
@@ -1394,27 +1371,30 @@ On a VM with Defender enabled:
 
 ```powershell
 avbench setup --bench-dir C:\bench
-avbench run --name defender-default --bench-dir C:\bench --output results -n 3
+avbench run --name defender-default --bench-dir C:\bench --output results
 ```
 
 Expected output:
 
 ```
 results/
-  20260413-153000/
-    suite-manifest.json
-    ripgrep-clean-build/
-      rep-01/run.json, stdout.log, stderr.log, combined.log
-      rep-02/...
-      rep-03/...
-    ripgrep-incremental-build/
-      rep-01/...
-    ripgrep-noop-build/
-      rep-01/...
-    file-create-delete/
-      rep-01/run.json
-    runs.csv
+  suite-manifest.json
+  ripgrep-clean-build/
+    run.json
+    stdout.log
+    stderr.log
+    counters.csv
+  ripgrep-incremental-build/
+    run.json
+    stdout.log
+    stderr.log
+    counters.csv
+  file-create-delete/
+    run.json
+  runs.csv
 ```
+
+Repetitions are achieved by the external orchestrator: restore VM snapshot → `avbench run` → copy results → repeat.
 
 ## Key Risks and Mitigations
 
@@ -1423,7 +1403,7 @@ results/
 | `AssignProcessToJobObject` after `Process.Start` misses early children | Under-count metrics for first few ms | Acceptable for compile workloads (seconds+). Add raw `CreateProcess` with `CREATE_SUSPENDED` in M2 if needed. |
 | Git/Rust installer URLs become stale | Setup fails on new VMs | Use `tools-manifest.json` to override URLs. Pin known-good versions. |
 | AV blocks installer downloads | Setup fails | Document: whitelist download URLs in AV profile if needed, or pre-stage installers on a network share. |
-| ripgrep `crates/core/main.rs` path may change across versions | Incremental scenario breaks | Pin ripgrep to a specific SHA. Validate the incremental source target path in `setup`. |
+| ripgrep `crates/searcher/src/lib.rs` path may change across versions | Incremental scenario breaks | Pin ripgrep to a specific SHA. Validate the incremental source target path in `setup`. |
 | Job object accounting on nested jobs | Double-counting on older Windows | Target Windows Server 2022+ / Windows 11+ where nested jobs are fully supported. |
 
 ## Testing Strategy
@@ -1437,5 +1417,5 @@ Verification checklist:
 3. `avbench run` with baseline label produces `run.json` files with valid metrics
 4. `avbench run` with defender-default label produces higher wall times than baseline
 5. `run.json` wall_ms, user_cpu_ms, io_read_bytes are non-zero for clean builds
-6. `runs.csv` has the correct number of rows (scenarios × repetitions)
+6. `runs.csv` has one row per scenario (one run per session)
 7. File microbench reports ops/sec in a plausible range (thousands to hundreds of thousands)

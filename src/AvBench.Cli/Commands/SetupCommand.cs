@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Net.Http;
 using System.Runtime.Versioning;
 using AvBench.Core;
 using AvBench.Core.Setup;
@@ -62,6 +63,11 @@ public static class SetupCommand
             catch (FileNotFoundException ex)
             {
                 Console.Error.WriteLine($"ERROR: {ex.Message}");
+                return 1;
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.Error.WriteLine($"ERROR: Setup could not download required sources or tools. {ex.Message}");
                 return 1;
             }
         });

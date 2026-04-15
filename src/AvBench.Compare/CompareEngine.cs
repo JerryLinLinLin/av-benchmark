@@ -39,7 +39,7 @@ public static class CompareEngine
                         AvProduct = scenarioRuns[0].AvProduct,
                         AvVersion = scenarioRuns[0].AvVersion,
                         BaselineName = baselineName,
-                        Repetitions = scenarioRuns.Count,
+                        Sessions = scenarioRuns.Count,
                         Status = "failed"
                     });
                     continue;
@@ -70,7 +70,7 @@ public static class CompareEngine
                     AvProduct = successfulRuns[0].AvProduct,
                     AvVersion = successfulRuns[0].AvVersion,
                     BaselineName = baselineName,
-                    Repetitions = successfulRuns.Count,
+                    Sessions = scenarioRuns.Count,
                     MeanWallMs = Math.Round(meanWall, 1),
                     MedianWallMs = Math.Round(Median(wallSamples), 1),
                     MeanCpuMs = Math.Round(meanCpu, 1),
@@ -126,7 +126,7 @@ public sealed class ComparisonRow
 
     public string BaselineName { get; init; } = string.Empty;
 
-    public int Repetitions { get; init; }
+    public int Sessions { get; init; }
 
     public double MeanWallMs { get; init; }
 

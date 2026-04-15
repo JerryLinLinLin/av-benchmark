@@ -16,9 +16,6 @@ public sealed class RunResult
     [JsonPropertyName("av_version")]
     public string AvVersion { get; set; } = string.Empty;
 
-    [JsonPropertyName("repetition")]
-    public int Repetition { get; set; }
-
     [JsonPropertyName("timestamp_utc")]
     public DateTime TimestampUtc { get; set; }
 
@@ -83,9 +80,9 @@ public sealed class RunResult
     [JsonPropertyName("suite_manifest_sha")]
     public string SuiteManifestSha { get; set; } = string.Empty;
 
-    [JsonPropertyName("file_microbench")]
+    [JsonPropertyName("microbench")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public FileMicrobenchMetrics? FileMicrobench { get; set; }
+    public MicrobenchMetrics? Microbench { get; set; }
 }
 
 public sealed class MachineInfo
@@ -103,7 +100,7 @@ public sealed class MachineInfo
     public string Storage { get; set; } = string.Empty;
 }
 
-public sealed class FileMicrobenchMetrics
+public sealed class MicrobenchMetrics
 {
     [JsonPropertyName("batch_size")]
     public int BatchSize { get; set; }

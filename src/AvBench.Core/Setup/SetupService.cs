@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using AvBench.Core.Environment;
+using AvBench.Core.Microbench;
 using AvBench.Core.Models;
 using AvBench.Core.Serialization;
 using System.Runtime.Versioning;
@@ -24,6 +25,7 @@ public sealed class SetupService
 
         RepoEntry? ripgrep = null;
         RepoEntry? roslyn = null;
+        MicrobenchSupportEntry? microbenchSupport = null;
         var repos = new List<RepoEntry>();
         var workloads = new List<WorkloadEntry>();
         var tools = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -60,6 +62,11 @@ public sealed class SetupService
         if (BenchmarkWorkloads.RequiresDotNetSdk(selectedWorkloads))
         {
             var sdkVersions = new List<string>();
+            if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Microbench))
+            {
+                sdkVersions.Add(MicrobenchSupport.RequiredDotNetSdkVersion);
+            }
+
             if (roslyn is not null)
             {
                 sdkVersions.Add(RepoCloner.ResolveDotNetSdkVersion(roslyn.LocalPath));
@@ -94,6 +101,11 @@ public sealed class SetupService
             });
         }
 
+        if (BenchmarkWorkloads.Contains(selectedWorkloads, BenchmarkWorkloads.Microbench))
+        {
+            microbenchSupport = await MicrobenchSupport.PrepareAsync(benchDirectory, cancellationToken);
+        }
+
         var manifest = new SuiteManifest
         {
             CreatedUtc = DateTime.UtcNow,
@@ -101,6 +113,7 @@ public sealed class SetupService
             RunnerVersion = SystemInfoProvider.GetRunnerVersion(),
             Repos = repos,
             Workloads = workloads,
+            MicrobenchSupport = microbenchSupport,
             Tools = tools
         };
 

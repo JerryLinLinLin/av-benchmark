@@ -54,13 +54,20 @@ public static class RepoCloner
         => ResolveFirstExistingPath(
             new[]
             {
-                Path.Combine(repoDirectory, "crates", "core", "main.rs"),
-                Path.Combine(repoDirectory, "crates", "core", "lib.rs"),
+                Path.Combine(repoDirectory, "crates", "searcher", "src", "lib.rs"),
+                Path.Combine(repoDirectory, "crates", "searcher", "src", "searcher", "core.rs"),
+                Path.Combine(repoDirectory, "crates", "searcher", "src", "line_buffer.rs"),
                 Path.Combine(repoDirectory, "src", "main.rs")
             },
             () => Directory.EnumerateFiles(repoDirectory, "*.rs", SearchOption.AllDirectories)
-                .Where(static path => !path.Contains($"{Path.DirectorySeparatorChar}target{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+                .Where(static path =>
+                    path.Contains($"{Path.DirectorySeparatorChar}crates{Path.DirectorySeparatorChar}searcher{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                    && !path.Contains($"{Path.DirectorySeparatorChar}target{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(static path => path.Length)
+                .Concat(
+                    Directory.EnumerateFiles(repoDirectory, "*.rs", SearchOption.AllDirectories)
+                        .Where(static path => !path.Contains($"{Path.DirectorySeparatorChar}target{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+                        .OrderBy(static path => path.Length))
                 .FirstOrDefault(),
             "Unable to locate a Rust source file for the ripgrep incremental scenario.");
 
@@ -68,13 +75,19 @@ public static class RepoCloner
         => ResolveFirstExistingPath(
             new[]
             {
-                Path.Combine(repoDirectory, "src", "Compilers", "Core", "Portable", "CommandLineParser.cs"),
-                Path.Combine(repoDirectory, "src", "Compilers", "CSharp", "Portable", "CSharpCommandLineParser.cs"),
-                Path.Combine(repoDirectory, "src", "Compilers", "VisualBasic", "Portable", "VisualBasicCommandLineParser.vb")
+                Path.Combine(repoDirectory, "src", "Compilers", "Core", "Portable", "DiagnosticAnalyzer", "AnalyzerManager.cs"),
+                Path.Combine(repoDirectory, "src", "Compilers", "Core", "Portable", "DiagnosticAnalyzer", "AnalyzerDriver.cs"),
+                Path.Combine(repoDirectory, "src", "Compilers", "Core", "Portable", "CompilationStage.cs")
             },
             () => Directory.EnumerateFiles(Path.Combine(repoDirectory, "src"), "*.cs", SearchOption.AllDirectories)
-                .Where(static path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+                .Where(static path =>
+                    path.Contains($"{Path.DirectorySeparatorChar}src{Path.DirectorySeparatorChar}Compilers{Path.DirectorySeparatorChar}Core{Path.DirectorySeparatorChar}Portable{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                    && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(static path => path.Length)
+                .Concat(
+                    Directory.EnumerateFiles(Path.Combine(repoDirectory, "src"), "*.cs", SearchOption.AllDirectories)
+                        .Where(static path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+                        .OrderBy(static path => path.Length))
                 .FirstOrDefault(),
             "Unable to locate a C# source file for the Roslyn incremental scenario.");
 

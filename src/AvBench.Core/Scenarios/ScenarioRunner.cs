@@ -1,8 +1,10 @@
+using AvBench.Core.Collectors;
+using AvBench.Core.Detection;
 using AvBench.Core.Environment;
+using AvBench.Core.Internal;
 using AvBench.Core.Models;
 using AvBench.Core.Output;
 using AvBench.Core.Runner;
-using AvBench.Core.Internal;
 
 namespace AvBench.Core.Scenarios;
 
@@ -14,32 +16,28 @@ public sealed class ScenarioRunner
     private readonly string _suiteManifestSha;
     private readonly AvInfo _avInfo;
 
-    public ScenarioRunner(string avName, string outputRoot, string runnerVersion, string suiteManifestSha)
+    public ScenarioRunner(string avName, string outputRoot, string runnerVersion, string suiteManifestSha, AvInfo avInfo)
     {
         _avName = avName;
         _outputRoot = outputRoot;
         _runnerVersion = runnerVersion;
         _suiteManifestSha = suiteManifestSha;
-        _avInfo = SystemInfoProvider.CollectAvInfo();
+        _avInfo = avInfo;
     }
 
-    public async Task<List<RunResult>> ExecuteScenarioAsync(
-        ScenarioDefinition scenario,
-        int repetitions,
+    public async Task<List<RunResult>> ExecuteScenariosAsync(
+        IReadOnlyList<ScenarioDefinition> scenarios,
         CancellationToken cancellationToken)
     {
-        FileSystemUtil.DeletePathIfExists(Path.Combine(_outputRoot, scenario.Id));
-
-        var results = new List<RunResult>(repetitions);
-        for (var repetition = 1; repetition <= repetitions; repetition++)
+        var results = new List<RunResult>(scenarios.Count);
+        foreach (var scenario in scenarios)
         {
-            var scenarioDirectory = Path.Combine(_outputRoot, scenario.Id, $"rep-{repetition:D2}");
+            var scenarioDirectory = Path.Combine(_outputRoot, scenario.Id);
+            FileSystemUtil.DeletePathIfExists(scenarioDirectory);
             Directory.CreateDirectory(scenarioDirectory);
 
-            Console.WriteLine($"[run] {scenario.Id} rep {repetition}/{repetitions}");
+            Console.WriteLine($"[run] {scenario.Id}");
             var result = await RunOnceAsync(scenario, scenarioDirectory, cancellationToken);
-            result.Repetition = repetition;
-
             await JsonResultWriter.WriteAsync(result, Path.Combine(scenarioDirectory, "run.json"), cancellationToken);
             results.Add(result);
 
@@ -71,45 +69,114 @@ public sealed class ScenarioRunner
         Directory.CreateDirectory(Path.GetDirectoryName(stdoutPath)!);
         Directory.CreateDirectory(Path.GetDirectoryName(stderrPath)!);
 
-        var execution = await ProcessTreeRunner.RunAsync(
-            scenario.FileName,
-            scenario.Arguments,
-            scenario.WorkingDirectory,
-            stdoutPath,
-            stderrPath,
-            TimeSpan.FromHours(2),
-            cancellationToken);
+        TypeperfCollector? collector = null;
+        try
+        {
+            if (outputDirectory is not null)
+            {
+                collector = new TypeperfCollector();
+                collector.Start(outputDirectory);
+            }
 
+            ScenarioExecutionResult execution;
+            if (scenario.ExecuteInProcessAsync is not null)
+            {
+                execution = await scenario.ExecuteInProcessAsync(cancellationToken);
+                await File.WriteAllTextAsync(stdoutPath, execution.Stdout, cancellationToken);
+                await File.WriteAllTextAsync(stderrPath, execution.Stderr, cancellationToken);
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(scenario.FileName))
+                {
+                    throw new InvalidOperationException($"Scenario {scenario.Id} does not define a process command or an in-process executor.");
+                }
+
+                var processExecution = await ProcessTreeRunner.RunAsync(
+                    scenario.FileName,
+                    scenario.Arguments,
+                    scenario.WorkingDirectory,
+                    stdoutPath,
+                    stderrPath,
+                    TimeSpan.FromHours(2),
+                    cancellationToken);
+
+                execution = new ScenarioExecutionResult
+                {
+                    Command = string.IsNullOrWhiteSpace(scenario.Arguments) ? scenario.FileName : $"{scenario.FileName} {scenario.Arguments}",
+                    WorkingDirectory = scenario.WorkingDirectory,
+                    ExitCode = processExecution.ExitCode,
+                    WallMs = processExecution.WallMs,
+                    UserCpuMs = processExecution.Accounting.TotalUserTimeMs,
+                    KernelCpuMs = processExecution.Accounting.TotalKernelTimeMs,
+                    PeakJobMemoryMb = (long)(processExecution.Accounting.PeakJobMemoryBytes / (1024 * 1024)),
+                    IoReadBytes = processExecution.Accounting.IoReadBytes,
+                    IoWriteBytes = processExecution.Accounting.IoWriteBytes,
+                    IoReadOps = processExecution.Accounting.IoReadOps,
+                    IoWriteOps = processExecution.Accounting.IoWriteOps,
+                    TotalProcesses = processExecution.Accounting.TotalProcesses
+                };
+            }
+
+            var result = CreateRunResult(scenario, execution);
+            scenario.EnrichResultFromLogs?.Invoke(result, stdoutPath, stderrPath);
+            return result;
+        }
+        finally
+        {
+            if (collector is not null)
+            {
+                try
+                {
+                    collector.Stop();
+                }
+                finally
+                {
+                    collector.Dispose();
+                }
+            }
+
+            if (outputDirectory is null)
+            {
+                TryDelete(stdoutPath);
+                TryDelete(stderrPath);
+            }
+        }
+    }
+
+    private RunResult CreateRunResult(ScenarioDefinition scenario, ScenarioExecutionResult execution)
+    {
         var result = new RunResult
         {
             ScenarioId = scenario.Id,
             AvName = _avName,
-            AvProduct = _avInfo.Product,
-            AvVersion = _avInfo.Version,
+            AvProduct = _avInfo.ProductName,
+            AvVersion = _avInfo.ProductVersion,
             TimestampUtc = DateTime.UtcNow,
-            Command = string.IsNullOrWhiteSpace(scenario.Arguments) ? scenario.FileName : $"{scenario.FileName} {scenario.Arguments}",
-            WorkingDir = scenario.WorkingDirectory,
+            Command = execution.Command,
+            WorkingDir = execution.WorkingDirectory,
             ExitCode = execution.ExitCode,
             WallMs = execution.WallMs,
-            UserCpuMs = execution.Accounting.TotalUserTimeMs,
-            KernelCpuMs = execution.Accounting.TotalKernelTimeMs,
-            PeakJobMemoryMb = (long)(execution.Accounting.PeakJobMemoryBytes / (1024 * 1024)),
-            IoReadBytes = execution.Accounting.IoReadBytes,
-            IoWriteBytes = execution.Accounting.IoWriteBytes,
-            IoReadOps = execution.Accounting.IoReadOps,
-            IoWriteOps = execution.Accounting.IoWriteOps,
-            TotalProcesses = execution.Accounting.TotalProcesses,
+            UserCpuMs = execution.UserCpuMs,
+            KernelCpuMs = execution.KernelCpuMs,
+            PeakJobMemoryMb = execution.PeakJobMemoryMb,
+            IoReadBytes = execution.IoReadBytes,
+            IoWriteBytes = execution.IoWriteBytes,
+            IoReadOps = execution.IoReadOps,
+            IoWriteOps = execution.IoWriteOps,
+            TotalProcesses = execution.TotalProcesses,
             Machine = SystemInfoProvider.CollectMachineInfo(),
             RunnerVersion = _runnerVersion,
-            SuiteManifestSha = _suiteManifestSha
+            SuiteManifestSha = _suiteManifestSha,
+            Microbench = execution.Microbench
         };
 
-        scenario.EnrichResultFromLogs?.Invoke(result, stdoutPath, stderrPath);
-
-        if (outputDirectory is null)
+        if (execution.Microbench is not null)
         {
-            TryDelete(stdoutPath);
-            TryDelete(stderrPath);
+            result.P50Us = execution.Microbench.P50Us;
+            result.P95Us = execution.Microbench.P95Us;
+            result.P99Us = execution.Microbench.P99Us;
+            result.MaxUs = execution.Microbench.MaxUs;
         }
 
         return result;

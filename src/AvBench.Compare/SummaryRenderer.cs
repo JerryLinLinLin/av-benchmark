@@ -15,8 +15,8 @@ public static class SummaryRenderer
 
         foreach (var group in rows.GroupBy(static row => row.AvName).OrderBy(static group => group.Key, StringComparer.OrdinalIgnoreCase))
         {
-            var baselineName = group.First().BaselineName;
-            builder.AppendLine($"## {group.Key} vs {baselineName}");
+            var first = group.First();
+            builder.AppendLine($"## {group.Key} ({first.AvProduct} v{first.AvVersion}) vs {first.BaselineName}");
             builder.AppendLine();
             builder.AppendLine("| Scenario | Mean Wall (ms) | Slowdown | Kernel CPU % | Baseline Kernel % | Kernel Shift | CV % | Status |");
             builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---|");

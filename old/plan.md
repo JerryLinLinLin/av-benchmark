@@ -19,12 +19,12 @@ This split exists because each VM runs in isolation with its own AV configuratio
 - Use C# for both programs.
 - Keep the benchmark core vendor-neutral. Do not depend on Defender-only tooling.
 - Use Windows Job objects via P/Invoke for process-tree accounting (CPU, I/O, memory) as the primary measurement layer.
-- Use `typeperf` as an opt-in system counter sampling layer for resource utilization analysis.
+- Use `typeperf` as an always-on system counter sampler for resource utilization analysis and anomaly diagnosis.
 - Compare AV products with VM snapshots, not by uninstalling and reinstalling on the same image.
 - `avbench setup` automates everything from tool installation to dependency hydration on a clean Windows VM.
 - Separate untimed setup from timed benchmark execution.
 - Pin repo SHAs and toolchain versions for each test campaign.
-- Default metrics are kept lean: wall time, CPU time, I/O bytes, peak memory. Everything else is opt-in.
+- Default metrics are kept lean: wall time, CPU time, I/O bytes, peak memory. `typeperf` counters are always collected alongside for diagnostic context.
 - `avbench` always runs as Administrator. Tool installation requires elevation. Rather than scattering privilege checks, the program validates elevation at startup and exits immediately if not elevated.
 
 ## Why C#
@@ -86,8 +86,7 @@ Minimum Rust version: 1.85.0 stable. Optional PCRE2 feature build (`cargo build 
 Scenarios:
 
 - `clean-build` (`cargo build --release`)
-- `incremental-build` (make a small, harmless edit to one stable `.rs` file, rebuild)
-- `noop-build`
+- `incremental-build` (touch a core source file in `crates/searcher/`, triggering cascade rebuild through printer → core → final binary)
 
 #### `dotnet/roslyn`
 
@@ -105,29 +104,145 @@ Roslyn uses `Roslyn.slnx` as of recent commits. The current repo also builds cle
 Scenarios:
 
 - `clean-build` (`dotnet build Roslyn.slnx -c Release /m /nr:false`)
-- `incremental-build` (touch one stable `.cs` file, rebuild)
-- `noop-build`
+- `incremental-build` (touch a core source file in `src/Compilers/Core/Portable/`, triggering cascade rebuild through CSharp, Workspaces, and downstream assemblies)
 
 Restore is always untimed and belongs in suite setup.
 
 ### API microbench workloads
 
-Split by behavior, not collapsed into one mega-loop.
+Split by behavior, not collapsed into one mega-loop. Each bench exercises a different Windows API category — file system operations, process/thread management, memory mapping, networking, registry, IPC, COM, and more. These are general-purpose Win32 APIs that common Windows applications call heavily. Some of these APIs are also known to be sensitive to security-software monitoring (user-mode hooks, kernel callbacks, minifilter I/O), which makes them useful for measuring AV overhead — but the primary selection criterion is **how commonly applications use these APIs**, not which ones are hooked by any particular product.
 
-First families:
+> **Reference**: For public data on which ntdll APIs are commonly intercepted by security software, see the [Mr-Un1k0d3r/EDRs](https://github.com/Mr-Un1k0d3r/EDRs) repository.
 
-- `file-create-delete` — create and delete small temp files (M1)
-- `archive-extract` — extract ~2K-file zip with mixed extensions/sizes (simulates NuGet/npm/pip restore)
-- `ext-sensitivity` — create+write+delete with .exe / .dll / .js / .ps1 extensions (same content)
-- `process-create-wait` — spawn an unsigned noop.exe (forces full AV scan, no trust-cache)
-- `dll-load-unique` — copy system DLL to unique temp path then load (bypasses section cache)
-- `file-write-content` — create→write→close→delete with pool of unique-hash unsigned PEs (forces full AV content inspection every iteration)
-- `motw` — copy + execute real unsigned exe, with vs without Zone.Identifier ADS (ZoneId=3 Internet origin)
+**Windows API interception layers** (each bench notes which layer it exercises):
 
-Later additions (not in v1):
+| Layer | Mechanism | What fires |
+|---|---|---|
+| **File minifilter** | `FltRegisterFilter` / `IRP_MJ_*` | Every file open, read, write, close |
+| **Process notify** | `PsSetCreateProcessNotifyRoutineEx` | Every process create/exit |
+| **Thread notify** | `PsSetCreateThreadNotifyRoutine` | Every thread create/exit |
+| **Image load notify** | `PsSetLoadImageNotifyRoutine` | Every DLL/EXE image load |
+| **Object callbacks** | `ObRegisterCallbacks` | Every `OpenProcess`/`OpenThread` |
+| **Registry callbacks** | `CmRegisterCallbackEx` | Every registry create/open/query/set/delete |
+| **WFP callout** | `FwpsCalloutRegister` | Every TCP connect, accept, DNS query |
+| **User-mode hooks** | ntdll inline patching | Varies — `NtAllocateVirtualMemory`, `NtMapViewOfSection`, etc. |
+| **ETW threat intel** | `EtwEventWrite` | Memory protection changes, image loads |
 
-- named pipe operations
-- memory-mapped file operations
+#### Tier 1 — File I/O & PE content (minifilter layer)
+
+These exercise the kernel file system minifilter — the single biggest source of AV overhead for file-heavy workloads. Security software typically registers a minifilter for on-access scanning.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| File create-delete | `file-create-delete` | Create + delete small temp files in a loop (M1) | Minifilter |
+| Archive extract | `archive-extract` | Extract ~2K-file zip with mixed extensions/sizes, then delete tree. Simulates NuGet/npm/pip restore | Minifilter |
+| Extension sensitivity | `ext-sensitivity-{ext}` | Create+write+delete with .exe/.dll/.js/.ps1 extensions (same content). Isolates extension-based dispatch | Minifilter |
+| File write PE content | `file-write-pe` | Create→write→close→delete unique-hash unsigned PEs (clone+patch noop.exe per iteration). Forces full PE inspection | Minifilter + content scan |
+| File enumerate large dir | `file-enum-large-dir` | Enumerate a pre-created directory with ~10K files. Exercises `NtQueryDirectoryFile` through minifilter. Common in IDE file indexing, `git status`, `dir /s` | Minifilter |
+| File copy large | `file-copy-large` | Copy a single ~100 MB file. Sustained minifilter read+write scan overhead on bulk data transfer | Minifilter |
+| Hardlink and junction | `hardlink-junction` | Create hard links and directory junctions in a loop. npm/pnpm use hard links for deduplication; junctions for node_modules hoisting | Minifilter |
+
+#### Tier 2 — Process, thread, DLL/image (kernel notify callbacks)
+
+These exercise the kernel `PsSetCreate*NotifyRoutine` and `PsSetLoadImageNotifyRoutine` callbacks plus user-mode ntdll hooks. Common in any application that spawns processes, loads libraries, or creates threads.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| Process create-wait | `process-create-wait` | Spawn unsigned noop.exe, wait for exit. Forces full AV on-execute scan (no trust-cache) | Process notify + user hooks |
+| DLL load unique | `dll-load-unique` | Copy system DLL to unique temp path, LoadLibrary, FreeLibrary. Bypasses section cache | Image load notify + user hooks |
+| MOTW exe (no mark) | `motw-exe-no-motw` | Copy + execute real unsigned noop.exe without Zone.Identifier | Process notify |
+| MOTW exe (Zone 3) | `motw-exe-motw-zone3` | Copy + stamp Zone.Identifier ZoneId=3 + execute. Triggers SmartScreen checks | Process notify + SmartScreen |
+| Thread create | `thread-create` | Rapid `new Thread()` → `Start()` → `Join()` cycle. Exercises `NtCreateThreadEx` + kernel thread notify | Thread notify + user hooks |
+
+#### Tier 3 — Memory (user-mode hooks, near-universal)
+
+Memory operations are the core primitives that security software monitors for process injection patterns (VirtualAlloc → VirtualProtect(RX) → CreateRemoteThread). These APIs are also used by JIT compilers (.NET, V8), code-generation tools, and memory-mapped databases.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| Memory alloc-protect | `mem-alloc-protect` | `VirtualAlloc(RW)` → `VirtualProtect(RX)` → `VirtualFree` loop. The RW→RX transition is a well-known sensitive pattern for security software | User hooks + ETW TI |
+| Memory map file | `mem-map-file` | `CreateFileMapping` → `MapViewOfFile` → `UnmapViewOfFile` loop. Exercises `NtMapViewOfSection` — widely monitored by security software | User hooks |
+
+#### Tier 4 — Network (WFP callout drivers)
+
+Network filtering happens in kernel mode via WFP callout drivers. User-mode Winsock calls transit the kernel where WFP callouts inspect at ALE connect/accept and stream layers. Every application that makes HTTP requests, downloads packages, or communicates over the network uses these APIs.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| TCP connect loopback | `net-connect-loopback` | TCP connect → send 1 KB → recv → close against a local echo listener. Each connection triggers WFP ALE_AUTH_CONNECT callout. Common in: git push/pull, npm install, NuGet restore, API calls | WFP callout |
+| DNS resolve | `net-dns-resolve` | `Dns.GetHostEntry` loop for non-cached hostnames. AV with DNS filtering inspects queries for C2 domain blocking. Common in: package managers, git, curl, browsers | WFP + DNS filter |
+
+#### Tier 5 — Registry (kernel CmRegisterCallbackEx)
+
+Security software registers kernel registry callbacks via `CmRegisterCallbackEx` — these fire on every registry operation. Installers, application settings, COM registration lookups, and many system tools perform heavy registry I/O.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| Registry CRUD | `registry-crud` | Create key → set 5 values (REG_SZ, REG_DWORD, REG_BINARY, REG_MULTI_SZ, REG_EXPAND_SZ) → query each → enumerate → delete. Under `HKCU\Software\AvBench\Temp` | Registry callbacks + user hooks |
+
+#### Tier 6 — IPC (minifilter for named pipes, ALPC hooks)
+
+Named pipes are a widely used IPC mechanism in Windows. ALPC (Advanced Local Procedure Call) underlies COM, RPC, and many Windows services. Applications that coordinate multiple processes (build tools, database servers, service hosts) use these heavily.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| Named pipe roundtrip | `pipe-roundtrip` | Create named pipe server → client connect → write 4 KB → read → disconnect. Exercises `NtCreateFile` (pipe) + `NtWriteFile` + `NtReadFile` through minifilter | Minifilter (named pipes) |
+
+#### Tier 7 — Security & crypto (common app usage)
+
+Token operations and cryptographic verification are exercised by every elevated application, installer, package manager (signature verification), and HTTPS connection. These are standard Win32 APIs that many applications call routinely.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| Token query | `token-query` | `OpenProcessToken` → `GetTokenInformation(TokenPrivileges)` → `CloseHandle` loop. Exercises `NtOpenProcessToken` and token query APIs monitored by security software | Object callbacks + user hooks |
+| Crypto hash+verify | `crypto-hash-verify` | SHA-256 hash a 64 KB buffer + RSA-2048 `VerifyData`. Simulates package signature verification. Not directly hooked, but AV's own signature verification shares CPU/cache | CPU-bound (contention) |
+
+#### Tier 8 — COM & WMI (common Windows infrastructure)
+
+COM activation underlies Office, shell extensions, management consoles, and many Windows applications. WMI queries are used by system monitoring, hardware inventory, and management tools.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| COM activation | `com-create-instance` | `Activator.CreateInstance(Type.GetTypeFromProgID("Scripting.FileSystemObject"))` in a loop. Exercises COM class factory + DLL loading + registry lookup | Image load notify + registry callbacks |
+| WMI query | `wmi-query` | `ManagementObjectSearcher("SELECT * FROM Win32_Process WHERE ProcessId = {pid}")` in a loop. Exercises WMI provider infrastructure + COM + named pipes (DCOM) | Multiple layers |
+
+#### Tier 9 — File system notifications
+
+File system watchers (`ReadDirectoryChangesW`) are used by IDEs, file sync tools, cloud storage clients, and build systems. AV minifilters sit in the notification path.
+
+| Bench | Scenario ID | Description | Layer |
+|---|---|---|---|
+| Directory watcher throughput | `fs-watcher` | Set up `FileSystemWatcher` on a directory, then create+modify+delete 1000 files rapidly. Measure notification delivery latency. Exercises minifilter notification path | Minifilter |
+
+#### Summary — complete bench matrix
+
+| # | Scenario ID | Category | Tier | AV layer exercised |
+|---|---|---|---|---|
+| 1 | `file-create-delete` | File I/O | 1 | Minifilter |
+| 2 | `archive-extract` | File I/O | 1 | Minifilter |
+| 3 | `ext-sensitivity-{ext}` | File I/O | 1 | Minifilter |
+| 4 | `file-write-pe` | File I/O | 1 | Minifilter + content scan |
+| 5 | `file-enum-large-dir` | File I/O | 1 | Minifilter |
+| 6 | `file-copy-large` | File I/O | 1 | Minifilter |
+| 7 | `hardlink-junction` | File I/O | 1 | Minifilter |
+| 8 | `process-create-wait` | Process | 2 | Process notify + user hooks |
+| 9 | `dll-load-unique` | DLL/Image | 2 | Image load notify + user hooks |
+| 10 | `motw-exe-no-motw` | MOTW | 2 | Process notify |
+| 11 | `motw-exe-motw-zone3` | MOTW | 2 | Process notify + SmartScreen |
+| 12 | `thread-create` | Thread | 2 | Thread notify + user hooks |
+| 13 | `mem-alloc-protect` | Memory | 3 | User hooks + ETW TI |
+| 14 | `mem-map-file` | Memory | 3 | User hooks |
+| 15 | `net-connect-loopback` | Network | 4 | WFP callout |
+| 16 | `net-dns-resolve` | Network | 4 | WFP + DNS filter |
+| 17 | `registry-crud` | Registry | 5 | Registry callbacks + user hooks |
+| 18 | `pipe-roundtrip` | IPC | 6 | Minifilter (named pipes) |
+| 19 | `token-query` | Security | 7 | Object callbacks + user hooks |
+| 20 | `crypto-hash-verify` | Crypto | 7 | CPU contention |
+| 21 | `com-create-instance` | COM | 8 | Image load + registry callbacks |
+| 22 | `wmi-query` | WMI | 8 | Multiple layers |
+| 23 | `fs-watcher` | FS notify | 9 | Minifilter |
+
+All Tier 1–6 benches are implemented in Milestone 3. Tier 7–9 are also included in M3 but may be deferred to a follow-up if implementation complexity warrants it.
 
 ## Benchmark Matrix
 
@@ -135,7 +250,7 @@ Later additions (not in v1):
 
 `avbench run` requires a `--name <label>` parameter that identifies this VM's AV configuration (e.g., `baseline-os`, `defender-default`, `eset-default`). This label is stamped into every `run.json` and used by `avbench-compare` to group results.
 
-In Milestone 4, `avbench` will auto-detect the installed AV product and version (supporting Microsoft Defender, Huorong, ESET, Bitdefender, and TrendMicro). The detected product name and version are recorded in `run.json`. Both can be manually overridden via `--av-name` and `--av-version` CLI flags for unsupported products or testing.
+In Milestone 4, `avbench` will auto-detect the installed AV product and version by querying Windows Security Center (`root\SecurityCenter2\AntiVirusProduct`). This works for any AV that registers with WSC — no hardcoded per-product logic. The product version is read from the exe's `FileVersionInfo`. Both fields can be manually overridden via `--av-product` and `--av-version` CLI flags.
 
 Suggested `--name` labels:
 
@@ -153,23 +268,32 @@ Every compile workload is measured in these phases:
 
 - `prepare` — untimed, dependency hydration (NuGet restore, cargo fetch, etc.)
 - `clean-build` — first timed phase
-- `incremental-build`
-- `noop-build`
+- `incremental-build` — touch a core source file, cascade rebuild
 
-### Execution block structure
+### Execution model — one session, one rep
 
-For each scenario + configuration combination:
+`avbench run` executes each scenario **exactly once** per invocation. Repetition is achieved by restoring the VM snapshot and re-running `avbench run` in a fresh session. This guarantees every rep starts from identical OS/AV state — no cached trust decisions, filesystem cache, or Prefetch data from prior runs.
+
+External orchestration (host-side script) handles the snapshot-restore loop:
+
+```
+for rep in 1..N:
+    restore VM snapshot
+    avbench run --name defender-default
+    copy results/ to shared/<av-name>/session-<rep>/
+```
+
+Per invocation:
 
 1. Idle check (refuse to start if CPU > threshold)
-2. N timed repetitions (default N=5)
+2. Run each scenario once
 3. Quick validation (check exit code and expected output artifacts)
 
-Within one repetition for compile workloads:
+Within one session for compile workloads:
 
 1. Clean (delete build artifacts)
 2. Build
-3. Touch one file, rebuild (incremental)
-4. Rebuild again (no-op)
+3. Touch one core source file, rebuild (incremental)
 
 ## What To Measure
 
@@ -207,13 +331,18 @@ Also collected per run:
 - For single-op latency (<1ms), Job object CPU accounting is useless — only `Stopwatch` should be used.
 - The kernel/user CPU ratio is statistically reliable for multi-second workloads because charging converges to the true distribution over thousands of scheduler ticks.
 
-### Opt-in metrics
+### System counters (always-on)
 
-These are not collected by default. Enable via CLI flags:
+`typeperf` samples 6 performance counters at 1-second intervals for every scenario run. Overhead is negligible (~0.01% CPU). The resulting `counters.csv` is the primary diagnostic tool for explaining noisy runs — a CPU or disk spike at a specific timestamp pinpoints exactly when background activity interfered.
 
-| Opt-in metric | Flag | Notes |
-|---|---|---|
-| PerfMon counters CSV | `--counters` | Sampled system counters via `typeperf`: CPU%, disk bytes/sec, available memory. |
+| Counter | Purpose |
+|---|---|
+| `\Processor(_Total)\% Processor Time` | Total CPU utilization |
+| `\PhysicalDisk(_Total)\Disk Bytes/sec` | Total disk throughput |
+| `\PhysicalDisk(_Total)\Disk Read Bytes/sec` | Disk read throughput |
+| `\PhysicalDisk(_Total)\Disk Write Bytes/sec` | Disk write throughput |
+| `\Memory\Available MBytes` | Free physical memory |
+| `\Memory\Pages/sec` | Page faults (memory pressure indicator) |
 
 ### API microbench metrics
 
@@ -239,11 +368,10 @@ Each VM produces a results directory that can be copied to shared storage.
 results/
   suite-manifest.json
   <scenario>/
-    rep-01/
-      run.json
-      stdout.log
-      stderr.log
-      counters.csv       (opt-in)
+    run.json
+    stdout.log
+    stderr.log
+    counters.csv
 ```
 
 The AV configuration name is recorded inside each `run.json`, not as a directory level, since each VM runs only one configuration.
@@ -260,7 +388,6 @@ Also produces:
   "av_name": "defender-default",
   "av_product": "Microsoft Defender Antivirus",
   "av_version": "4.18.24090.11",
-  "repetition": 1,
   "timestamp_utc": "2026-04-13T15:30:00Z",
   "command": "cargo build --release",
   "working_dir": "C:\\bench\\ripgrep",
@@ -291,7 +418,7 @@ Also produces:
 
 ### `avbench-compare` output (cross-VM)
 
-`avbench-compare` reads result directories from multiple VMs (copied to shared storage or a local folder) and produces:
+`avbench-compare` reads result directories from multiple VM sessions (copied to shared storage or a local folder) and produces:
 
 - `compare.csv` — aggregated comparison across profiles
 - `summary.md` — human-readable report
@@ -315,14 +442,14 @@ avbench-compare ^
 | `av_product` | e.g., `Microsoft Defender Antivirus` (auto-detected or overridden, M4) |
 | `av_version` | e.g., `4.18.24090.11` (auto-detected or overridden, M4) |
 | `baseline_name` | e.g., `baseline-os` |
-| `repetitions` | Number of measured runs |
+| `sessions` | Number of VM sessions (snapshot-restored runs) collected for this scenario+config |
 | `mean_wall_ms` | Mean wall-clock time |
 | `median_wall_ms` | Median wall-clock time |
 | `mean_cpu_ms` | Mean total CPU time (user + kernel) |
 | `kernel_cpu_pct` | Mean kernel CPU as percentage of total CPU. AV minifilter overhead lands in kernel mode, so this ratio shifting upward vs. baseline is the most direct signal of AV scanning impact. |
 | `baseline_kernel_cpu_pct` | Baseline's kernel CPU percentage for the same scenario. Shown side-by-side for easy comparison. |
 | `kernel_cpu_slowdown_pct` | `(kernel_cpu_pct - baseline_kernel_cpu_pct)` in percentage points. Positive = AV added kernel-mode overhead. |
-| `peak_memory_mb` | Max peak job memory across reps |
+| `peak_memory_mb` | Max peak job memory across sessions |
 | `slowdown_pct` | `(mean_wall - baseline_mean_wall) / baseline_mean_wall * 100` |
 | `cv_pct` | Coefficient of variation for wall time |
 | `status` | `ok`, `noisy`, or `failed` |
@@ -406,14 +533,15 @@ Responsibilities:
 1. Load suite manifest.
 2. Validate setup is complete (tools present, source trees fetched, deps hydrated).
 3. Idle check: refuse if system CPU > threshold.
-4. For each scenario block:
-   a. For each repetition:
+4. For each scenario:
+      - Start `typeperf` counter sampling.
       - Create Windows Job object (`CreateJobObject`).
       - Launch workload process, assign to Job (`AssignProcessToJobObject`).
       - Stream stdout/stderr to log files.
       - On completion, query `JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION` and `JOBOBJECT_EXTENDED_LIMIT_INFORMATION` for metrics.
+      - Stop `typeperf`.
       - Validate exit code and expected artifacts.
-      - Write `run.json`.
+      - Write `run.json` and `counters.csv`.
 5. Flatten all `run.json` files into `runs.csv`.
 
 ### `compare` (in `avbench-compare`, the host program)
@@ -461,9 +589,9 @@ Default:
 
 - **`JobAccountingCollector`** — queries Job object accounting on process exit.
 
-Opt-in:
+Always-on:
 
-- **`PerfCounterCollector`** — starts/stops `typeperf.exe` for sampled system counters.
+- **`TypeperfCollector`** — starts/stops `typeperf.exe` for sampled system counters. Runs unconditionally for every scenario.
 
 ## VM Image Preparation
 
@@ -486,11 +614,12 @@ Create separate snapshots for:
 
 Simple, defensible rules for v1:
 
-- No warmup runs — every repetition is measured. AV cache priming from a discarded warmup would hide the real cold-path overhead that developers experience on first build, package restore, or branch switch.
-- At least 5 measured repetitions per scenario.
-- Report mean, median, stdev, and coefficient of variation (CV).
+- No warmup runs — every run is a cold start from a freshly restored VM snapshot.
+- One run per VM session. Repetitions are achieved by restoring the snapshot and re-running. This eliminates OS/AV cache contamination between reps.
+- At least 5 sessions (reps) per AV configuration.
+- Report mean, median, stdev, and coefficient of variation (CV) across sessions.
 - Mark a scenario as `noisy` if CV > 10%.
-- Randomize scenario order within a run when possible.
+- Randomize scenario order within a session when possible.
 - Never compare a single best run against another single best run.
 
 ## Workload-Specific Notes
@@ -524,7 +653,7 @@ Deliverables:
 
 Target workloads:
 
-- ripgrep clean/incremental/noop build
+- ripgrep clean/incremental build
 - `file-create-delete` API microbench
 
 Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API microbench gives immediate AV overhead signal.
@@ -537,14 +666,15 @@ Why: ripgrep needs only Git + Rust, so setup automation is minimal. One API micr
 
 ### Milestone 3
 
-- Add remaining API microbench families
-- Add `--counters` (typeperf) opt-in collector
+- Add all API microbench families (23 benches across 9 tiers / 11 categories)
+- Integrate `TypeperfCollector` (always-on system counter sampling)
+- Categories: File I/O (7), Process/Thread/DLL (5), Memory (2), Network (2), Registry (1), IPC (1), Security/Crypto (2), COM/WMI (2), FS Notifications (1)
 
 ### Milestone 4
 
-- Auto-detect installed AV product and version (Microsoft Defender, Huorong, ESET, Bitdefender, TrendMicro)
+- Auto-detect installed AV product and version via Windows Security Center (`root\SecurityCenter2`)
 - Record detected `av_product` and `av_version` in `run.json`
-- `--av-name` and `--av-version` CLI overrides for unsupported products or manual testing
+- `--av-product` and `--av-version` CLI overrides
 
 ## References
 
