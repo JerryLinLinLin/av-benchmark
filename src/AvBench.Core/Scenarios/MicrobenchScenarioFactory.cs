@@ -50,7 +50,7 @@ public static class MicrobenchScenarioFactory
     private const int ExtensionSensitivityOperations = 10_000;
     private const int DllLoadOperations = 2_000;
     private const int FileWriteContentOperations = 10_000;
-    private const int MotwOperations = 500;
+    private const int MotwOperations = 50;
     private const int ThreadCreateOperations = 5_000;
     private const int MemAllocProtectOperations = 50_000;
     private const int MemMapFileOperations = 10_000;
