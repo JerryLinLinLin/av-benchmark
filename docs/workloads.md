@@ -170,8 +170,8 @@ These scenarios focus on API paths around process creation, image loading, execu
 |---|---|---|
 | `process-create-wait` | Launches the local unsigned `noop.exe` 500 times and waits for exit | Measures the small-process-launch path directly |
 | `dll-load-unique` | Copies a system DLL to a unique path, loads it, unloads it, and deletes it 2,000 times | Measures repeated load-from-new-path behavior on the image-load path |
-| `new-exe-run` | Copies the unsigned `noop.exe` to a temp directory, patches 4 bytes to produce a unique hash, runs it, and deletes the directory, 500 times | Baseline for executing a never-before-seen binary without internet-origin marking |
-| `new-exe-run-motw` | Same as above, but also adds a `Zone.Identifier` alternate data stream with `ZoneId=3` before execution, 500 times | Measures whether internet-origin marking changes the cost of executing a never-before-seen binary |
+| `new-exe-run` | Copies the unsigned `noop.exe` to a temp directory, patches 4 bytes to produce a unique hash, runs it, and deletes the directory, 50 times | Baseline for executing a never-before-seen binary without internet-origin marking |
+| `new-exe-run-motw` | Same as above, but also adds a `Zone.Identifier` alternate data stream with `ZoneId=3` before execution, 50 times | Measures whether internet-origin marking changes the cost of executing a never-before-seen binary |
 | `thread-create` | Creates, starts, and joins 5,000 managed threads | Measures a simple thread-creation path that some products also watch closely |
 
 The `new-exe-run` / `new-exe-run-motw` pair is especially useful because it creates a controlled A/B comparison on the same execution path. Each iteration patches 4 bytes of the PE header (the same DOS stub padding region that `file-write-content` uses) so every copy has a unique file hash, defeating AV scan-result caching. The executable payload is functionally the same; the only differences are the hash and the presence of the `Zone.Identifier` stream. Any delta can reflect Windows security features, reputation checks, product policy, or other handling tied to internet-origin metadata.[1]
@@ -222,7 +222,7 @@ Operation counts are tuned by scenario type rather than by one fixed rule:
 - 5,000 to 10,000 for ordinary short operations
 - 2,000 for moderately heavier paths
 - 500 for obviously slower operations such as process launch or WMI query
-- 10 to 50 iterations for multi-file or large-transfer scenarios
+- 10 to 50 iterations for multi-file or large-transfer scenarios, and for per-operation-heavy paths such as `new-exe-run` / `new-exe-run-motw` where each iteration triggers a full AV scan of a unique binary
 
 That keeps the suite long enough to produce meaningful percentile data, but short enough to run repeatedly as part of a multi-session comparison workflow.
 

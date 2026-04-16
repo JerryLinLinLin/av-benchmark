@@ -140,7 +140,7 @@ Before running any scenarios, `IdleChecker.VerifyAsync()` samples CPU via `Perfo
 
 ### Scenario ordering and cooldowns
 
-`RunCommand` runs all **microbench scenarios first**, then **compilation scenarios last**. Within each phase, family groups are shuffled using a Fisher-Yates shuffle. This ensures latency-sensitive microbenchmarks run on a settled system, before heavy multi-minute builds leave the system hot (warm disk cache, populated AV caches, thermal state changes).
+`RunCommand` runs all **microbench scenarios first**, then **compilation scenarios last**, in a **fixed deterministic order**. Microbench scenarios run in the order defined by `AllScenarioIds` in `MicrobenchScenarioFactory`. Compilation scenarios follow in factory order (ripgrep then roslyn). This ensures latency-sensitive microbenchmarks run on a settled system, and makes ordering effects consistent across sessions so they cancel out in baseline-vs-AV comparisons.
 
 Between scenarios, `ScenarioRunner` inserts a cooldown pause to let AV background activity (scan cache writes, cloud verdict callbacks) settle before the next measurement begins:
 
