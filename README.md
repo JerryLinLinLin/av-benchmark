@@ -29,13 +29,12 @@ This produces `C:\tools\avbench\avbench.exe` and `C:\tools\avbench\avbench-compa
 
 ## VM workflow (one-liners)
 
-> **Assumption:** `avbench.exe` and `avbench-compare.exe` are on PATH or in `C:\tools\avbench\`.
 > All commands run in an **elevated PowerShell** terminal.
 
 ### 1. Setup (run once per VM image, before snapshotting)
 
 ```powershell
-avbench setup --bench-dir C:\bench
+C:\tools\avbench\avbench.exe setup --bench-dir C:\bench
 ```
 
 This installs Git, Rust 1.85.0, .NET SDK, VS Build Tools, clones repos (ripgrep + Roslyn), hydrates dependencies, builds the unsigned noop.exe, creates the archive zip, and writes `C:\bench\suite-manifest.json`.
@@ -43,8 +42,8 @@ This installs Git, Rust 1.85.0, .NET SDK, VS Build Tools, clones repos (ripgrep 
 To set up only specific workloads:
 
 ```powershell
-avbench setup --bench-dir C:\bench -w microbench
-avbench setup --bench-dir C:\bench -w ripgrep,roslyn
+C:\tools\avbench\avbench.exe setup --bench-dir C:\bench -w microbench
+C:\tools\avbench\avbench.exe setup --bench-dir C:\bench -w ripgrep,roslyn
 ```
 
 **After setup completes, take a VM snapshot.** Restore to this snapshot before each run.
@@ -52,27 +51,27 @@ avbench setup --bench-dir C:\bench -w ripgrep,roslyn
 ### 2. Run — baseline VM (no AV installed)
 
 ```powershell
-avbench run --name baseline-os --bench-dir C:\bench --output C:\results
+C:\tools\avbench\avbench.exe run --name baseline-os --bench-dir C:\bench --output C:\results
 ```
 
 ### 3. Run — AV VM (e.g., Defender with default settings)
 
 ```powershell
-avbench run --name defender-default --bench-dir C:\bench --output C:\results
+C:\tools\avbench\avbench.exe run --name defender-default --bench-dir C:\bench --output C:\results
 ```
 
 AV product and version are auto-detected from Windows Security Center. To override:
 
 ```powershell
-avbench run --name eset-default --bench-dir C:\bench --output C:\results --av-product "ESET Security" --av-version "19.1.12.0"
+C:\tools\avbench\avbench.exe run --name eset-default --bench-dir C:\bench --output C:\results --av-product "ESET Security" --av-version "19.1.12.0"
 ```
 
 ### 4. Run only specific workloads or scenarios
 
 ```powershell
-avbench run --name defender-default --bench-dir C:\bench --output C:\results -w microbench
-avbench run --name defender-default --bench-dir C:\bench --output C:\results -w ripgrep,roslyn
-avbench run --name defender-default --bench-dir C:\bench --output C:\results -w file-create-delete
+C:\tools\avbench\avbench.exe run --name defender-default --bench-dir C:\bench --output C:\results -w microbench
+C:\tools\avbench\avbench.exe run --name defender-default --bench-dir C:\bench --output C:\results -w ripgrep,roslyn
+C:\tools\avbench\avbench.exe run --name defender-default --bench-dir C:\bench --output C:\results -w file-create-delete
 ```
 
 `avbench setup` accepts workload families only: `ripgrep`, `roslyn`, `microbench`, or `all`.
@@ -83,13 +82,13 @@ avbench run --name defender-default --bench-dir C:\bench --output C:\results -w 
 Copy `C:\results` from each VM to the host, then:
 
 ```powershell
-avbench-compare --baseline C:\compare\baseline-os --input C:\compare\defender-default --output C:\compare\report
+C:\tools\avbench\avbench-compare.exe --baseline C:\compare\baseline-os --input C:\compare\defender-default --output C:\compare\report
 ```
 
 Compare multiple AV configs at once:
 
 ```powershell
-avbench-compare --baseline C:\compare\baseline-os --input C:\compare\defender-default C:\compare\eset-default --output C:\compare\report
+C:\tools\avbench\avbench-compare.exe --baseline C:\compare\baseline-os --input C:\compare\defender-default C:\compare\eset-default --output C:\compare\report
 ```
 
 **Outputs:**
