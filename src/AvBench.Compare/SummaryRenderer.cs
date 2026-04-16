@@ -7,6 +7,8 @@ public static class SummaryRenderer
 {
     private const double SignificantDiskDeltaMb = 100.0;
     private const double SignificantKernelShiftPp = 1.0;
+    private const string OutlierMarker = "\u2020";
+    private const string ExcludedOutlierFootnote = "\u2020 1 outlier run excluded to reduce CV";
 
     public static async Task WriteAsync(IReadOnlyList<ComparisonRow> rows, string path, CancellationToken cancellationToken)
     {
@@ -21,18 +23,23 @@ public static class SummaryRenderer
             var first = group.First();
             builder.AppendLine($"## {group.Key} ({first.AvProduct} v{first.AvVersion}) vs {first.BaselineName}");
             builder.AppendLine();
-            builder.AppendLine("| Scenario | Median Wall (ms) | Slowdown | p95 Slowdown | Disk Read Δ (MB) | Disk Write Δ (MB) | CV % | Baseline CV % | Status |");
+            builder.AppendLine("| Scenario | Median Wall (ms) | Slowdown | p95 Slowdown | Disk Read Delta (MB) | Disk Write Delta (MB) | CV % | Baseline CV % | Status |");
             builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---|");
+
+            var hasExcludedOutliers = false;
 
             foreach (var row in group.OrderByDescending(static item => item.SlowdownPct).ThenBy(static item => item.ScenarioId, StringComparer.OrdinalIgnoreCase))
             {
                 var diskReadDeltaMb = BytesToMb(row.SystemDiskReadBytes - row.BaselineSystemDiskReadBytes);
                 var diskWriteDeltaMb = BytesToMb(row.SystemDiskWriteBytes - row.BaselineSystemDiskWriteBytes);
+                var hasExcludedOutlier = row.ExcludedRuns > 0;
+                hasExcludedOutliers |= hasExcludedOutlier;
+                var scenarioLabel = hasExcludedOutlier ? $"{row.ScenarioId}{OutlierMarker}" : row.ScenarioId;
 
                 builder.AppendLine(string.Format(
                     CultureInfo.InvariantCulture,
                     "| {0} | {1:F1} | {2} | {3} | {4} | {5} | {6:F1}% | {7:F1}% | {8} |",
-                    row.ScenarioId,
+                    scenarioLabel,
                     row.MedianWallMs,
                     FormatPercent(row.SlowdownPct),
                     FormatNullablePercent(row.P95SlowdownPct),
@@ -41,6 +48,12 @@ public static class SummaryRenderer
                     row.CvPct,
                     row.BaselineCvPct,
                     row.Status));
+            }
+
+            if (hasExcludedOutliers)
+            {
+                builder.AppendLine();
+                builder.AppendLine(ExcludedOutlierFootnote);
             }
 
             var worstSlowdown = group
@@ -186,7 +199,7 @@ public static class SummaryRenderer
     private static string FormatNullablePercent(double? value)
         => value.HasValue
             ? FormatPercent(value.Value)
-            : "—";
+            : "-";
 
     private static string FormatDeltaMb(double value)
         => value >= 0
@@ -196,13 +209,13 @@ public static class SummaryRenderer
     private static string FormatBaselineWall(double? value)
         => value.HasValue && value.Value > 0
             ? value.Value.ToString("F1", CultureInfo.InvariantCulture)
-            : "—";
+            : "-";
 
     private static string FormatCrossAvCell(ComparisonRow? row)
     {
         if (row is null)
         {
-            return "—";
+            return "-";
         }
 
         if (string.Equals(row.Status, "failed", StringComparison.OrdinalIgnoreCase) && row.MedianWallMs <= 0)

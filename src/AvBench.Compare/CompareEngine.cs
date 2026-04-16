@@ -51,6 +51,25 @@ public static class CompareEngine
                     continue;
                 }
 
+                successfulRuns = TryExcludeOutlier(
+                    successfulRuns,
+                    static run => run.WallMs,
+                    NoisyThresholdPct,
+                    out var excludedRuns);
+
+                allBaselineByScenario.TryGetValue(group.Key, out var allBaselineScenarioRuns);
+                baselineByScenario.TryGetValue(group.Key, out var baselineScenarioRuns);
+                var baselineHasFailures = allBaselineScenarioRuns is null
+                    || baselineScenarioRuns is null
+                    || baselineScenarioRuns.Count != allBaselineScenarioRuns.Count;
+
+                var filteredBaselineRuns = baselineScenarioRuns ?? [];
+                filteredBaselineRuns = TryExcludeOutlier(
+                    filteredBaselineRuns,
+                    static run => run.WallMs,
+                    NoisyThresholdPct,
+                    out var baselineExcludedRuns);
+
                 var wallSamples = successfulRuns.Select(static run => (double)run.WallMs).ToArray();
                 var cpuSamples = successfulRuns.Select(static run => (double)(run.UserCpuMs + run.KernelCpuMs)).ToArray();
                 var kernelCpuSamples = successfulRuns.Select(static run => (double)run.KernelCpuMs).ToArray();
@@ -74,28 +93,33 @@ public static class CompareEngine
                 var medianP95Us = TryMedian(p95Samples);
                 var medianP99Us = TryMedian(p99Samples);
 
-                allBaselineByScenario.TryGetValue(group.Key, out var allBaselineScenarioRuns);
-                baselineByScenario.TryGetValue(group.Key, out var baselineScenarioRuns);
-                var baselineHasFailures = allBaselineScenarioRuns is null
-                    || baselineScenarioRuns is null
-                    || baselineScenarioRuns.Count != allBaselineScenarioRuns.Count;
-                var baselineMeanWall = baselineScenarioRuns?.Average(static run => (double)run.WallMs) ?? 0.0;
-                var baselineMedianWall = baselineScenarioRuns is not null && baselineScenarioRuns.Count > 0
-                    ? Median(baselineScenarioRuns.Select(static run => (double)run.WallMs).ToArray())
+                var baselineMeanWall = filteredBaselineRuns.Count > 0
+                    ? filteredBaselineRuns.Average(static run => (double)run.WallMs)
                     : 0.0;
-                var baselineMeanCpu = baselineScenarioRuns?.Average(static run => (double)(run.UserCpuMs + run.KernelCpuMs)) ?? 0.0;
-                var baselineMeanKernelCpu = baselineScenarioRuns?.Average(static run => (double)run.KernelCpuMs) ?? 0.0;
-                var baselineMeanSystemDiskReadBytes = baselineScenarioRuns?.Average(static run => (double)run.SystemDiskReadBytes) ?? 0.0;
-                var baselineMeanSystemDiskWriteBytes = baselineScenarioRuns?.Average(static run => (double)run.SystemDiskWriteBytes) ?? 0.0;
-                var baselineWallSamples = baselineScenarioRuns?.Select(static run => (double)run.WallMs).ToArray() ?? [];
+                var baselineMedianWall = filteredBaselineRuns.Count > 0
+                    ? Median(filteredBaselineRuns.Select(static run => (double)run.WallMs).ToArray())
+                    : 0.0;
+                var baselineMeanCpu = filteredBaselineRuns.Count > 0
+                    ? filteredBaselineRuns.Average(static run => (double)(run.UserCpuMs + run.KernelCpuMs))
+                    : 0.0;
+                var baselineMeanKernelCpu = filteredBaselineRuns.Count > 0
+                    ? filteredBaselineRuns.Average(static run => (double)run.KernelCpuMs)
+                    : 0.0;
+                var baselineMeanSystemDiskReadBytes = filteredBaselineRuns.Count > 0
+                    ? filteredBaselineRuns.Average(static run => (double)run.SystemDiskReadBytes)
+                    : 0.0;
+                var baselineMeanSystemDiskWriteBytes = filteredBaselineRuns.Count > 0
+                    ? filteredBaselineRuns.Average(static run => (double)run.SystemDiskWriteBytes)
+                    : 0.0;
+                var baselineWallSamples = filteredBaselineRuns.Select(static run => (double)run.WallMs).ToArray();
                 var baselineCvPct = baselineWallSamples.Length > 1
                     ? StandardDeviation(baselineWallSamples) / baselineWallSamples.Average() * 100.0
                     : 0.0;
                 var baselineKernelCpuPct = CalculatePercent(baselineMeanKernelCpu, baselineMeanCpu);
-                var baselineP95Samples = baselineScenarioRuns?
+                var baselineP95Samples = filteredBaselineRuns
                     .Where(static run => run.P95Us.HasValue)
                     .Select(static run => run.P95Us!.Value)
-                    .ToArray() ?? [];
+                    .ToArray();
                 var baselineMedianP95Us = TryMedian(baselineP95Samples);
                 var slowdownPct = baselineMedianWall > 0
                     ? Math.Round((medianWall - baselineMedianWall) / baselineMedianWall * 100.0, 1)
@@ -120,6 +144,8 @@ public static class CompareEngine
                     BaselineName = baselineName,
                     Sessions = scenarioRuns.Count,
                     BaselineSessions = allBaselineScenarioRuns?.Count ?? 0,
+                    ExcludedRuns = excludedRuns,
+                    BaselineExcludedRuns = baselineExcludedRuns,
                     MeanWallMs = Math.Round(meanWall, 1),
                     MedianWallMs = Math.Round(medianWall, 1),
                     BaselineMedianWallMs = Math.Round(baselineMedianWall, 1),
@@ -150,6 +176,64 @@ public static class CompareEngine
 
     private static double CalculatePercent(double numerator, double denominator)
         => denominator > 0 ? numerator / denominator * 100.0 : 0.0;
+
+    private static List<T> TryExcludeOutlier<T>(
+        List<T> runs,
+        Func<T, long> wallSelector,
+        double noisyThreshold,
+        out int excluded)
+    {
+        excluded = 0;
+
+        if (runs.Count < 4)
+        {
+            return runs;
+        }
+
+        var samples = runs.Select(run => (double)wallSelector(run)).ToArray();
+        var mean = samples.Average();
+        var cv = mean > 0
+            ? StandardDeviation(samples) / mean * 100.0
+            : 0.0;
+
+        if (cv <= noisyThreshold)
+        {
+            return runs;
+        }
+
+        var median = Median(samples);
+        var worstIndex = 0;
+        var worstDistance = double.MinValue;
+        for (var index = 0; index < samples.Length; index++)
+        {
+            var distance = Math.Abs(samples[index] - median);
+            if (distance > worstDistance)
+            {
+                worstDistance = distance;
+                worstIndex = index;
+            }
+        }
+
+        var remaining = runs.Where((_, index) => index != worstIndex).ToList();
+        if (remaining.Count < 4)
+        {
+            return runs;
+        }
+
+        var remainingSamples = remaining.Select(run => (double)wallSelector(run)).ToArray();
+        var remainingMean = remainingSamples.Average();
+        var remainingCv = remainingMean > 0
+            ? StandardDeviation(remainingSamples) / remainingMean * 100.0
+            : 0.0;
+
+        if (remainingCv <= noisyThreshold)
+        {
+            excluded = 1;
+            return remaining;
+        }
+
+        return runs;
+    }
 
     private static string BuildStatus(
         bool hasFailures,
@@ -222,6 +306,10 @@ public sealed class ComparisonRow
     public int Sessions { get; init; }
 
     public int BaselineSessions { get; init; }
+
+    public int ExcludedRuns { get; init; }
+
+    public int BaselineExcludedRuns { get; init; }
 
     public double MeanWallMs { get; init; }
 
