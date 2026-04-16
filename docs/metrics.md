@@ -179,6 +179,8 @@ The main derived columns in `compare.csv` are:
 | `slowdown_pct` | Wall-time slowdown versus baseline, computed from median values |
 | `cv_pct` | Coefficient of variation of AV wall time |
 | `baseline_cv_pct` | Coefficient of variation of baseline wall time |
+| `excluded_runs` | Number of outlier runs excluded on the AV side (0 or 1) |
+| `baseline_excluded_runs` | Number of outlier runs excluded on the baseline side (0 or 1) |
 | `status` | `ok`, `noisy`, or `failed` |
 
 `summary.md` shows a narrower table focused on the columns that are meaningful for every scenario:
@@ -192,10 +194,18 @@ Kernel CPU shift and peak memory are omitted from the summary table because they
 Status is assigned like this:
 
 - `failed`: at least one run in the group failed, or no successful runs exist
-- `noisy`: all runs succeeded, but `cv_pct > 10` or `baseline_cv_pct > 10`
-- `ok`: all runs succeeded and both `cv_pct` and `baseline_cv_pct` are ≤ 10
+- `noisy`: all runs succeeded, but `cv_pct > 10` or `baseline_cv_pct > 10` even after attempting outlier exclusion (see below)
+- `ok`: all runs succeeded and both `cv_pct` and `baseline_cv_pct` are ≤ 10 (possibly after outlier exclusion)
 
 That makes `status` intentionally conservative. If even one run failed, the row is marked `failed` even when some successful samples were available.
+
+### Automatic outlier exclusion
+
+When a scenario's CV exceeds 10% and at least 4 successful runs exist, the engine attempts to rescue the data by excluding the single run whose wall time is furthest from the median. If the remaining N−1 runs have CV ≤ 10%, they are used for all aggregation (wall, CPU, kernel, disk, latency percentiles) and `excluded_runs` (or `baseline_excluded_runs`) is set to 1. If dropping that one run is not enough to bring CV under the threshold, all runs are kept and the scenario is marked `noisy` as before.
+
+This is applied independently to the AV side and the baseline side. At most one run is excluded per side per scenario. The exclusion only affects the comparison aggregation layer — raw `run.json` and `runs.csv` files are never modified. `sessions` / `baseline_sessions` still report the total number of runs discovered, so the reader always knows how many were attempted.
+
+In `summary.md`, scenarios with excluded outliers are marked with a † footnote.
 
 For microbench scenarios, the comparison columns derived from `user_cpu_ms`, `kernel_cpu_ms`, and `peak_job_memory_mb` stay at `0` because those source fields are not populated by the in-process execution path.
 
@@ -210,6 +220,8 @@ For microbench scenarios, the comparison columns derived from `user_cpu_ms`, `ke
 `baseline_cv_pct` is the same metric for the baseline side.
 
 Both are needed because noisy results on either side make the `slowdown_pct` unreliable. A 2% slowdown in a scenario with a 9% AV CV but a 15% baseline CV is weak evidence — the baseline instability alone could explain the difference.
+
+Note: the CV values reported in `compare.csv` and `summary.md` reflect the **post-exclusion** sample set when an outlier was removed. Check `excluded_runs` / `baseline_excluded_runs` to tell whether the reported CV used all runs or N−1.
 
 ### `status`
 

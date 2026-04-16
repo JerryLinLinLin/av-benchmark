@@ -104,8 +104,8 @@ src/
 └── AvBench.Compare/                   # Comparison tool (avbench-compare.exe)
     ├── Program.cs
     ├── CompareCommand.cs              # CLI: --baseline, --input, --output
-    ├── CompareEngine.cs               # Stat computation + slowdown %
-    ├── CompareCsvWriter.cs            # compare.csv (21 columns)
+    ├── CompareEngine.cs               # Stat computation, outlier exclusion + slowdown %
+    ├── CompareCsvWriter.cs            # compare.csv (23 columns)
     └── SummaryRenderer.cs             # summary.md (Markdown tables)
 ```
 
