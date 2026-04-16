@@ -1,0 +1,38 @@
+{
+  "scenario_id": "ext-sensitivity-dll",
+  "av_name": "huorong",
+  "av_product": "Huorong Internet Security",
+  "av_version": "5.0.0.0",
+  "timestamp_utc": "2026-04-16T16:36:46.3696939Z",
+  "command": "ext-sensitivity-dll",
+  "working_dir": "C:\\bench\\microbench\\ext-sensitivity-dll",
+  "exit_code": 0,
+  "wall_ms": 10973,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 81920,
+  "system_disk_write_bytes": 73699328,
+  "p50_us": 1057,
+  "p95_us": 1263.6,
+  "p99_us": 1597.3,
+  "max_us": 19601.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 911.3652209999144,
+    "mean_latency_us": 1095.83341,
+    "p50_us": 1057,
+    "p95_us": 1263.6,
+    "p99_us": 1597.3,
+    "max_us": 19601.4
+  }
+}

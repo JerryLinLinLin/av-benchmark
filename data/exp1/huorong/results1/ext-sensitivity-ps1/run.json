@@ -1,0 +1,38 @@
+{
+  "scenario_id": "ext-sensitivity-ps1",
+  "av_name": "huorong",
+  "av_product": "Huorong Internet Security",
+  "av_version": "5.0.0.0",
+  "timestamp_utc": "2026-04-16T16:37:16.0059768Z",
+  "command": "ext-sensitivity-ps1",
+  "working_dir": "C:\\bench\\microbench\\ext-sensitivity-ps1",
+  "exit_code": 0,
+  "wall_ms": 4827,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 876544,
+  "system_disk_write_bytes": 66801664,
+  "p50_us": 473.8,
+  "p95_us": 523.5,
+  "p99_us": 658.2,
+  "max_us": 25206.7,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 2071.5122486862056,
+    "mean_latency_us": 481.44518,
+    "p50_us": 473.8,
+    "p95_us": 523.5,
+    "p99_us": 658.2,
+    "max_us": 25206.7
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "scenario_id": "wmi-query",
+  "av_name": "huorong",
+  "av_product": "Huorong Internet Security",
+  "av_version": "5.0.0.0",
+  "timestamp_utc": "2026-04-16T17:30:04.6773979Z",
+  "command": "wmi-query",
+  "working_dir": "C:\\bench\\microbench\\wmi-query",
+  "exit_code": 0,
+  "wall_ms": 21657,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 282624,
+  "system_disk_write_bytes": 598016,
+  "p50_us": 43048.5,
+  "p95_us": 45636.1,
+  "p99_us": 46778.9,
+  "max_us": 110040,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 500,
+    "ops_per_sec": 23.087313291396736,
+    "mean_latency_us": 43130.1916,
+    "p50_us": 43048.5,
+    "p95_us": 45636.1,
+    "p99_us": 46778.9,
+    "max_us": 110040
+  }
+}
