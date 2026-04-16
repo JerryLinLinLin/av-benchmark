@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Text.Json;
 using AvBench.Core.Models;
+using AvBench.Core.Output;
 using AvBench.Core.Serialization;
 
 namespace AvBench.Compare;
@@ -28,16 +29,32 @@ public static class CompareCommand
         };
         outputOption.Required = true;
 
+        var rebuildOption = new Option<bool>("--rebuild")
+        {
+            Description = "Regenerate runs.csv in each results directory from run.json files before comparing."
+        };
+
         var command = new RootCommand("Load run.json files and compute cross-configuration summaries.");
         command.Options.Add(baselineOption);
         command.Options.Add(inputOption);
         command.Options.Add(outputOption);
+        command.Options.Add(rebuildOption);
 
         command.SetAction(async parseResult =>
         {
             var baselineDirectory = parseResult.GetValue(baselineOption)!;
             var inputDirectories = parseResult.GetValue(inputOption)!;
             var outputDirectory = parseResult.GetValue(outputOption)!;
+            var rebuild = parseResult.GetValue(rebuildOption);
+
+            if (rebuild)
+            {
+                RebuildRunsCsv(baselineDirectory.FullName);
+                foreach (var inputDirectory in inputDirectories)
+                {
+                    RebuildRunsCsv(inputDirectory.FullName);
+                }
+            }
 
             var baselineRuns = LoadRuns(baselineDirectory.FullName);
             if (baselineRuns.Count == 0)
@@ -102,5 +119,48 @@ public static class CompareCommand
         }
 
         return results;
+    }
+
+    private static void RebuildRunsCsv(string rootDirectory)
+    {
+        var bySession = new Dictionary<string, List<RunResult>>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var path in Directory.EnumerateFiles(rootDirectory, "run.json", SearchOption.AllDirectories))
+        {
+            var scenarioDirectory = Path.GetDirectoryName(path);
+            var sessionDirectory = scenarioDirectory is not null
+                ? Path.GetDirectoryName(scenarioDirectory)
+                : null;
+            if (sessionDirectory is null)
+            {
+                continue;
+            }
+
+            var json = File.ReadAllText(path);
+            var run = JsonSerializer.Deserialize(json, AvBenchJsonContext.Default.RunResult);
+            if (run is null)
+            {
+                continue;
+            }
+
+            if (!bySession.TryGetValue(sessionDirectory, out var sessionRuns))
+            {
+                sessionRuns = [];
+                bySession[sessionDirectory] = sessionRuns;
+            }
+
+            sessionRuns.Add(run);
+        }
+
+        foreach (var (sessionDirectory, runs) in bySession.OrderBy(static pair => pair.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            var orderedRuns = runs
+                .OrderBy(static run => run.ScenarioId, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(static run => run.TimestampUtc)
+                .ToArray();
+            var csvPath = Path.Combine(sessionDirectory, "runs.csv");
+            CsvResultWriter.WriteAsync(orderedRuns, csvPath, CancellationToken.None).GetAwaiter().GetResult();
+            Console.WriteLine($"[rebuild] Wrote {orderedRuns.Length} rows to {csvPath}");
+        }
     }
 }

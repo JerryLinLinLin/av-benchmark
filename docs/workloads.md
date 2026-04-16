@@ -124,7 +124,7 @@ The microbench suite follows a few simple rules:
 - Inputs are prepared locally so the benchmark does not depend on network downloads during the measured phase.
 - Each scenario runs in a fresh working directory.
 - Operation counts are high enough to produce stable percentile data without making the whole suite take too long.
-- The suite does not perform a benchmark warmup pass that would deliberately hide first-touch cost.
+- The suite does not perform a benchmark-wide warmup pass that would deliberately hide first-touch cost. Individual scenarios may still use a small targeted warmup when needed to remove harness noise from the API path being measured.
 
 Support assets are generated locally during setup:
 
@@ -205,7 +205,7 @@ These scenarios cover a set of Windows-facing API paths that show up in tools, s
 
 | Scenario ID | What it does | Why it is in the suite |
 |---|---|---|
-| `pipe-roundtrip` | Creates a named-pipe server/client pair, exchanges 4 KB, and tears it down 2,000 times | Measures a compact local IPC path |
+| `pipe-roundtrip` | Creates a named-pipe server/client pair, then exchanges 4 KB round-trips 2,000 times over the established connection | Measures steady-state local IPC latency |
 | `token-query` | Opens the current process token and reads privileges 50,000 times | Measures a repeated security-context query path |
 | `crypto-hash-verify` | Hashes a 64 KB buffer with SHA-256 and verifies an RSA-2048 signature 5,000 times | Acts as a security-related local compute path rather than a file or process path |
 | `com-create-instance` | Creates and releases `Scripting.FileSystemObject` 5,000 times | Measures COM activation and teardown |

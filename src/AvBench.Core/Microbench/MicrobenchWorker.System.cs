@@ -3,6 +3,7 @@ using System.IO.Pipes;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
 using Microsoft.Win32;
 using AvBench.Core.Internal;
@@ -112,34 +113,66 @@ public static partial class MicrobenchWorker
         var payload = new byte[4096];
         var response = new byte[payload.Length];
         Random.Shared.NextBytes(payload);
+        const int warmupOperations = 100;
+        var pipeName = $"avbench-pipe-{System.Environment.ProcessId}";
+
+        using var server = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.None);
+        using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.None);
+
+        ExceptionDispatchInfo? serverFailure = null;
+        var serverThread = new Thread(() =>
+        {
+            try
+            {
+                server.WaitForConnection();
+                var buffer = new byte[payload.Length];
+                for (var index = 0; index < warmupOperations + totalOperations; index++)
+                {
+                    ReadExact(server, buffer, buffer.Length);
+                    server.Write(buffer, 0, buffer.Length);
+                    server.Flush();
+                }
+            }
+            catch (Exception ex)
+            {
+                serverFailure = ExceptionDispatchInfo.Capture(ex);
+            }
+        })
+        {
+            IsBackground = true
+        };
+        serverThread.Start();
+
+        client.Connect(5_000);
+
+        for (var index = 0; index < warmupOperations; index++)
+        {
+            client.Write(payload, 0, payload.Length);
+            client.Flush();
+            ReadExact(client, response, response.Length);
+        }
 
         var histogram = new LatencyHistogram(totalOperations);
         var stopwatch = Stopwatch.StartNew();
 
         for (var index = 0; index < totalOperations; index++)
         {
-            var pipeName = $"avbench-pipe-{System.Environment.ProcessId}-{index:D5}";
-            var serverTask = Task.Run(() =>
-            {
-                using var server = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.None);
-                server.WaitForConnection();
-                var buffer = new byte[payload.Length];
-                ReadExact(server, buffer, buffer.Length);
-                server.Write(buffer, 0, buffer.Length);
-                server.Flush();
-            });
-
             var start = Stopwatch.GetTimestamp();
-            using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.None);
-            client.Connect(5_000);
             client.Write(payload, 0, payload.Length);
             client.Flush();
             ReadExact(client, response, response.Length);
-            serverTask.GetAwaiter().GetResult();
             histogram.Record(Stopwatch.GetTimestamp() - start);
         }
 
         stopwatch.Stop();
+        client.Dispose();
+
+        if (!serverThread.Join(5_000))
+        {
+            throw new TimeoutException("Pipe roundtrip server thread did not exit within 5 seconds.");
+        }
+
+        serverFailure?.Throw();
         return BuildMetrics(1, totalOperations, stopwatch.Elapsed, histogram);
     }
 
