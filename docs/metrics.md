@@ -102,9 +102,11 @@ This is the best primary metric for compile workloads because it includes the fu
 
 ### `slowdown_pct`
 
-`slowdown_pct` is the comparison form of `wall_ms`:
+`slowdown_pct` is the comparison form of wall time, always computed from **median** values:
 
-`(mean_wall_ms - baseline_mean_wall_ms) / baseline_mean_wall_ms * 100`
+`(median_wall_ms - baseline_median_wall_ms) / baseline_median_wall_ms * 100`
+
+Median is used instead of mean because it is robust to outliers at any sample size. When data is clean (low CV), median ≈ mean and nothing is lost. When data is noisy, median avoids the distortion that a single outlier session can cause. Using the same statistic on both sides also avoids mixed-comparison artifacts.
 
 This is usually the number you want in a summary table or executive comparison. It translates the raw timing difference into a form that is easy to compare across scenarios with very different runtimes.
 
@@ -162,7 +164,7 @@ Because these are system-wide, they include background OS activity (indexer, upd
 
 Important implementation detail: averages are computed from **successful runs only** (`exit_code == 0`), but `sessions` still counts all runs seen for that scenario group. A row can therefore show `sessions = 5` even if only 4 runs contributed to the mean.
 
-The main derived columns are:
+The main derived columns in `compare.csv` are:
 
 | Column | Meaning |
 |---|---|
@@ -174,15 +176,24 @@ The main derived columns are:
 | `baseline_kernel_cpu_pct` | Same metric for the baseline |
 | `kernel_cpu_slowdown_pct` | Percentage-point difference from baseline |
 | `peak_memory_mb` | Maximum peak job memory across successful runs |
-| `slowdown_pct` | Wall-time slowdown versus baseline |
-| `cv_pct` | Coefficient of variation of wall time |
+| `slowdown_pct` | Wall-time slowdown versus baseline, computed from median values |
+| `cv_pct` | Coefficient of variation of AV wall time |
+| `baseline_cv_pct` | Coefficient of variation of baseline wall time |
 | `status` | `ok`, `noisy`, or `failed` |
+
+`summary.md` shows a narrower table focused on the columns that are meaningful for every scenario:
+
+```
+| Scenario | Median Wall (ms) | Slowdown | Disk Read Δ (MB) | Disk Write Δ (MB) | CV % | Baseline CV % | Status |
+```
+
+Kernel CPU shift and peak memory are omitted from the summary table because they are zero for all 27 microbenchmarks (which run in-process without Job Object accounting). When a compilation scenario has a significant kernel CPU shift, it appears as a footnote callout below the table. The full data remains in `compare.csv` for detailed analysis.
 
 Status is assigned like this:
 
 - `failed`: at least one run in the group failed, or no successful runs exist
-- `noisy`: all runs succeeded, but `cv_pct > 10`
-- `ok`: all runs succeeded and `cv_pct <= 10`
+- `noisy`: all runs succeeded, but `cv_pct > 10` or `baseline_cv_pct > 10`
+- `ok`: all runs succeeded and both `cv_pct` and `baseline_cv_pct` are ≤ 10
 
 That makes `status` intentionally conservative. If even one run failed, the row is marked `failed` even when some successful samples were available.
 
@@ -190,13 +201,15 @@ For microbench scenarios, the comparison columns derived from `user_cpu_ms`, `ke
 
 ## How to judge result quality
 
-### `cv_pct`
+### `cv_pct` and `baseline_cv_pct`
 
-`cv_pct` is the coefficient of variation of wall time:
+`cv_pct` is the coefficient of variation of the AV side's wall time:
 
 `standard deviation / mean * 100`
 
-This is the simplest way to ask whether repeated runs are stable. A 2% slowdown in a scenario with a 9% CV is weak evidence. The same 2% slowdown in a scenario with a 1% CV is much more believable.
+`baseline_cv_pct` is the same metric for the baseline side.
+
+Both are needed because noisy results on either side make the `slowdown_pct` unreliable. A 2% slowdown in a scenario with a 9% AV CV but a 15% baseline CV is weak evidence — the baseline instability alone could explain the difference.
 
 ### `status`
 
@@ -212,8 +225,8 @@ If you only have a minute, read a result like this:
 
 1. Did `wall_ms` or `slowdown_pct` move enough to matter?
 2. If this is a microbench, did `p95_us` or `p99_us` get much worse?
-3. Did `kernel_cpu_pct`, memory, or system disk I/O move in the same direction and support the story?
-4. Is `cv_pct` low enough, and is `status` clean enough, to trust the conclusion?
+3. Did system disk I/O move in the same direction and support the story? (For compilation scenarios, also check `kernel_cpu_pct` in `compare.csv`.)
+4. Is `cv_pct` and `baseline_cv_pct` low enough, and is `status` clean enough, to trust the conclusion?
 
 That sequence usually gets you to the right interpretation faster than reading every field one by one.
 

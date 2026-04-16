@@ -105,7 +105,7 @@ src/
     ├── Program.cs
     ├── CompareCommand.cs              # CLI: --baseline, --input, --output
     ├── CompareEngine.cs               # Stat computation + slowdown %
-    ├── CompareCsvWriter.cs            # compare.csv (20 columns)
+    ├── CompareCsvWriter.cs            # compare.csv (21 columns)
     └── SummaryRenderer.cs             # summary.md (Markdown tables)
 ```
 
