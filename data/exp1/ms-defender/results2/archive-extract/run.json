@@ -1,0 +1,38 @@
+{
+  "scenario_id": "archive-extract",
+  "av_name": "ms-defender",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T05:45:40.1957992Z",
+  "command": "archive-extract",
+  "working_dir": "C:\\bench\\microbench\\archive-extract",
+  "exit_code": 0,
+  "wall_ms": 19956,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 68230144,
+  "system_disk_write_bytes": 272921088,
+  "p50_us": 1890624.1,
+  "p95_us": 2894686.5,
+  "p99_us": 2894686.5,
+  "max_us": 2894686.5,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "43310669ee4bebead4b721c143a85e3bfe1e03a2fc023880faf9a25de6c9ddee",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10,
+    "ops_per_sec": 0.5014274989038042,
+    "mean_latency_us": 1994296.2100000002,
+    "p50_us": 1890624.1,
+    "p95_us": 2894686.5,
+    "p99_us": 2894686.5,
+    "max_us": 2894686.5
+  }
+}

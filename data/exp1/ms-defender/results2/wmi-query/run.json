@@ -1,0 +1,38 @@
+{
+  "scenario_id": "wmi-query",
+  "av_name": "ms-defender",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T05:52:45.8474502Z",
+  "command": "wmi-query",
+  "working_dir": "C:\\bench\\microbench\\wmi-query",
+  "exit_code": 0,
+  "wall_ms": 9070,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 110592,
+  "system_disk_write_bytes": 32768,
+  "p50_us": 17783.2,
+  "p95_us": 19337.9,
+  "p99_us": 20216.6,
+  "max_us": 79891,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "43310669ee4bebead4b721c143a85e3bfe1e03a2fc023880faf9a25de6c9ddee",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 500,
+    "ops_per_sec": 55.125253340504905,
+    "mean_latency_us": 18027.187,
+    "p50_us": 17783.2,
+    "p95_us": 19337.9,
+    "p99_us": 20216.6,
+    "max_us": 79891
+  }
+}

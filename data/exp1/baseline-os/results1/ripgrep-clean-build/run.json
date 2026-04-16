@@ -1,0 +1,24 @@
+{
+  "scenario_id": "ripgrep-clean-build",
+  "av_name": "baseline-os",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T04:55:31.1528091Z",
+  "command": "cargo build --release",
+  "working_dir": "C:\\bench\\ripgrep",
+  "exit_code": 0,
+  "wall_ms": 14934,
+  "user_cpu_ms": 164562,
+  "kernel_cpu_ms": 7187,
+  "peak_job_memory_mb": 2062,
+  "system_disk_read_bytes": 204553728,
+  "system_disk_write_bytes": 78200832,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d"
+}

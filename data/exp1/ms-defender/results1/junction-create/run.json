@@ -1,0 +1,38 @@
+{
+  "scenario_id": "junction-create",
+  "av_name": "ms-defender",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T05:29:39.5702296Z",
+  "command": "junction-create",
+  "working_dir": "C:\\bench\\microbench\\junction-create",
+  "exit_code": 0,
+  "wall_ms": 717,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 36864,
+  "system_disk_write_bytes": 13033472,
+  "p50_us": 345.7,
+  "p95_us": 393.2,
+  "p99_us": 473.6,
+  "max_us": 2666.2,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "43310669ee4bebead4b721c143a85e3bfe1e03a2fc023880faf9a25de6c9ddee",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 2000,
+    "ops_per_sec": 2789.166097909213,
+    "mean_latency_us": 357.13755,
+    "p50_us": 345.7,
+    "p95_us": 393.2,
+    "p99_us": 473.6,
+    "max_us": 2666.2
+  }
+}

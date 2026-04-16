@@ -1,0 +1,38 @@
+{
+  "scenario_id": "token-query",
+  "av_name": "ms-defender",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T05:35:52.708159Z",
+  "command": "token-query",
+  "working_dir": "C:\\bench\\microbench\\token-query",
+  "exit_code": 0,
+  "wall_ms": 56,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 0,
+  "p50_us": 1,
+  "p95_us": 1.3,
+  "p99_us": 1.7,
+  "max_us": 609.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "43310669ee4bebead4b721c143a85e3bfe1e03a2fc023880faf9a25de6c9ddee",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 50000,
+    "ops_per_sec": 900329.8808683502,
+    "mean_latency_us": 1.0663639999999999,
+    "p50_us": 1,
+    "p95_us": 1.3,
+    "p99_us": 1.7,
+    "max_us": 609.4
+  }
+}

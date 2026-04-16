@@ -1,0 +1,38 @@
+{
+  "scenario_id": "new-exe-run",
+  "av_name": "ms-defender",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T05:32:39.4804159Z",
+  "command": "new-exe-run",
+  "working_dir": "C:\\bench\\microbench\\new-exe-run",
+  "exit_code": 0,
+  "wall_ms": 5423,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 223753728,
+  "system_disk_write_bytes": 56162304,
+  "p50_us": 106233.8,
+  "p95_us": 118267.2,
+  "p99_us": 124272.7,
+  "max_us": 124272.7,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "43310669ee4bebead4b721c143a85e3bfe1e03a2fc023880faf9a25de6c9ddee",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 50,
+    "ops_per_sec": 9.219010425520757,
+    "mean_latency_us": 108219.662,
+    "p50_us": 106233.8,
+    "p95_us": 118267.2,
+    "p99_us": 124272.7,
+    "max_us": 124272.7
+  }
+}

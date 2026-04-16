@@ -1,0 +1,38 @@
+{
+  "scenario_id": "pipe-roundtrip",
+  "av_name": "ms-defender",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T05:51:55.9112964Z",
+  "command": "pipe-roundtrip",
+  "working_dir": "C:\\bench\\microbench\\pipe-roundtrip",
+  "exit_code": 0,
+  "wall_ms": 480,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 583168,
+  "system_disk_write_bytes": 0,
+  "p50_us": 111.3,
+  "p95_us": 141.2,
+  "p99_us": 519.5,
+  "max_us": 16619.3,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "43310669ee4bebead4b721c143a85e3bfe1e03a2fc023880faf9a25de6c9ddee",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 2000,
+    "ops_per_sec": 4295.950615470105,
+    "mean_latency_us": 223.92370000000003,
+    "p50_us": 111.3,
+    "p95_us": 141.2,
+    "p99_us": 519.5,
+    "max_us": 16619.3
+  }
+}

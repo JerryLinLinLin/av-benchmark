@@ -1,0 +1,38 @@
+{
+  "scenario_id": "net-dns-resolve",
+  "av_name": "baseline-os",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T05:06:41.7641113Z",
+  "command": "net-dns-resolve",
+  "working_dir": "C:\\bench\\microbench\\net-dns-resolve",
+  "exit_code": 0,
+  "wall_ms": 957,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 8192,
+  "system_disk_write_bytes": 0,
+  "p50_us": 192.9,
+  "p95_us": 210.9,
+  "p99_us": 234.9,
+  "max_us": 5248.1,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 5225.014737154066,
+    "mean_latency_us": 191.26436,
+    "p50_us": 192.9,
+    "p95_us": 210.9,
+    "p99_us": 234.9,
+    "max_us": 5248.1
+  }
+}

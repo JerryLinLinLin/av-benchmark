@@ -1,0 +1,38 @@
+{
+  "scenario_id": "ext-sensitivity-dll",
+  "av_name": "ms-defender",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T05:30:34.3658849Z",
+  "command": "ext-sensitivity-dll",
+  "working_dir": "C:\\bench\\microbench\\ext-sensitivity-dll",
+  "exit_code": 0,
+  "wall_ms": 4353,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 51261440,
+  "p50_us": 426.9,
+  "p95_us": 464.5,
+  "p99_us": 541.7,
+  "max_us": 21995.9,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "43310669ee4bebead4b721c143a85e3bfe1e03a2fc023880faf9a25de6c9ddee",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 2297.0791834205093,
+    "mean_latency_us": 434.06605,
+    "p50_us": 426.9,
+    "p95_us": 464.5,
+    "p99_us": 541.7,
+    "max_us": 21995.9
+  }
+}

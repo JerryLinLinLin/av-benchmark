@@ -1,0 +1,24 @@
+{
+  "scenario_id": "roslyn-clean-build",
+  "av_name": "baseline-os",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T05:25:23.3961594Z",
+  "command": "dotnet build \u0022C:\\bench\\roslyn\\Roslyn.slnx\u0022 -c Release /m /nr:false /p:RepositoryUrl=https://github.com/dotnet/roslyn /p:RepositoryCommit=358fc4c237c3ec174e66c5d6e430ba176bf793cf /p:RepositoryBranch=main",
+  "working_dir": "C:\\bench\\roslyn",
+  "exit_code": 0,
+  "wall_ms": 206248,
+  "user_cpu_ms": 2955500,
+  "kernel_cpu_ms": 291750,
+  "peak_job_memory_mb": 8776,
+  "system_disk_read_bytes": 5812553728,
+  "system_disk_write_bytes": 32030031872,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d"
+}

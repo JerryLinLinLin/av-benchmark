@@ -1,0 +1,38 @@
+{
+  "scenario_id": "mem-map-file",
+  "av_name": "ms-defender",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T06:07:14.9704862Z",
+  "command": "mem-map-file",
+  "working_dir": "C:\\bench\\microbench\\mem-map-file",
+  "exit_code": 0,
+  "wall_ms": 9054,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 145920,
+  "system_disk_write_bytes": 108400640,
+  "p50_us": 828.4,
+  "p95_us": 1419.8,
+  "p99_us": 2171.5,
+  "max_us": 7248.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "43310669ee4bebead4b721c143a85e3bfe1e03a2fc023880faf9a25de6c9ddee",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 1104.9944023193568,
+    "mean_latency_us": 904.70969,
+    "p50_us": 828.4,
+    "p95_us": 1419.8,
+    "p99_us": 2171.5,
+    "max_us": 7248.4
+  }
+}

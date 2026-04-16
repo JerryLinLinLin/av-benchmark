@@ -1,0 +1,38 @@
+{
+  "scenario_id": "dll-load-unique",
+  "av_name": "ms-defender",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T06:04:46.0486752Z",
+  "command": "dll-load-unique",
+  "working_dir": "C:\\bench\\microbench\\dll-load-unique",
+  "exit_code": 0,
+  "wall_ms": 55649,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 2891776,
+  "system_disk_write_bytes": 4028948480,
+  "p50_us": 27707.4,
+  "p95_us": 29362.8,
+  "p99_us": 30356.9,
+  "max_us": 40047,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "43310669ee4bebead4b721c143a85e3bfe1e03a2fc023880faf9a25de6c9ddee",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 2000,
+    "ops_per_sec": 35.93984178674262,
+    "mean_latency_us": 27815.72465,
+    "p50_us": 27707.4,
+    "p95_us": 29362.8,
+    "p99_us": 30356.9,
+    "max_us": 40047
+  }
+}
