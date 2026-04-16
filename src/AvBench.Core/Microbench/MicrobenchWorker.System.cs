@@ -145,7 +145,7 @@ public static partial class MicrobenchWorker
 
     private static MicrobenchMetrics ExecuteTokenQuery(int totalOperations)
     {
-        var processHandle = Process.GetCurrentProcess().Handle;
+        var processHandle = GetCurrentProcess();
         var histogram = new LatencyHistogram(totalOperations);
         var stopwatch = Stopwatch.StartNew();
 
@@ -242,6 +242,9 @@ public static partial class MicrobenchWorker
         byte[] tokenInformation,
         int tokenInformationLength,
         out int returnLength);
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetCurrentProcess();
 
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
