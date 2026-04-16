@@ -1,0 +1,38 @@
+{
+  "scenario_id": "thread-create",
+  "av_name": "ms-defender",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T19:53:24.2896991Z",
+  "command": "thread-create",
+  "working_dir": "C:\\bench\\microbench\\thread-create",
+  "exit_code": 0,
+  "wall_ms": 1261,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 208896,
+  "system_disk_write_bytes": 0,
+  "p50_us": 220.2,
+  "p95_us": 392.1,
+  "p99_us": 628.1,
+  "max_us": 12801.8,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "43310669ee4bebead4b721c143a85e3bfe1e03a2fc023880faf9a25de6c9ddee",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 3964.3481414422326,
+    "mean_latency_us": 252.08478,
+    "p50_us": 220.2,
+    "p95_us": 392.1,
+    "p99_us": 628.1,
+    "max_us": 12801.8
+  }
+}

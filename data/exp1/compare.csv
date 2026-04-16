@@ -1,63 +1,63 @@
 scenario_id,av_name,av_product,av_version,baseline_name,sessions,mean_wall_ms,median_wall_ms,mean_cpu_ms,kernel_cpu_pct,baseline_kernel_cpu_pct,kernel_cpu_slowdown_pct,peak_memory_mb,system_disk_read_mb,baseline_system_disk_read_mb,system_disk_write_mb,baseline_system_disk_write_mb,slowdown_pct,cv_pct,baseline_cv_pct,median_p50_us,median_p95_us,median_p99_us,baseline_median_p95_us,p95_slowdown_pct,status
-archive-extract,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,18453.0,18416.0,0.0,0.0,0.0,0.0,0,33.8,0.0,268.0,250.4,41.4,0.5,1.4,1828516.7,1967403.2,1967403.2,1446535.4,36.0,ok
-com-create-instance,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,897.3,900.0,0.0,0.0,0.0,0.0,0,0.1,0.1,0.0,0.0,91.5,0.5,1.8,160.5,247.5,282.2,145.9,69.6,ok
-crypto-hash-verify,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,262.0,264.0,0.0,0.0,0.0,0.0,0,0.0,0.4,0.0,0.1,5.2,4.1,1.1,40.4,42.8,56.1,43.9,-2.5,ok
-dll-load-unique,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,27411.0,27392.0,0.0,0.0,0.0,0.0,0,132.2,1.9,3850.6,3829.5,244.3,0.4,1.8,13494.2,14873.3,15925.0,4584.0,224.5,ok
-ext-sensitivity-dll,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,11037.0,10973.0,0.0,0.0,0.0,0.0,0,0.1,0.0,67.0,44.2,264.8,1.3,0.7,1050.5,1293.9,1709.6,326.1,296.8,ok
-ext-sensitivity-exe,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,10042.3,10009.0,0.0,0.0,0.0,0.0,0,0.4,0.0,65.5,43.8,232.5,0.5,0.4,953.7,1218.9,1559.0,329.1,270.4,ok
-ext-sensitivity-js,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,4765.0,4767.0,0.0,0.0,0.0,0.0,0,4.8,0.0,66.7,52.9,57.0,0.8,0.8,469.3,513.6,577.6,332.4,54.5,ok
-ext-sensitivity-ps1,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,4802.3,4794.0,0.0,0.0,0.0,0.0,0,0.4,0.0,61.8,52.3,60.5,0.4,0.2,468.4,512.8,597.0,330.3,55.3,ok
-file-copy-large,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,833.0,823.0,0.0,0.0,0.0,0.0,0,0.0,0.1,0.0,100.1,-15.0,2.0,3.1,35667.9,44977.2,44977.2,98383.0,-54.3,anomaly
-file-create-delete,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,2396.3,2404.0,0.0,0.0,0.0,0.0,0,2.6,0.1,23.0,12.4,61.3,0.5,1.3,460.6,514.4,642.1,322.9,59.3,ok
-file-enum-large-dir,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,4379.3,4393.0,0.0,0.0,0.0,0.0,0,1.6,0.1,39.7,62.5,83.0,0.7,0.9,2803.2,3887.7,4853.1,3227.3,20.5,ok
-file-write-content,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,1044001.3,1043355.0,0.0,0.0,0.0,0.0,0,152.2,0.0,377.3,57.5,31622.6,0.3,0.5,103914.6,106651.7,114129.3,366.1,29031.8,ok
-fs-watcher,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,3868.0,3865.0,0.0,0.0,0.0,0.0,0,0.2,0.2,30.4,28.7,75.1,0.2,0.9,729.8,802.9,990.5,499.3,60.8,ok
-hardlink-create,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,2881.7,2888.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.5,7.7,130.1,1.4,0.5,564.8,849.4,908.6,329.9,157.5,ok
-junction-create,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,847.3,847.0,0.0,0.0,0.0,0.0,0,0.0,0.1,8.3,0.0,44.5,0.8,2.0,409.0,464.3,786.6,319.7,45.2,ok
-mem-alloc-protect,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,164.0,164.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,-2.4,0.5,1.0,3.0,4.7,6.5,5.4,-13.0,ok
-mem-map-file,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,4119.3,4120.0,0.0,0.0,0.0,0.0,0,0.2,0.4,104.2,101.4,4.8,1.1,6.7,393.5,583.9,911.0,540.9,7.9,ok
-net-connect-loopback,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,644.0,647.0,0.0,0.0,0.0,0.0,0,0.9,0.2,0.0,0.0,12.5,1.6,0.6,307.9,407.4,599.2,358.9,13.5,ok
-net-dns-resolve,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,1120.3,1123.0,0.0,0.0,0.0,0.0,0,0.4,0.0,0.0,0.0,17.3,1.0,1.4,226.0,248.7,270.5,208.6,19.2,ok
-new-exe-run,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,2595.0,2595.0,0.0,0.0,0.0,0.0,0,1.1,0.0,14.6,11.9,35.6,0.3,1.0,50654.4,55174.1,86745.9,39710.3,38.9,ok
-new-exe-run-motw,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,2558.3,2553.0,0.0,0.0,0.0,0.0,0,0.4,0.1,13.1,12.0,31.9,0.4,0.9,50183.5,54026.5,64889.8,41098.2,31.5,ok
-pipe-roundtrip,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,1355.7,1249.0,0.0,0.0,0.0,0.0,0,0.6,0.5,0.0,0.0,-17.8,13.5,27.9,120.5,360.0,15758.2,407.2,-11.6,noisy
-process-create-wait,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,18302.3,18346.0,0.0,0.0,0.0,0.0,0,1.3,0.1,100.3,0.1,37.9,0.4,0.4,36226.9,38849.3,40118.1,28798.5,34.9,ok
-registry-crud,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,805.7,810.0,0.0,0.0,0.0,0.0,0,0.0,0.1,0.0,0.0,78.0,0.8,3.8,151.7,210.2,251.3,119.7,75.6,ok
-ripgrep-clean-build,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,16810.7,16837.0,166999.0,4.5,3.9,0.7,2165,376.7,195.1,76.1,76.2,12.5,0.5,0.2,,,,,,ok
-ripgrep-incremental-build,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,6097.7,6072.0,33145.0,2.7,2.3,0.4,473,0.0,0.0,35.3,20.1,3.1,1.2,1.5,,,,,,ok
-roslyn-clean-build,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,217180.0,219943.0,3409332.0,11.2,8.9,2.3,9104,5097.6,11779.6,30811.8,30574.7,6.6,1.9,2.7,,,,,,ok
-roslyn-incremental-build,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,63334.7,63463.0,878640.0,16.5,15.1,1.4,4996,497.6,131.8,1537.3,1216.5,6.2,2.1,3.7,,,,,,ok
-thread-create,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,1166.7,1164.0,0.0,0.0,0.0,0.0,0,0.0,0.1,0.0,0.0,-0.1,0.5,1.7,219.0,306.2,534.5,327.1,-6.4,ok
-token-query,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,55.3,55.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,-1.8,0.9,2.2,1.0,1.3,1.6,1.4,-7.1,ok
-wmi-query,huorong,Huorong Internet Security,5.0.0.0,baseline-os,3,21654.0,21657.0,0.0,0.0,0.0,0.0,0,0.2,0.0,0.4,0.2,57.1,1.1,0.9,43048.5,45636.1,46875.2,30836.7,48.0,ok
-archive-extract,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,20106.7,19972.0,0.0,0.0,0.0,0.0,0,68.0,0.0,261.2,250.4,53.4,1.0,1.4,1902634.4,2894686.5,2894686.5,1446535.4,100.1,ok
-com-create-instance,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,546.3,544.0,0.0,0.0,0.0,0.0,0,0.1,0.1,0.0,0.0,15.7,0.7,1.8,89.6,163.5,185.6,145.9,12.1,ok
-crypto-hash-verify,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,259.3,262.0,0.0,0.0,0.0,0.0,0,0.5,0.4,0.0,0.1,4.4,2.0,1.1,40.5,44.1,62.8,43.9,0.5,ok
-dll-load-unique,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,55792.3,55649.0,0.0,0.0,0.0,0.0,0,2.8,1.9,3842.4,3829.5,599.4,0.6,1.8,27707.4,29362.8,30356.9,4584.0,540.5,ok
-ext-sensitivity-dll,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,4387.0,4353.0,0.0,0.0,0.0,0.0,0,0.0,0.0,56.0,44.2,44.7,1.1,0.7,429.3,466.5,543.5,326.1,43.1,ok
-ext-sensitivity-exe,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,4459.0,4453.0,0.0,0.0,0.0,0.0,0,0.0,0.0,57.2,43.8,47.9,0.6,0.4,435.7,479.4,549.7,329.1,45.7,ok
-ext-sensitivity-js,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,4376.0,4360.0,0.0,0.0,0.0,0.0,0,0.0,0.0,53.7,52.9,43.6,0.7,0.8,428.2,469.3,512.1,332.4,41.2,ok
-ext-sensitivity-ps1,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,4404.3,4389.0,0.0,0.0,0.0,0.0,0,0.0,0.0,61.4,52.3,47.0,0.6,0.2,429.8,473.0,583.4,330.3,43.2,ok
-file-copy-large,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,880.7,885.0,0.0,0.0,0.0,0.0,0,0.0,0.1,101.4,100.1,-8.6,1.1,3.1,35128.0,80814.7,80814.7,98383.0,-17.9,ok
-file-create-delete,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,2245.3,2236.0,0.0,0.0,0.0,0.0,0,1.0,0.1,25.6,12.4,50.1,1.3,1.3,431.2,494.9,848.6,322.9,53.3,ok
-file-enum-large-dir,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,5256.3,5258.0,0.0,0.0,0.0,0.0,0,28.2,0.1,62.5,62.5,119.0,0.9,0.9,5653.0,6870.3,8556.9,3227.3,112.9,ok
-file-write-content,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,4690.7,4687.0,0.0,0.0,0.0,0.0,0,0.6,0.0,70.3,57.5,42.5,0.7,0.5,453.8,508.3,596.8,366.1,38.8,ok
-fs-watcher,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,3501.7,3472.0,0.0,0.0,0.0,0.0,0,0.1,0.2,45.9,28.7,57.3,1.3,0.9,659.9,720.3,818.8,499.3,44.3,ok
-hardlink-create,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,1733.3,1734.0,0.0,0.0,0.0,0.0,0,0.0,0.0,5.2,7.7,38.2,0.3,0.5,338.8,440.4,474.3,329.9,33.5,ok
-junction-create,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,725.3,728.0,0.0,0.0,0.0,0.0,0,0.0,0.1,4.6,0.0,24.2,0.8,2.0,348.0,400.9,473.6,319.7,25.4,ok
-mem-alloc-protect,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,200.0,202.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.2,0.0,20.2,1.4,1.0,3.5,6.0,9.5,5.4,11.1,ok
-mem-map-file,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,8876.3,8795.0,0.0,0.0,0.0,0.0,0,0.1,0.4,103.8,101.4,123.7,1.4,6.7,827.1,1203.4,1795.1,540.9,122.5,ok
-net-connect-loopback,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,595.3,597.0,0.0,0.0,0.0,0.0,0,0.6,0.2,0.1,0.0,3.8,0.8,0.6,276.0,361.5,564.9,358.9,0.7,ok
-net-dns-resolve,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,1044.0,1042.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,8.9,0.9,1.4,209.1,228.3,246.6,208.6,9.4,ok
-new-exe-run,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,5315.7,5408.0,0.0,0.0,0.0,0.0,0,73.8,0.0,26.1,11.9,182.5,2.7,1.0,106233.8,115375.5,124238.8,39710.3,190.5,ok
-new-exe-run-motw,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,70796.7,68200.0,0.0,0.0,0.0,0.0,0,92.1,0.1,201.7,12.0,3422.7,19.9,0.9,1003030.3,4377107.9,4852384.2,41098.2,10550.4,noisy
-pipe-roundtrip,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,1113.3,1397.0,0.0,0.0,0.0,0.0,0,0.6,0.5,0.0,0.0,-8.0,40.3,27.9,113.2,421.4,15632.3,407.2,3.5,noisy
-process-create-wait,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,15961.7,15969.0,0.0,0.0,0.0,0.0,0,0.6,0.1,0.5,0.1,20.0,0.3,0.4,31319.2,34162.8,37796.6,28798.5,18.6,ok
-registry-crud,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,590.0,590.0,0.0,0.0,0.0,0.0,0,0.1,0.1,0.0,0.0,29.7,0.1,3.8,109.4,149.7,171.6,119.7,25.1,ok
-ripgrep-clean-build,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,18265.7,18272.0,166952.7,4.3,3.9,0.5,1927,306.5,195.1,82.0,76.2,22.1,0.2,0.2,,,,,,ok
-ripgrep-incremental-build,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,6121.0,6129.0,32519.7,2.4,2.3,0.0,466,0.1,0.0,20.5,20.1,4.0,0.2,1.5,,,,,,ok
-roslyn-clean-build,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,264578.3,260770.0,3429957.7,10.3,8.9,1.4,9120,2617.1,11779.6,30686.6,30574.7,26.4,2.8,2.7,,,,,,ok
-roslyn-incremental-build,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,69579.0,69593.0,916275.0,15.8,15.1,0.7,5179,161.2,131.8,1220.5,1216.5,16.5,2.2,3.7,,,,,,ok
-thread-create,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,1239.3,1248.0,0.0,0.0,0.0,0.0,0,0.2,0.1,0.0,0.0,7.1,1.5,1.7,223.2,360.6,566.1,327.1,10.2,ok
-token-query,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,55.3,55.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,-1.8,0.9,2.2,1.0,1.3,1.7,1.4,-7.1,ok
-wmi-query,ms-defender,Windows Defender,4.18.2201.11,baseline-os,3,8887.3,8881.0,0.0,0.0,0.0,0.0,0,0.1,0.0,0.1,0.2,-35.6,1.6,0.9,17395.6,19059.0,19872.0,30836.7,-38.2,anomaly
+archive-extract,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,18612.0,18515.0,0.0,0.0,0.0,0.0,0,34.8,0.1,272.1,251.6,42.2,1.6,1.7,1829355.2,1976835.4,1976835.4,1446535.4,36.7,ok
+com-create-instance,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,898.2,900.0,0.0,0.0,0.0,0.0,0,0.1,0.1,0.0,0.0,88.7,0.4,1.9,160.5,247.2,275.2,146.0,69.3,ok
+crypto-hash-verify,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,263.6,264.0,0.0,0.0,0.0,0.0,0,0.0,0.4,0.0,0.1,6.0,3.8,1.1,40.5,42.8,56.1,43.9,-2.5,ok
+dll-load-unique,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,27753.8,27555.0,0.0,0.0,0.0,0.0,0,148.0,1.9,3851.9,3829.4,244.3,2.2,2.1,13578.7,14873.5,16011.7,4633.8,221.0,ok
+ext-sensitivity-dll,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,10972.4,10908.0,0.0,0.0,0.0,0.0,0,0.2,0.0,67.0,42.7,263.0,1.2,1.0,1046.5,1293.9,1639.4,325.4,297.6,ok
+ext-sensitivity-exe,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,10029.8,10009.0,0.0,0.0,0.0,0.0,0,0.3,0.0,65.6,42.4,232.7,1.1,1.1,953.7,1218.9,1543.9,326.4,273.4,ok
+ext-sensitivity-js,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,4776.4,4769.0,0.0,0.0,0.0,0.0,0,3.0,0.0,56.9,51.9,58.5,0.7,1.3,468.3,513.6,577.6,331.8,54.8,ok
+ext-sensitivity-ps1,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,4797.6,4794.0,0.0,0.0,0.0,0.0,0,0.3,0.0,52.5,52.4,61.3,0.3,0.8,468.8,512.8,600.5,328.7,56.0,ok
+file-copy-large,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,832.4,826.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,100.0,-14.7,1.6,2.5,35337.6,38996.2,38996.2,103996.6,-62.5,anomaly
+file-create-delete,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,2400.4,2406.0,0.0,0.0,0.0,0.0,0,1.9,0.1,25.8,14.9,61.5,0.4,1.1,461.9,514.4,642.1,322.3,59.6,ok
+file-enum-large-dir,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,6072.8,4393.0,0.0,0.0,0.0,0.0,0,1.5,0.1,41.6,59.2,82.9,56.3,1.0,2803.2,3742.7,4986.4,3227.3,16.0,noisy
+file-write-content,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,1044218.4,1044006.0,0.0,0.0,0.0,0.0,0,147.6,0.0,376.7,55.9,31642.4,0.2,0.4,103932.9,106813.8,114366.6,361.5,29447.4,ok
+fs-watcher,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,3863.0,3865.0,0.0,0.0,0.0,0.0,0,0.2,0.2,32.1,29.9,75.6,0.3,1.4,730.0,797.3,990.4,487.7,63.5,ok
+hardlink-create,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,2909.6,2929.0,0.0,0.0,0.0,0.0,0,0.0,0.0,2.5,4.6,133.2,1.6,0.7,566.3,863.5,908.6,332.7,159.5,ok
+junction-create,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,842.0,846.0,0.0,0.0,0.0,0.0,0,0.0,0.0,5.0,0.0,41.9,1.3,1.6,409.0,460.5,552.1,339.8,35.5,ok
+mem-alloc-protect,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,161.2,163.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,-3.0,2.5,1.0,2.9,4.7,6.5,5.4,-13.0,ok
+mem-map-file,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,4134.6,4120.0,0.0,0.0,0.0,0.0,0,0.2,0.3,103.7,101.5,4.8,1.5,6.9,393.5,583.9,919.0,536.4,8.9,ok
+net-connect-loopback,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,648.6,653.0,0.0,0.0,0.0,0.0,0,0.9,0.2,0.0,0.0,13.6,1.5,0.7,307.9,407.8,608.6,358.9,13.6,ok
+net-dns-resolve,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,1113.4,1118.0,0.0,0.0,0.0,0.0,0,0.4,0.0,0.0,0.0,16.8,1.4,1.2,222.9,245.7,269.2,208.6,17.8,ok
+new-exe-run,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,2583.0,2586.0,0.0,0.0,0.0,0.0,0,1.0,0.0,14.4,11.9,35.0,0.6,0.8,50623.0,54540.4,86745.9,40323.7,35.3,ok
+new-exe-run-motw,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,2548.2,2551.0,0.0,0.0,0.0,0.0,0,0.4,0.1,13.1,12.0,32.1,0.7,0.7,50183.5,53801.9,65877.8,41098.2,30.9,ok
+pipe-roundtrip,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,1224.2,1249.0,0.0,0.0,0.0,0.0,0,0.6,0.5,0.0,0.0,-0.3,23.5,39.5,120.5,360.0,15758.2,311.1,15.7,noisy
+process-create-wait,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,18263.0,18346.0,0.0,0.0,0.0,0.0,0,1.4,0.1,100.3,6.2,37.0,0.8,1.2,36226.9,38849.3,40118.1,28798.5,34.9,ok
+registry-crud,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,808.6,810.0,0.0,0.0,0.0,0.0,0,0.0,0.1,0.0,0.0,77.6,1.0,3.3,152.0,210.2,251.3,119.9,75.3,ok
+ripgrep-clean-build,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,16766.2,16799.0,169768.0,4.5,3.9,0.5,2173,376.4,195.3,76.2,76.7,12.3,0.6,0.3,,,,,,ok
+ripgrep-incremental-build,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,6078.6,6072.0,33058.2,2.7,2.4,0.2,473,0.0,0.0,35.5,20.4,3.1,1.0,1.3,,,,,,ok
+roslyn-clean-build,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,217600.0,219665.0,3428023.8,11.2,8.9,2.3,9104,5022.0,12096.8,30824.1,30571.8,2.4,1.5,2.5,,,,,,ok
+roslyn-incremental-build,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,63918.4,64415.0,880827.4,16.8,15.4,1.4,5151,536.7,128.6,1549.7,1206.7,7.8,2.0,3.8,,,,,,ok
+thread-create,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,1181.8,1175.0,0.0,0.0,0.0,0.0,0,0.0,0.1,0.0,0.0,-0.4,1.6,1.7,221.0,315.2,547.9,327.1,-3.6,ok
+token-query,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,55.2,55.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,0.0,0.7,2.4,1.0,1.3,1.6,1.3,0.0,ok
+wmi-query,huorong,Huorong Internet Security,5.0.0.0,baseline-os,5,21591.0,21657.0,0.0,0.0,0.0,0.0,0,0.2,0.3,0.3,0.3,57.1,2.3,1.3,43048.5,45636.1,46875.2,30521.8,49.5,ok
+archive-extract,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,20164.8,20087.0,0.0,0.0,0.0,0.0,0,52.6,0.1,263.0,251.6,54.2,1.0,1.7,1912077.1,2894686.5,2894686.5,1446535.4,100.1,ok
+com-create-instance,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,550.4,552.0,0.0,0.0,0.0,0.0,0,0.1,0.1,0.0,0.0,15.7,1.1,1.9,90.5,164.0,188.6,146.0,12.3,ok
+crypto-hash-verify,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,259.0,262.0,0.0,0.0,0.0,0.0,0,0.5,0.4,0.0,0.1,5.2,2.1,1.1,40.5,44.1,60.1,43.9,0.5,ok
+dll-load-unique,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,55910.6,56054.0,0.0,0.0,0.0,0.0,0,2.8,1.9,3843.3,3829.4,600.4,0.5,2.1,27912.8,29588.1,30356.9,4633.8,538.5,ok
+ext-sensitivity-dll,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,4392.0,4397.0,0.0,0.0,0.0,0.0,0,0.0,0.0,57.5,42.7,46.3,0.9,1.0,429.5,468.5,543.5,325.4,44.0,ok
+ext-sensitivity-exe,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,4451.4,4453.0,0.0,0.0,0.0,0.0,0,0.0,0.0,54.2,42.4,48.0,0.7,1.1,435.7,479.4,549.7,326.4,46.9,ok
+ext-sensitivity-js,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,4371.8,4360.0,0.0,0.0,0.0,0.0,0,0.0,0.0,52.3,51.9,44.9,0.6,1.3,428.5,468.7,512.1,331.8,41.3,ok
+ext-sensitivity-ps1,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,4400.4,4389.0,0.0,0.0,0.0,0.0,0,0.0,0.0,60.3,52.4,47.6,0.5,0.8,429.8,473.0,582.1,328.7,43.9,ok
+file-copy-large,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,883.0,885.0,0.0,0.0,0.0,0.0,0,0.0,0.0,100.8,100.0,-8.6,1.2,2.5,35242.2,86762.1,86762.1,103996.6,-16.6,ok
+file-create-delete,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,2249.8,2236.0,0.0,0.0,0.0,0.0,0,1.0,0.1,29.0,14.9,50.1,1.2,1.1,431.2,498.8,848.6,322.3,54.8,ok
+file-enum-large-dir,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,5254.8,5258.0,0.0,0.0,0.0,0.0,0,17.0,0.1,61.2,59.2,118.9,0.7,1.0,5609.7,6870.3,8736.8,3227.3,112.9,ok
+file-write-content,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,4700.6,4699.0,0.0,0.0,0.0,0.0,0,0.5,0.0,67.5,55.9,42.9,0.6,0.4,458.1,508.3,576.2,361.5,40.6,ok
+fs-watcher,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,3512.4,3472.0,0.0,0.0,0.0,0.0,0,0.1,0.2,42.9,29.9,57.7,1.7,1.4,659.9,720.3,818.8,487.7,47.7,ok
+hardlink-create,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,1843.8,1739.0,0.0,0.0,0.0,0.0,0,0.0,0.0,7.4,4.6,38.5,7.3,0.7,343.0,447.6,478.0,332.7,34.5,ok
+junction-create,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,724.4,724.0,0.0,0.0,0.0,0.0,0,0.0,0.0,5.2,0.0,21.5,0.7,1.6,347.2,400.9,479.0,339.8,18.0,ok
+mem-alloc-protect,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,197.4,197.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.1,0.0,17.3,2.3,1.0,3.5,5.8,9.5,5.4,7.4,ok
+mem-map-file,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,8857.4,8795.0,0.0,0.0,0.0,0.0,0,0.1,0.3,103.6,101.5,123.7,1.2,6.9,827.1,1203.4,1795.1,536.4,124.3,ok
+net-connect-loopback,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,596.4,597.0,0.0,0.0,0.0,0.0,0,0.6,0.2,0.0,0.0,3.8,0.8,0.7,276.3,364.0,547.1,358.9,1.4,ok
+net-dns-resolve,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,1052.8,1056.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,10.3,1.2,1.2,210.1,230.4,250.0,208.6,10.5,ok
+new-exe-run,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,5239.6,5182.0,0.0,0.0,0.0,0.0,0,48.7,0.0,20.7,11.9,170.5,2.8,0.8,102116.4,110594.4,124238.8,40323.7,174.3,ok
+new-exe-run-motw,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,66507.6,63715.0,0.0,0.0,0.0,0.0,0,100.1,0.1,126.3,12.0,3199.6,18.5,0.7,1025641.4,1990369.2,4532506.9,41098.2,4743.0,noisy
+pipe-roundtrip,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,997.6,868.0,0.0,0.0,0.0,0.0,0,0.6,0.5,0.0,0.0,-30.7,37.7,39.5,126.3,233.1,14652.4,311.1,-25.1,noisy
+process-create-wait,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,15925.6,15969.0,0.0,0.0,0.0,0.0,0,0.6,0.1,0.5,6.2,19.3,0.7,1.2,31319.2,34162.8,37796.6,28798.5,18.6,ok
+registry-crud,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,591.4,590.0,0.0,0.0,0.0,0.0,0,0.1,0.1,0.0,0.0,29.4,0.9,3.3,109.5,149.7,171.6,119.9,24.9,ok
+ripgrep-clean-build,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,18327.4,18306.0,167743.2,4.4,3.9,0.4,1927,306.6,195.3,81.1,76.7,22.3,0.6,0.3,,,,,,ok
+ripgrep-incremental-build,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,6146.4,6129.0,32752.0,2.3,2.4,-0.1,474,0.1,0.0,21.7,20.4,4.0,0.7,1.3,,,,,,ok
+roslyn-clean-build,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,259971.0,258176.0,3437205.4,10.4,8.9,1.5,9581,2684.0,12096.8,30684.0,30571.8,20.4,3.2,2.5,,,,,,ok
+roslyn-incremental-build,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,69652.6,69593.0,912483.4,16.0,15.4,0.5,5179,154.2,128.6,1226.7,1206.7,16.5,2.1,3.8,,,,,,ok
+thread-create,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,1248.6,1257.0,0.0,0.0,0.0,0.0,0,0.2,0.1,0.0,0.0,6.5,1.5,1.7,223.2,360.6,628.1,327.1,10.2,ok
+token-query,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,55.6,55.0,0.0,0.0,0.0,0.0,0,0.0,0.0,0.0,0.0,0.0,1.4,2.4,1.0,1.3,1.7,1.3,0.0,ok
+wmi-query,ms-defender,Windows Defender,4.18.2201.11,baseline-os,5,9111.4,9066.0,0.0,0.0,0.0,0.0,0,0.1,0.3,0.1,0.3,-34.2,4.2,1.3,17742.7,19337.9,20216.6,30521.8,-36.6,anomaly

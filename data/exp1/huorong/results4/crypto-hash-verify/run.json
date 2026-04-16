@@ -1,0 +1,38 @@
+{
+  "scenario_id": "crypto-hash-verify",
+  "av_name": "huorong",
+  "av_product": "Huorong Internet Security",
+  "av_version": "5.0.0.0",
+  "timestamp_utc": "2026-04-16T20:47:52.8315578Z",
+  "command": "crypto-hash-verify",
+  "working_dir": "C:\\bench\\microbench\\crypto-hash-verify",
+  "exit_code": 0,
+  "wall_ms": 274,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 0,
+  "p50_us": 40.5,
+  "p95_us": 42.8,
+  "p99_us": 56,
+  "max_us": 109.9,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 24322.153736442222,
+    "mean_latency_us": 41.09264,
+    "p50_us": 40.5,
+    "p95_us": 42.8,
+    "p99_us": 56,
+    "max_us": 109.9
+  }
+}

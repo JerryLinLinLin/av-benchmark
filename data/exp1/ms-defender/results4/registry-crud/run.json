@@ -1,0 +1,38 @@
+{
+  "scenario_id": "registry-crud",
+  "av_name": "ms-defender",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T19:54:25.5317358Z",
+  "command": "registry-crud",
+  "working_dir": "C:\\bench\\microbench\\registry-crud",
+  "exit_code": 0,
+  "wall_ms": 586,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 139264,
+  "system_disk_write_bytes": 0,
+  "p50_us": 109.7,
+  "p95_us": 148.6,
+  "p99_us": 170.8,
+  "max_us": 3651.9,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "43310669ee4bebead4b721c143a85e3bfe1e03a2fc023880faf9a25de6c9ddee",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 8537.569060396128,
+    "mean_latency_us": 116.84358,
+    "p50_us": 109.7,
+    "p95_us": 148.6,
+    "p99_us": 170.8,
+    "max_us": 3651.9
+  }
+}

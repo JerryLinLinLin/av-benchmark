@@ -1,0 +1,38 @@
+{
+  "scenario_id": "dll-load-unique",
+  "av_name": "huorong",
+  "av_product": "Huorong Internet Security",
+  "av_version": "5.0.0.0",
+  "timestamp_utc": "2026-04-16T21:01:06.8350366Z",
+  "command": "dll-load-unique",
+  "working_dir": "C:\\bench\\microbench\\dll-load-unique",
+  "exit_code": 0,
+  "wall_ms": 27590,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 179226112,
+  "system_disk_write_bytes": 4039237632,
+  "p50_us": 13622.7,
+  "p95_us": 14873.5,
+  "p99_us": 16011.7,
+  "max_us": 313951.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 2000,
+    "ops_per_sec": 72.48958254927544,
+    "mean_latency_us": 13787.84855,
+    "p50_us": 13622.7,
+    "p95_us": 14873.5,
+    "p99_us": 16011.7,
+    "max_us": 313951.4
+  }
+}

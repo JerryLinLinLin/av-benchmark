@@ -1,0 +1,38 @@
+{
+  "scenario_id": "ext-sensitivity-js",
+  "av_name": "baseline-os",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T21:38:48.7116926Z",
+  "command": "ext-sensitivity-js",
+  "working_dir": "C:\\bench\\microbench\\ext-sensitivity-js",
+  "exit_code": 0,
+  "wall_ms": 2947,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 32768,
+  "system_disk_write_bytes": 47849472,
+  "p50_us": 284.3,
+  "p95_us": 322.9,
+  "p99_us": 578.1,
+  "max_us": 20546.2,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 3393.002333062334,
+    "mean_latency_us": 293.69217000000003,
+    "p50_us": 284.3,
+    "p95_us": 322.9,
+    "p99_us": 578.1,
+    "max_us": 20546.2
+  }
+}

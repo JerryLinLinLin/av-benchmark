@@ -1,0 +1,24 @@
+{
+  "scenario_id": "ripgrep-incremental-build",
+  "av_name": "ms-defender",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T20:16:04.1638838Z",
+  "command": "cargo build --release",
+  "working_dir": "C:\\bench\\ripgrep",
+  "exit_code": 0,
+  "wall_ms": 6232,
+  "user_cpu_ms": 32218,
+  "kernel_cpu_ms": 843,
+  "peak_job_memory_mb": 454,
+  "system_disk_read_bytes": 98304,
+  "system_disk_write_bytes": 25489408,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "43310669ee4bebead4b721c143a85e3bfe1e03a2fc023880faf9a25de6c9ddee"
+}

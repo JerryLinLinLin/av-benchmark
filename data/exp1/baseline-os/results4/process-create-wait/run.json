@@ -1,0 +1,38 @@
+{
+  "scenario_id": "process-create-wait",
+  "av_name": "baseline-os",
+  "av_product": "Windows Defender",
+  "av_version": "4.18.2201.11",
+  "timestamp_utc": "2026-04-16T21:38:09.8340767Z",
+  "command": "process-create-wait",
+  "working_dir": "C:\\bench\\microbench\\process-create-wait",
+  "exit_code": 0,
+  "wall_ms": 13724,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 98304,
+  "system_disk_write_bytes": 31891456,
+  "p50_us": 27173.2,
+  "p95_us": 29710.9,
+  "p99_us": 31380.4,
+  "max_us": 41754.5,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 500,
+    "ops_per_sec": 36.43261084745721,
+    "mean_latency_us": 27447.026,
+    "p50_us": 27173.2,
+    "p95_us": 29710.9,
+    "p99_us": 31380.4,
+    "max_us": 41754.5
+  }
+}
