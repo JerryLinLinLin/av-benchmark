@@ -165,3 +165,10 @@ Exit codes: `0` = success, `1` = error, `2` = reboot required (re-run setup afte
 | `--baseline` | *required* | Result directory for the no-AV baseline |
 | `--input` | *required* | One or more result directories to compare |
 | `--output` | *required* | Where to write `compare.csv` and `summary.md` |
+| `--rebuild` | `false` | Regenerate `runs.csv` in each results directory from `run.json` files before comparing |
+
+Use `--rebuild` after replacing a single scenario's `run.json` to refresh `runs.csv`, `compare.csv`, and `summary.md` without re-running the full suite:
+
+```powershell
+C:\tools\avbench\avbench-compare.exe --baseline C:\compare\baseline-os --input C:\compare\defender-default --output C:\compare\report --rebuild
+```
