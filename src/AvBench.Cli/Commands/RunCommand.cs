@@ -112,6 +112,11 @@ public static class RunCommand
                     effectiveAv);
 
                 var scenarios = new List<ScenarioDefinition>();
+                if (selection.IncludesWorkloadFamily(BenchmarkWorkloads.Microbench) || selection.IncludesAnyMicrobenchScenario())
+                {
+                    scenarios.AddRange(MicrobenchScenarioFactory.Create(manifest, selection.MicrobenchScenarioIds));
+                }
+
                 if (selection.IncludesWorkloadFamily(BenchmarkWorkloads.Ripgrep))
                 {
                     scenarios.AddRange(RipgrepScenarioFactory.Create(manifest));
@@ -120,11 +125,6 @@ public static class RunCommand
                 if (selection.IncludesWorkloadFamily(BenchmarkWorkloads.Roslyn))
                 {
                     scenarios.AddRange(RoslynScenarioFactory.Create(manifest));
-                }
-
-                if (selection.IncludesWorkloadFamily(BenchmarkWorkloads.Microbench) || selection.IncludesAnyMicrobenchScenario())
-                {
-                    scenarios.AddRange(MicrobenchScenarioFactory.Create(manifest, selection.MicrobenchScenarioIds));
                 }
 
                 var orderedScenarios = OrderScenariosForSession(scenarios);
@@ -180,46 +180,7 @@ public static class RunCommand
 
     private static List<ScenarioDefinition> OrderScenariosForSession(IReadOnlyList<ScenarioDefinition> scenarios)
     {
-        var groups = new List<List<ScenarioDefinition>>();
-        List<ScenarioDefinition>? currentGroup = null;
-        string? currentFamily = null;
-
-        foreach (var scenario in scenarios)
-        {
-            var family = ScenarioSupport.GetScenarioFamily(scenario.Id);
-            if (currentGroup is null || !string.Equals(currentFamily, family, StringComparison.OrdinalIgnoreCase))
-            {
-                currentGroup = [];
-                groups.Add(currentGroup);
-                currentFamily = family;
-            }
-
-            currentGroup.Add(scenario);
-        }
-
-        var microbenchGroups = groups
-            .Where(group => !ScenarioSupport.IsCompilationFamily(ScenarioSupport.GetScenarioFamily(group[0].Id)))
-            .ToList();
-        var compilationGroups = groups
-            .Where(group => ScenarioSupport.IsCompilationFamily(ScenarioSupport.GetScenarioFamily(group[0].Id)))
-            .ToList();
-
-        Shuffle(microbenchGroups);
-        Shuffle(compilationGroups);
-
-        return microbenchGroups
-            .Concat(compilationGroups)
-            .SelectMany(static group => group)
-            .ToList();
-    }
-
-    private static void Shuffle(List<List<ScenarioDefinition>> groups)
-    {
-        for (var index = groups.Count - 1; index > 0; index--)
-        {
-            var swapIndex = Random.Shared.Next(index + 1);
-            (groups[index], groups[swapIndex]) = (groups[swapIndex], groups[index]);
-        }
+        return scenarios.ToList();
     }
 
     private static string? NormalizeOverride(string? value)
