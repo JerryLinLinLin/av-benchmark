@@ -3,20 +3,20 @@
   "av_name": "baseline-os",
   "av_product": "Windows Defender",
   "av_version": "4.18.2201.11",
-  "timestamp_utc": "2026-04-16T21:41:34.7496485Z",
+  "timestamp_utc": "2026-04-16T19:24:30.5599545Z",
   "command": "crypto-hash-verify",
   "working_dir": "C:\\bench\\microbench\\crypto-hash-verify",
   "exit_code": 0,
-  "wall_ms": 247,
+  "wall_ms": 249,
   "user_cpu_ms": 0,
   "kernel_cpu_ms": 0,
   "peak_job_memory_mb": 0,
-  "system_disk_read_bytes": 458752,
+  "system_disk_read_bytes": 417792,
   "system_disk_write_bytes": 0,
   "p50_us": 40.5,
-  "p95_us": 44,
-  "p99_us": 56.6,
-  "max_us": 345.3,
+  "p95_us": 41.7,
+  "p99_us": 56,
+  "max_us": 121.1,
   "machine": {
     "os": "Microsoft Windows NT 10.0.22621.0",
     "cpu": "24 vCPU",
@@ -28,11 +28,11 @@
   "microbench": {
     "batch_size": 1,
     "total_operations": 5000,
-    "ops_per_sec": 24088.282592168995,
-    "mean_latency_us": 41.48854,
+    "ops_per_sec": 24303.143806076467,
+    "mean_latency_us": 41.12276,
     "p50_us": 40.5,
-    "p95_us": 44,
-    "p99_us": 56.6,
-    "max_us": 345.3
+    "p95_us": 41.7,
+    "p99_us": 56,
+    "max_us": 121.1
   }
 }
