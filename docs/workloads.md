@@ -145,17 +145,17 @@ These scenarios probe file-system API paths that are both common in normal softw
 
 | Scenario ID | What it does | Why it is in the suite |
 |---|---|---|
-| `file-create-delete` | Creates and deletes 5,000 small temp files in batches of 100 | Baseline file-create/file-delete overhead on a very common API path |
+| `file-create-delete` | Creates 5,000 64-byte temp files via `File.Create` and immediately deletes each one, in batches of 100 | Baseline file-create/file-delete overhead on a very common API path |
 | `archive-extract` | Extracts the generated mixed-file zip 10 times, deleting the extracted tree each time | Stresses the bursty multi-file create/write path seen in restore, unpack, and installer workflows |
 | `file-enum-large-dir` | Enumerates a generated directory containing 10,000 files, 50 times | Measures directory-enumeration cost on a path hit by IDEs, sync clients, and source-control tools |
 | `file-copy-large` | Copies a generated 100 MB file 10 times, deleting the copy after each run | Measures bulk file-copy behavior rather than tiny metadata-only operations |
-| `hardlink-create` | Creates and deletes 5,000 hard links | Covers link-creation APIs used by package managers and workspace tooling |
-| `junction-create` | Creates and deletes 2,000 directory junctions | Covers reparse-point creation on a path that some developer workflows use heavily |
-| `ext-sensitivity-exe` | Writes and deletes 10,000 randomly generated `.exe` files | Tests whether executable-looking filenames change the cost of the write path |
-| `ext-sensitivity-dll` | Writes and deletes 10,000 randomly generated `.dll` files | Same idea for library-like payloads |
-| `ext-sensitivity-js` | Writes and deletes 10,000 randomly generated `.js` files | Same idea for script-like payloads |
-| `ext-sensitivity-ps1` | Writes and deletes 10,000 randomly generated `.ps1` files | Same idea for PowerShell-style payloads |
-| `file-write-content` | Rewrites a local unsigned PE template with small byte changes and writes it as alternating `.exe` and `.dll` files | Tests the file-write path with executable-like content, not just executable-like extensions |
+| `hardlink-create` | Creates a 4 KB source file, then calls Win32 `CreateHardLink` to make a hard link to it and deletes the link, 5,000 times | Covers link-creation APIs used by package managers and workspace tooling |
+| `junction-create` | Creates an empty directory, sets a mount-point reparse point on it (`FSCTL_SET_REPARSE_POINT`) targeting a fixed directory, then deletes the junction, 2,000 times | Covers reparse-point creation on a path that some developer workflows use heavily |
+| `ext-sensitivity-exe` | Writes a 4 KB random-content buffer to a `.exe` file and deletes it, 10,000 times | Tests whether executable-looking filenames change the cost of the write path |
+| `ext-sensitivity-dll` | Same as above but with `.dll` extension, 10,000 times | Same idea for library-like payloads |
+| `ext-sensitivity-js` | Same as above but with `.js` extension, 10,000 times | Same idea for script-like payloads |
+| `ext-sensitivity-ps1` | Same as above but with `.ps1` extension, 10,000 times | Same idea for PowerShell-style payloads |
+| `file-write-content` | Copies the unsigned `noop.exe` PE template into a buffer, patches 4 bytes at the DOS stub offset (0x40) with the iteration index to produce a unique file hash, writes the result as alternating `.exe` and `.dll` files, and deletes each file, 10,000 times | Tests the file-write path with executable-like content, not just executable-like extensions |
 
 Two of these scenarios deserve special attention:
 
@@ -168,11 +168,11 @@ These scenarios focus on API paths around process creation, image loading, execu
 
 | Scenario ID | What it does | Why it is in the suite |
 |---|---|---|
-| `process-create-wait` | Launches the local unsigned `noop.exe` 500 times and waits for exit | Measures the small-process-launch path directly |
-| `dll-load-unique` | Copies a system DLL to a unique path, loads it, unloads it, and deletes it 2,000 times | Measures repeated load-from-new-path behavior on the image-load path |
+| `process-create-wait` | Launches the local unsigned `noop.exe` with redirected stdout/stderr, reads both streams, and waits for exit, 500 times | Measures the small-process-launch path directly |
+| `dll-load-unique` | Copies a system DLL (`urlmon.dll` by default) to a unique file path, calls Win32 `LoadLibrary` to load it, `FreeLibrary` to unload it, and deletes the copy, 2,000 times | Measures repeated load-from-new-path behavior on the image-load path |
 | `new-exe-run` | Copies the unsigned `noop.exe` to a temp directory, patches 4 bytes to produce a unique hash, runs it, and deletes the directory, 50 times | Baseline for executing a never-before-seen binary without internet-origin marking |
 | `new-exe-run-motw` | Same as above, but also adds a `Zone.Identifier` alternate data stream with `ZoneId=3` before execution, 50 times | Measures whether internet-origin marking changes the cost of executing a never-before-seen binary |
-| `thread-create` | Creates, starts, and joins 5,000 managed threads | Measures a simple thread-creation path that some products also watch closely |
+| `thread-create` | Creates a .NET `Thread` with a no-op body (`IsBackground = true`), starts it, and joins it, 5,000 times | Measures a simple thread-creation path that some products also watch closely |
 
 The `new-exe-run` / `new-exe-run-motw` pair is especially useful because it creates a controlled A/B comparison on the same execution path. Each iteration patches 4 bytes of the PE header (the same DOS stub padding region that `file-write-content` uses) so every copy has a unique file hash, defeating AV scan-result caching. The executable payload is functionally the same; the only differences are the hash and the presence of the `Zone.Identifier` stream. Any delta can reflect Windows security features, reputation checks, product policy, or other handling tied to internet-origin metadata.[1]
 
@@ -182,7 +182,7 @@ These scenarios target memory-management API paths that show up in JITs, loaders
 
 | Scenario ID | What it does | Why it is in the suite |
 |---|---|---|
-| `mem-alloc-protect` | Repeats `VirtualAlloc` -> write -> `VirtualProtect` -> `VirtualFree` 50,000 times | Measures a compact allocate/change-protection/free path that is often security-sensitive |
+| `mem-alloc-protect` | Allocates a 4 KB page with `VirtualAlloc(PAGE_READWRITE)`, writes one byte, changes protection to `PAGE_EXECUTE_READ` via `VirtualProtect`, then releases it with `VirtualFree`, 50,000 times | Measures a compact allocate/change-protection/free path that is often security-sensitive; the RW→execute-read transition is the security-interesting step |
 | `mem-map-file` | Creates a memory-mapped view over a 4 KB backing file, writes one byte, reads one byte, then disposes it 10,000 times | Measures repeated file-backed section mapping rather than ordinary buffered I/O |
 
 These are not whole-application models. They are API-path probes for behaviors that often receive more security scrutiny than plain file reads and writes.
@@ -193,9 +193,9 @@ These scenarios cover two API surfaces that matter to ordinary software and to s
 
 | Scenario ID | What it does | Why it is in the suite |
 |---|---|---|
-| `net-connect-loopback` | Connects to a local echo server 2,000 times, sends 1 KB, reads 1 KB back, and closes | Measures connect/send/receive/close overhead without internet noise dominating the result |
-| `net-dns-resolve` | Resolves `localhost` 5,000 times | Measures a lightweight lookup-oriented networking path |
-| `registry-crud` | Creates a key, writes five value types, reads them back, enumerates names, and deletes the key 5,000 times | Measures a registry API sequence that is common in installers, apps, and management tooling |
+| `net-connect-loopback` | Creates a new `TcpClient` with `TCP_NODELAY`, connects to a localhost echo server, writes 1 KB, reads 1 KB back, and disposes the connection, 2,000 times (a new TCP connection per iteration) | Measures connect/send/receive/close overhead without internet noise dominating the result |
+| `net-dns-resolve` | Calls `Dns.GetHostAddresses("localhost")` and verifies at least one address is returned, 5,000 times | Measures a lightweight lookup-oriented networking path |
+| `registry-crud` | Creates a subkey under `HKCU\Software\AvBench\Temp`, writes five value types (String, DWord, Binary, MultiString, ExpandString), reads all five back, enumerates value names, and deletes the key tree, 5,000 times | Measures a registry API sequence that is common in installers, apps, and management tooling |
 
 The networking scenarios should be read carefully. They are API-path probes, not network benchmarks. They are useful for exposing relative differences in local networking or inspection overhead, not for predicting end-to-end internet latency.
 
@@ -206,11 +206,11 @@ These scenarios cover a set of Windows-facing API paths that show up in tools, s
 | Scenario ID | What it does | Why it is in the suite |
 |---|---|---|
 | `pipe-roundtrip` | Creates a named-pipe server/client pair, then exchanges 4 KB round-trips 2,000 times over the established connection | Measures steady-state local IPC latency |
-| `token-query` | Opens the current process token and reads privileges 50,000 times | Measures a repeated security-context query path |
-| `crypto-hash-verify` | Hashes a 64 KB buffer with SHA-256 and verifies an RSA-2048 signature 5,000 times | Acts as a security-related local compute path rather than a file or process path |
-| `com-create-instance` | Creates and releases `Scripting.FileSystemObject` 5,000 times | Measures COM activation and teardown |
-| `wmi-query` | Runs a `Win32_Process` query 500 times | Measures a heavier management-oriented query path than raw COM alone |
-| `fs-watcher` | Enables a `FileSystemWatcher`, then repeatedly creates, appends to, and deletes files | Measures file activity while the change-notification path is active |
+| `token-query` | Calls Win32 `OpenProcessToken(TOKEN_QUERY)` on the current process, reads `TokenPrivileges` via `GetTokenInformation` into a 1 KB buffer, and closes the token handle, 50,000 times | Measures a repeated security-context query path |
+| `crypto-hash-verify` | Computes `SHA256.HashData` over a 64 KB buffer, then verifies the hash against a pre-computed RSA-2048 signature using PKCS#1 v1.5 padding, 5,000 times | Acts as a security-related local compute path rather than a file or process path |
+| `com-create-instance` | Calls `Activator.CreateInstance` to create a `Scripting.FileSystemObject` COM object and immediately releases it via `Marshal.FinalReleaseComObject`, 5,000 times | Measures COM activation and teardown |
+| `wmi-query` | Creates a new `ManagementObjectSearcher`, queries `SELECT ProcessId, Name FROM Win32_Process WHERE ProcessId = <self>` to select only the current process, reads the `Name` property from the result, and disposes the searcher, 500 times | Measures a heavier management-oriented query path than raw COM alone |
+| `fs-watcher` | Sets up a `FileSystemWatcher` monitoring for file-name and last-write changes, then per iteration writes a 64-byte file, appends one character, and deletes it, 5,000 times while the watcher is active | Measures file-system API cost while the OS change-notification path is active |
 
 `crypto-hash-verify` is the outlier in this group. It is less direct than the file/process/registry scenarios as a Windows API probe, but it is still useful as a security-adjacent path: it shows whether a configuration changes the cost of local hash-and-verify work enough to matter.
 
