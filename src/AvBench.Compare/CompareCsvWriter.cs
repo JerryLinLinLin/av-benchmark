@@ -26,6 +26,12 @@ public static class CompareCsvWriter
         "baseline_system_disk_write_mb",
         "slowdown_pct",
         "cv_pct",
+        "baseline_cv_pct",
+        "median_p50_us",
+        "median_p95_us",
+        "median_p99_us",
+        "baseline_median_p95_us",
+        "p95_slowdown_pct",
         "status"
     ];
 
@@ -56,6 +62,12 @@ public static class CompareCsvWriter
                 BytesToMb(row.BaselineSystemDiskWriteBytes).ToString("F1", CultureInfo.InvariantCulture),
                 row.SlowdownPct.ToString("F1", CultureInfo.InvariantCulture),
                 row.CvPct.ToString("F1", CultureInfo.InvariantCulture),
+                row.BaselineCvPct.ToString("F1", CultureInfo.InvariantCulture),
+                FormatNullable(row.MedianP50Us),
+                FormatNullable(row.MedianP95Us),
+                FormatNullable(row.MedianP99Us),
+                FormatNullable(row.BaselineMedianP95Us),
+                FormatNullable(row.P95SlowdownPct),
                 Escape(row.Status)));
         }
 
@@ -74,4 +86,9 @@ public static class CompareCsvWriter
 
     private static double BytesToMb(long bytes)
         => bytes / (1024d * 1024d);
+
+    private static string FormatNullable(double? value)
+        => value.HasValue
+            ? value.Value.ToString("F1", CultureInfo.InvariantCulture)
+            : string.Empty;
 }

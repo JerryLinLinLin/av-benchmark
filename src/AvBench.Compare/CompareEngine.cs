@@ -5,6 +5,8 @@ namespace AvBench.Compare;
 public static class CompareEngine
 {
     private const double NoisyThresholdPct = 10.0;
+    private const double AnomalySlowdownThresholdPct = -10.0;
+    private const int MinimumReliableSessions = 3;
 
     public static List<ComparisonRow> Compare(
         IReadOnlyList<RunResult> baselineRuns,
@@ -12,6 +14,10 @@ public static class CompareEngine
     {
         var rows = new List<ComparisonRow>();
         var baselineName = baselineRuns.FirstOrDefault()?.AvName ?? "baseline-os";
+
+        var allBaselineByScenario = baselineRuns
+            .GroupBy(static run => run.ScenarioId, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(static group => group.Key, static group => group.ToList(), StringComparer.OrdinalIgnoreCase);
 
         var baselineByScenario = baselineRuns
             .Where(static run => run.ExitCode == 0)
@@ -50,8 +56,12 @@ public static class CompareEngine
                 var kernelCpuSamples = successfulRuns.Select(static run => (double)run.KernelCpuMs).ToArray();
                 var systemDiskReadSamples = successfulRuns.Select(static run => (double)run.SystemDiskReadBytes).ToArray();
                 var systemDiskWriteSamples = successfulRuns.Select(static run => (double)run.SystemDiskWriteBytes).ToArray();
+                var p50Samples = successfulRuns.Where(static run => run.P50Us.HasValue).Select(static run => run.P50Us!.Value).ToArray();
+                var p95Samples = successfulRuns.Where(static run => run.P95Us.HasValue).Select(static run => run.P95Us!.Value).ToArray();
+                var p99Samples = successfulRuns.Where(static run => run.P99Us.HasValue).Select(static run => run.P99Us!.Value).ToArray();
 
                 var meanWall = wallSamples.Average();
+                var medianWall = Median(wallSamples);
                 var meanCpu = cpuSamples.Average();
                 var meanKernelCpu = kernelCpuSamples.Average();
                 var meanSystemDiskReadBytes = systemDiskReadSamples.Average();
@@ -60,14 +70,46 @@ public static class CompareEngine
                     ? StandardDeviation(wallSamples) / meanWall * 100.0
                     : 0.0;
                 var kernelCpuPct = CalculatePercent(meanKernelCpu, meanCpu);
+                var medianP50Us = TryMedian(p50Samples);
+                var medianP95Us = TryMedian(p95Samples);
+                var medianP99Us = TryMedian(p99Samples);
 
+                allBaselineByScenario.TryGetValue(group.Key, out var allBaselineScenarioRuns);
                 baselineByScenario.TryGetValue(group.Key, out var baselineScenarioRuns);
+                var baselineHasFailures = allBaselineScenarioRuns is null
+                    || baselineScenarioRuns is null
+                    || baselineScenarioRuns.Count != allBaselineScenarioRuns.Count;
                 var baselineMeanWall = baselineScenarioRuns?.Average(static run => (double)run.WallMs) ?? 0.0;
+                var baselineMedianWall = baselineScenarioRuns is not null && baselineScenarioRuns.Count > 0
+                    ? Median(baselineScenarioRuns.Select(static run => (double)run.WallMs).ToArray())
+                    : 0.0;
                 var baselineMeanCpu = baselineScenarioRuns?.Average(static run => (double)(run.UserCpuMs + run.KernelCpuMs)) ?? 0.0;
                 var baselineMeanKernelCpu = baselineScenarioRuns?.Average(static run => (double)run.KernelCpuMs) ?? 0.0;
                 var baselineMeanSystemDiskReadBytes = baselineScenarioRuns?.Average(static run => (double)run.SystemDiskReadBytes) ?? 0.0;
                 var baselineMeanSystemDiskWriteBytes = baselineScenarioRuns?.Average(static run => (double)run.SystemDiskWriteBytes) ?? 0.0;
+                var baselineWallSamples = baselineScenarioRuns?.Select(static run => (double)run.WallMs).ToArray() ?? [];
+                var baselineCvPct = baselineWallSamples.Length > 1
+                    ? StandardDeviation(baselineWallSamples) / baselineWallSamples.Average() * 100.0
+                    : 0.0;
                 var baselineKernelCpuPct = CalculatePercent(baselineMeanKernelCpu, baselineMeanCpu);
+                var baselineP95Samples = baselineScenarioRuns?
+                    .Where(static run => run.P95Us.HasValue)
+                    .Select(static run => run.P95Us!.Value)
+                    .ToArray() ?? [];
+                var baselineMedianP95Us = TryMedian(baselineP95Samples);
+                var slowdownPct = baselineMedianWall > 0
+                    ? Math.Round((medianWall - baselineMedianWall) / baselineMedianWall * 100.0, 1)
+                    : 0.0;
+                double? p95SlowdownPct = medianP95Us.HasValue && baselineMedianP95Us.HasValue && baselineMedianP95Us.Value > 0
+                    ? Math.Round((medianP95Us.Value - baselineMedianP95Us.Value) / baselineMedianP95Us.Value * 100.0, 1)
+                    : null;
+                var status = BuildStatus(
+                    hasFailures || baselineHasFailures,
+                    scenarioRuns.Count,
+                    allBaselineScenarioRuns?.Count ?? 0,
+                    cvPct,
+                    baselineCvPct,
+                    slowdownPct);
 
                 rows.Add(new ComparisonRow
                 {
@@ -77,8 +119,10 @@ public static class CompareEngine
                     AvVersion = successfulRuns[0].AvVersion,
                     BaselineName = baselineName,
                     Sessions = scenarioRuns.Count,
+                    BaselineSessions = allBaselineScenarioRuns?.Count ?? 0,
                     MeanWallMs = Math.Round(meanWall, 1),
-                    MedianWallMs = Math.Round(Median(wallSamples), 1),
+                    MedianWallMs = Math.Round(medianWall, 1),
+                    BaselineMedianWallMs = Math.Round(baselineMedianWall, 1),
                     MeanCpuMs = Math.Round(meanCpu, 1),
                     KernelCpuPct = Math.Round(kernelCpuPct, 1),
                     BaselineKernelCpuPct = Math.Round(baselineKernelCpuPct, 1),
@@ -88,15 +132,15 @@ public static class CompareEngine
                     BaselineSystemDiskReadBytes = (long)Math.Round(baselineMeanSystemDiskReadBytes, MidpointRounding.AwayFromZero),
                     SystemDiskWriteBytes = (long)Math.Round(meanSystemDiskWriteBytes, MidpointRounding.AwayFromZero),
                     BaselineSystemDiskWriteBytes = (long)Math.Round(baselineMeanSystemDiskWriteBytes, MidpointRounding.AwayFromZero),
-                    SlowdownPct = baselineMeanWall > 0
-                        ? Math.Round((meanWall - baselineMeanWall) / baselineMeanWall * 100.0, 1)
-                        : 0.0,
+                    SlowdownPct = slowdownPct,
                     CvPct = Math.Round(cvPct, 1),
-                    Status = hasFailures
-                        ? "failed"
-                        : cvPct > NoisyThresholdPct
-                            ? "noisy"
-                            : "ok"
+                    BaselineCvPct = Math.Round(baselineCvPct, 1),
+                    MedianP50Us = RoundNullable(medianP50Us),
+                    MedianP95Us = RoundNullable(medianP95Us),
+                    MedianP99Us = RoundNullable(medianP99Us),
+                    BaselineMedianP95Us = RoundNullable(baselineMedianP95Us),
+                    P95SlowdownPct = RoundNullable(p95SlowdownPct),
+                    Status = status
                 });
             }
         }
@@ -107,6 +151,37 @@ public static class CompareEngine
     private static double CalculatePercent(double numerator, double denominator)
         => denominator > 0 ? numerator / denominator * 100.0 : 0.0;
 
+    private static string BuildStatus(
+        bool hasFailures,
+        int sessions,
+        int baselineSessions,
+        double cvPct,
+        double baselineCvPct,
+        double slowdownPct)
+    {
+        if (hasFailures)
+        {
+            return "failed";
+        }
+
+        if (sessions < MinimumReliableSessions || baselineSessions < MinimumReliableSessions)
+        {
+            return "insufficient";
+        }
+
+        if (cvPct > NoisyThresholdPct || baselineCvPct > NoisyThresholdPct)
+        {
+            return "noisy";
+        }
+
+        if (slowdownPct < AnomalySlowdownThresholdPct)
+        {
+            return "anomaly";
+        }
+
+        return "ok";
+    }
+
     private static double Median(IReadOnlyList<double> values)
     {
         var ordered = values.OrderBy(static value => value).ToArray();
@@ -116,12 +191,20 @@ public static class CompareEngine
             : ordered[middle];
     }
 
+    private static double? TryMedian(IReadOnlyList<double> values)
+        => values.Count == 0 ? null : Median(values);
+
     private static double StandardDeviation(IReadOnlyList<double> values)
     {
         var mean = values.Average();
         var variance = values.Sum(value => Math.Pow(value - mean, 2)) / values.Count;
         return Math.Sqrt(variance);
     }
+
+    private static double? RoundNullable(double? value)
+        => value.HasValue
+            ? Math.Round(value.Value, 1)
+            : null;
 }
 
 public sealed class ComparisonRow
@@ -138,9 +221,13 @@ public sealed class ComparisonRow
 
     public int Sessions { get; init; }
 
+    public int BaselineSessions { get; init; }
+
     public double MeanWallMs { get; init; }
 
     public double MedianWallMs { get; init; }
+
+    public double BaselineMedianWallMs { get; init; }
 
     public double MeanCpuMs { get; init; }
 
@@ -163,6 +250,18 @@ public sealed class ComparisonRow
     public double SlowdownPct { get; init; }
 
     public double CvPct { get; init; }
+
+    public double BaselineCvPct { get; init; }
+
+    public double? MedianP50Us { get; init; }
+
+    public double? MedianP95Us { get; init; }
+
+    public double? MedianP99Us { get; init; }
+
+    public double? BaselineMedianP95Us { get; init; }
+
+    public double? P95SlowdownPct { get; init; }
 
     public string Status { get; init; } = string.Empty;
 }

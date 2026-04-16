@@ -6,6 +6,7 @@ namespace AvBench.Compare;
 public static class SummaryRenderer
 {
     private const double SignificantDiskDeltaMb = 100.0;
+    private const double SignificantKernelShiftPp = 1.0;
 
     public static async Task WriteAsync(IReadOnlyList<ComparisonRow> rows, string path, CancellationToken cancellationToken)
     {
@@ -20,28 +21,25 @@ public static class SummaryRenderer
             var first = group.First();
             builder.AppendLine($"## {group.Key} ({first.AvProduct} v{first.AvVersion}) vs {first.BaselineName}");
             builder.AppendLine();
-            builder.AppendLine("| Scenario | Mean Wall (ms) | Slowdown | Kernel CPU % | Baseline Kernel % | Kernel Shift | CV % | Status |");
-            builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---|");
+            builder.AppendLine("| Scenario | Median Wall (ms) | Slowdown | p95 Slowdown | Disk Read Δ (MB) | Disk Write Δ (MB) | CV % | Baseline CV % | Status |");
+            builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---|");
 
             foreach (var row in group.OrderByDescending(static item => item.SlowdownPct).ThenBy(static item => item.ScenarioId, StringComparer.OrdinalIgnoreCase))
             {
-                var slowdown = row.SlowdownPct >= 0
-                    ? $"+{row.SlowdownPct:F1}%"
-                    : $"{row.SlowdownPct:F1}%";
-                var kernelShift = row.KernelCpuSlowdownPct >= 0
-                    ? $"+{row.KernelCpuSlowdownPct:F1}pp"
-                    : $"{row.KernelCpuSlowdownPct:F1}pp";
+                var diskReadDeltaMb = BytesToMb(row.SystemDiskReadBytes - row.BaselineSystemDiskReadBytes);
+                var diskWriteDeltaMb = BytesToMb(row.SystemDiskWriteBytes - row.BaselineSystemDiskWriteBytes);
 
                 builder.AppendLine(string.Format(
                     CultureInfo.InvariantCulture,
-                    "| {0} | {1:F1} | {2} | {3:F1}% | {4:F1}% | {5} | {6:F1}% | {7} |",
+                    "| {0} | {1:F1} | {2} | {3} | {4} | {5} | {6:F1}% | {7:F1}% | {8} |",
                     row.ScenarioId,
-                    row.MeanWallMs,
-                    slowdown,
-                    row.KernelCpuPct,
-                    row.BaselineKernelCpuPct,
-                    kernelShift,
+                    row.MedianWallMs,
+                    FormatPercent(row.SlowdownPct),
+                    FormatNullablePercent(row.P95SlowdownPct),
+                    FormatDeltaMb(diskReadDeltaMb),
+                    FormatDeltaMb(diskWriteDeltaMb),
                     row.CvPct,
+                    row.BaselineCvPct,
                     row.Status));
             }
 
@@ -59,7 +57,7 @@ public static class SummaryRenderer
                 .Where(static row => string.Equals(row.Status, "ok", StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(static row => row.KernelCpuSlowdownPct)
                 .FirstOrDefault();
-            if (largestKernelShift is not null && largestKernelShift.KernelCpuSlowdownPct > 0)
+            if (largestKernelShift is not null && largestKernelShift.KernelCpuSlowdownPct >= SignificantKernelShiftPp)
             {
                 builder.AppendLine();
                 builder.AppendLine(
@@ -101,6 +99,20 @@ public static class SummaryRenderer
                 builder.AppendLine($"Noisy scenarios: {string.Join(", ", noisy.Select(static row => row.ScenarioId))}");
             }
 
+            var insufficient = group.Where(static row => string.Equals(row.Status, "insufficient", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (insufficient.Count > 0)
+            {
+                builder.AppendLine();
+                builder.AppendLine($"Insufficient data (< 3 sessions): {string.Join(", ", insufficient.Select(static row => row.ScenarioId))}");
+            }
+
+            var anomalies = group.Where(static row => string.Equals(row.Status, "anomaly", StringComparison.OrdinalIgnoreCase)).ToList();
+            if (anomalies.Count > 0)
+            {
+                builder.AppendLine();
+                builder.AppendLine($"Anomaly scenarios (AV appears faster - likely caching artifact): {string.Join(", ", anomalies.Select(static row => row.ScenarioId))}");
+            }
+
             var failed = group.Where(static row => string.Equals(row.Status, "failed", StringComparison.OrdinalIgnoreCase)).ToList();
             if (failed.Count > 0)
             {
@@ -111,9 +123,96 @@ public static class SummaryRenderer
             builder.AppendLine();
         }
 
+        AppendCrossAvComparison(rows, builder);
+
         await File.WriteAllTextAsync(path, builder.ToString(), cancellationToken);
     }
 
     private static double BytesToMb(long bytes)
         => bytes / (1024d * 1024d);
+
+    private static void AppendCrossAvComparison(IReadOnlyList<ComparisonRow> rows, StringBuilder builder)
+    {
+        var avGroups = rows
+            .GroupBy(static row => row.AvName)
+            .OrderBy(static group => group.Key, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (avGroups.Count < 2)
+        {
+            return;
+        }
+
+        builder.AppendLine("## Cross-AV comparison");
+        builder.AppendLine();
+
+        var headers = new List<string> { "Scenario", "baseline (ms)" };
+        headers.AddRange(avGroups.Select(static group => group.Key));
+        builder.AppendLine($"| {string.Join(" | ", headers)} |");
+        builder.AppendLine($"|{string.Join("|", Enumerable.Repeat("---", headers.Count))}|");
+
+        var rowsByScenario = rows
+            .GroupBy(static row => row.ScenarioId, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(static group => group.Max(static row => row.SlowdownPct))
+            .ThenBy(static group => group.Key, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var scenarioGroup in rowsByScenario)
+        {
+            var cells = new List<string>
+            {
+                scenarioGroup.Key,
+                FormatBaselineWall(scenarioGroup.FirstOrDefault()?.BaselineMedianWallMs)
+            };
+
+            foreach (var avGroup in avGroups)
+            {
+                var row = scenarioGroup.FirstOrDefault(item => string.Equals(item.AvName, avGroup.Key, StringComparison.OrdinalIgnoreCase));
+                cells.Add(FormatCrossAvCell(row));
+            }
+
+            builder.AppendLine($"| {string.Join(" | ", cells)} |");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("`*` marks a non-ok result (`failed`, `insufficient`, `noisy`, or `anomaly`).");
+        builder.AppendLine();
+    }
+
+    private static string FormatPercent(double value)
+        => value >= 0
+            ? $"+{value:F1}%"
+            : $"{value:F1}%";
+
+    private static string FormatNullablePercent(double? value)
+        => value.HasValue
+            ? FormatPercent(value.Value)
+            : "—";
+
+    private static string FormatDeltaMb(double value)
+        => value >= 0
+            ? $"+{value:F1}"
+            : $"{value:F1}";
+
+    private static string FormatBaselineWall(double? value)
+        => value.HasValue && value.Value > 0
+            ? value.Value.ToString("F1", CultureInfo.InvariantCulture)
+            : "—";
+
+    private static string FormatCrossAvCell(ComparisonRow? row)
+    {
+        if (row is null)
+        {
+            return "—";
+        }
+
+        if (string.Equals(row.Status, "failed", StringComparison.OrdinalIgnoreCase) && row.MedianWallMs <= 0)
+        {
+            return "failed*";
+        }
+
+        var formatted = FormatPercent(row.SlowdownPct);
+        return string.Equals(row.Status, "ok", StringComparison.OrdinalIgnoreCase)
+            ? formatted
+            : $"{formatted}*";
+    }
 }
