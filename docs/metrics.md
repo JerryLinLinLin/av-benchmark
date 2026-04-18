@@ -169,6 +169,7 @@ The main derived columns in `compare.csv` are:
 | Column | Meaning |
 |---|---|
 | `sessions` | Number of discovered runs for that AV/scenario pair |
+| `baseline_sessions` | Number of discovered baseline runs for the same scenario |
 | `mean_wall_ms` | Mean wall time across successful runs |
 | `median_wall_ms` | Median wall time across successful runs |
 | `mean_cpu_ms` | Mean total CPU time (`user + kernel`) across successful runs |
@@ -181,7 +182,7 @@ The main derived columns in `compare.csv` are:
 | `baseline_cv_pct` | Coefficient of variation of baseline wall time |
 | `excluded_runs` | Number of outlier runs excluded on the AV side (0 or 1) |
 | `baseline_excluded_runs` | Number of outlier runs excluded on the baseline side (0 or 1) |
-| `status` | `ok`, `noisy`, or `failed` |
+| `status` | `ok`, `failed`, `insufficient`, `noisy`, or `anomaly` |
 
 `summary.md` shows a narrower table focused on the columns that are meaningful for every scenario:
 
@@ -191,10 +192,14 @@ The main derived columns in `compare.csv` are:
 
 Kernel CPU shift and peak memory are omitted from the summary table because they are zero for all 27 microbenchmarks (which run in-process without Job Object accounting). When a compilation scenario has a significant kernel CPU shift, it appears as a footnote callout below the table. The full data remains in `compare.csv` for detailed analysis.
 
+Rows in each `summary.md` table use the suite's fixed scenario order instead of sorting by slowdown. This keeps reports stable between AV products and between repeated comparisons. The ranked callouts below each table, such as highest slowdown or largest disk delta, still sort by the metric they summarize.
+
 Status is assigned like this:
 
 - `failed`: at least one run in the group failed, or no successful runs exist
+- `insufficient`: fewer than 3 sessions exist on either side
 - `noisy`: all runs succeeded, but `cv_pct > 10` or `baseline_cv_pct > 10` even after attempting outlier exclusion (see below)
+- `anomaly`: all runs succeeded and were stable, but the AV side appears more than 10% faster than baseline, which usually points to cache or ordering artifacts rather than a real security-product speedup
 - `ok`: all runs succeeded and both `cv_pct` and `baseline_cv_pct` are ≤ 10 (possibly after outlier exclusion)
 
 That makes `status` intentionally conservative. If even one run failed, the row is marked `failed` even when some successful samples were available.
@@ -230,6 +235,8 @@ Note: the CV values reported in `compare.csv` and `summary.md` reflect the **pos
 - `ok` means the repeated measurements were stable enough for ordinary comparison.
 - `noisy` means the scenario likely needs more investigation or more runs.
 - `failed` means you should not treat the comparison row as clean evidence.
+- `insufficient` means there are too few sessions to make a reliable comparison.
+- `anomaly` means the direction of the result is suspicious enough that it should be investigated before drawing conclusions.
 
 ## The shortest useful reading of a result
 

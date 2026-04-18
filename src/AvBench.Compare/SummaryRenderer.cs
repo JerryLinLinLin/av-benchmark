@@ -9,6 +9,44 @@ public static class SummaryRenderer
     private const double SignificantKernelShiftPp = 1.0;
     private const string OutlierMarker = "\u2020";
     private const string ExcludedOutlierFootnote = "\u2020 1 outlier run excluded to reduce CV";
+    private static readonly string[] ScenarioOrder =
+    [
+        "file-create-delete",
+        "archive-extract",
+        "file-enum-large-dir",
+        "file-copy-large",
+        "hardlink-create",
+        "junction-create",
+        "process-create-wait",
+        "ext-sensitivity-exe",
+        "ext-sensitivity-dll",
+        "ext-sensitivity-js",
+        "ext-sensitivity-ps1",
+        "dll-load-unique",
+        "file-write-content",
+        "new-exe-run",
+        "new-exe-run-motw",
+        "thread-create",
+        "mem-alloc-protect",
+        "mem-map-file",
+        "net-connect-loopback",
+        "net-dns-resolve",
+        "registry-crud",
+        "pipe-roundtrip",
+        "token-query",
+        "crypto-hash-verify",
+        "com-create-instance",
+        "wmi-query",
+        "fs-watcher",
+        "ripgrep-clean-build",
+        "ripgrep-incremental-build",
+        "roslyn-clean-build",
+        "roslyn-incremental-build"
+    ];
+
+    private static readonly IReadOnlyDictionary<string, int> ScenarioOrderById = ScenarioOrder
+        .Select(static (scenarioId, index) => new KeyValuePair<string, int>(scenarioId, index))
+        .ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.OrdinalIgnoreCase);
 
     public static async Task WriteAsync(IReadOnlyList<ComparisonRow> rows, string path, CancellationToken cancellationToken)
     {
@@ -28,7 +66,7 @@ public static class SummaryRenderer
 
             var hasExcludedOutliers = false;
 
-            foreach (var row in group.OrderByDescending(static item => item.SlowdownPct).ThenBy(static item => item.ScenarioId, StringComparer.OrdinalIgnoreCase))
+            foreach (var row in OrderRows(group))
             {
                 var diskReadDeltaMb = BytesToMb(row.SystemDiskReadBytes - row.BaselineSystemDiskReadBytes);
                 var diskWriteDeltaMb = BytesToMb(row.SystemDiskWriteBytes - row.BaselineSystemDiskWriteBytes);
@@ -144,6 +182,16 @@ public static class SummaryRenderer
     private static double BytesToMb(long bytes)
         => bytes / (1024d * 1024d);
 
+    private static IOrderedEnumerable<ComparisonRow> OrderRows(IEnumerable<ComparisonRow> rows)
+        => rows
+            .OrderBy(static row => GetScenarioOrder(row.ScenarioId))
+            .ThenBy(static row => row.ScenarioId, StringComparer.OrdinalIgnoreCase);
+
+    private static int GetScenarioOrder(string scenarioId)
+        => ScenarioOrderById.TryGetValue(scenarioId, out var index)
+            ? index
+            : int.MaxValue;
+
     private static void AppendCrossAvComparison(IReadOnlyList<ComparisonRow> rows, StringBuilder builder)
     {
         var avGroups = rows
@@ -166,7 +214,7 @@ public static class SummaryRenderer
 
         var rowsByScenario = rows
             .GroupBy(static row => row.ScenarioId, StringComparer.OrdinalIgnoreCase)
-            .OrderByDescending(static group => group.Max(static row => row.SlowdownPct))
+            .OrderBy(static group => GetScenarioOrder(group.Key))
             .ThenBy(static group => group.Key, StringComparer.OrdinalIgnoreCase);
 
         foreach (var scenarioGroup in rowsByScenario)

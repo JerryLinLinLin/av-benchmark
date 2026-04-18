@@ -14,6 +14,8 @@ public sealed class ScenarioDefinition
 
     public Func<CancellationToken, Task<ScenarioExecutionResult>>? ExecuteInProcessAsync { get; init; }
 
+    public bool ContinueOnFailure { get; init; }
+
     public Func<CancellationToken, Task>? ValidateAsync { get; init; }
 
     public Action<RunResult, string, string>? EnrichResultFromLogs { get; init; }

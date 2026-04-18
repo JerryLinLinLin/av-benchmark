@@ -134,6 +134,13 @@ public static class RunCommand
                 await CsvResultWriter.WriteAsync(results, csvPath, CancellationToken.None);
 
                 Console.WriteLine($"[run] Wrote {results.Count} run records to {outputRoot.FullName}");
+                var failedCount = results.Count(static result => result.ExitCode != 0);
+                if (failedCount > 0)
+                {
+                    Console.Error.WriteLine($"ERROR: {failedCount} scenario(s) failed. Results were written to {outputRoot.FullName}.");
+                    return 1;
+                }
+
                 return 0;
             }
             catch (InvalidOperationException ex)

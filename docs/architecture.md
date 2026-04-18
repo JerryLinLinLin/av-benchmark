@@ -105,7 +105,7 @@ src/
     ├── Program.cs
     ├── CompareCommand.cs              # CLI: --baseline, --input, --output
     ├── CompareEngine.cs               # Stat computation, outlier exclusion + slowdown %
-    ├── CompareCsvWriter.cs            # compare.csv (23 columns)
+    ├── CompareCsvWriter.cs            # compare.csv
     └── SummaryRenderer.cs             # summary.md (Markdown tables)
 ```
 
@@ -141,6 +141,8 @@ Before running any scenarios, `IdleChecker.VerifyAsync()` samples CPU via `Perfo
 ### Scenario ordering and cooldowns
 
 `RunCommand` runs all **microbench scenarios first**, then **compilation scenarios last**, in a **fixed deterministic order**. Microbench scenarios run in the order defined by `AllScenarioIds` in `MicrobenchScenarioFactory`. Compilation scenarios follow in factory order (ripgrep then roslyn). This ensures latency-sensitive microbenchmarks run on a settled system, and makes ordering effects consistent across sessions so they cancel out in baseline-vs-AV comparisons.
+
+Microbench scenarios are isolated at the runner boundary: if one in-process microbench throws, the runner records that scenario as failed, writes its exception to `stderr.log`, and continues with the remaining scenarios. Compilation scenarios remain fail-fast because their setup/build failures usually invalidate the rest of that workload session.
 
 Between scenarios, `ScenarioRunner` inserts a cooldown pause to let AV background activity (scan cache writes, cloud verdict callbacks) settle before the next measurement begins:
 

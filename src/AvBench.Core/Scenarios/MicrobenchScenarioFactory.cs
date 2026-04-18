@@ -272,6 +272,7 @@ public static class MicrobenchScenarioFactory
             Id = scenarioId,
             WorkingDirectory = workingDirectory,
             PrepareAsync = ct => MicrobenchSupport.PrepareWorkingDirectoryAsync(runRoot, scenarioId, ct),
+            ContinueOnFailure = true,
             ExecuteInProcessAsync = cancellationToken =>
                 ExecuteInProcessAsync(request, support, cancellationToken)
         };

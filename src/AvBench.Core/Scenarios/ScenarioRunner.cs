@@ -44,12 +44,19 @@ public sealed class ScenarioRunner
             await JsonResultWriter.WriteAsync(result, Path.Combine(scenarioDirectory, "run.json"), cancellationToken);
             results.Add(result);
 
-            if (result.ExitCode != 0)
+            var succeeded = result.ExitCode == 0;
+            if (!succeeded)
             {
-                throw new InvalidOperationException($"Scenario {scenario.Id} failed with exit code {result.ExitCode}. See logs in {scenarioDirectory}.");
+                var message = $"Scenario {scenario.Id} failed with exit code {result.ExitCode}. See logs in {scenarioDirectory}.";
+                if (!scenario.ContinueOnFailure)
+                {
+                    throw new InvalidOperationException(message);
+                }
+
+                Console.WriteLine($"[run] WARNING: {message} Continuing with remaining scenarios.");
             }
 
-            if (scenario.ValidateAsync is not null)
+            if (succeeded && scenario.ValidateAsync is not null)
             {
                 await scenario.ValidateAsync(cancellationToken);
             }
@@ -71,8 +78,6 @@ public sealed class ScenarioRunner
 
     private async Task<RunResult> RunOnceAsync(ScenarioDefinition scenario, string? outputDirectory, CancellationToken cancellationToken)
     {
-        await scenario.PrepareAsync(cancellationToken);
-
         var stdoutPath = outputDirectory is null
             ? Path.Combine(Path.GetTempPath(), "avbench", $"{Guid.NewGuid():N}.stdout.log")
             : Path.Combine(outputDirectory, "stdout.log");
@@ -86,6 +91,8 @@ public sealed class ScenarioRunner
         using var diskIoSnapshot = new DiskIoSnapshot();
         try
         {
+            await scenario.PrepareAsync(cancellationToken);
+
             ScenarioExecutionResult execution;
             if (scenario.ExecuteInProcessAsync is not null)
             {
@@ -136,6 +143,11 @@ public sealed class ScenarioRunner
             scenario.EnrichResultFromLogs?.Invoke(result, stdoutPath, stderrPath);
             return result;
         }
+        catch (Exception ex) when (scenario.ContinueOnFailure && ex is not OperationCanceledException)
+        {
+            var execution = await CreateFailedExecutionAsync(scenario, stdoutPath, stderrPath, ex, cancellationToken);
+            return CreateRunResult(scenario, execution);
+        }
         finally
         {
             if (outputDirectory is null)
@@ -145,6 +157,33 @@ public sealed class ScenarioRunner
             }
         }
     }
+
+    private static async Task<ScenarioExecutionResult> CreateFailedExecutionAsync(
+        ScenarioDefinition scenario,
+        string stdoutPath,
+        string stderrPath,
+        Exception exception,
+        CancellationToken cancellationToken)
+    {
+        var stderr = FormatException(exception);
+        await File.WriteAllTextAsync(stdoutPath, string.Empty, cancellationToken);
+        await File.WriteAllTextAsync(stderrPath, stderr, cancellationToken);
+
+        return new ScenarioExecutionResult
+        {
+            Command = scenario.ExecuteInProcessAsync is not null
+                ? scenario.Id
+                : string.IsNullOrWhiteSpace(scenario.Arguments) ? scenario.FileName ?? scenario.Id : $"{scenario.FileName} {scenario.Arguments}",
+            WorkingDirectory = scenario.WorkingDirectory,
+            ExitCode = 1,
+            WallMs = 0,
+            Stdout = string.Empty,
+            Stderr = stderr
+        };
+    }
+
+    private static string FormatException(Exception exception)
+        => $"{exception.GetType().FullName}: {exception.Message}{System.Environment.NewLine}{exception.StackTrace}{System.Environment.NewLine}";
 
     private RunResult CreateRunResult(ScenarioDefinition scenario, ScenarioExecutionResult execution)
     {

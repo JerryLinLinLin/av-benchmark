@@ -96,7 +96,7 @@ C:\tools\avbench\avbench-compare.exe --baseline C:\compare\baseline-os --input C
 | File | Description |
 |---|---|
 | `compare.csv` | Comparison spreadsheet with per-scenario slowdown %, kernel CPU shift, system disk deltas, CV, and status |
-| `summary.md` | Markdown report with tables sorted by worst slowdown, highlights noisy/failed |
+| `summary.md` | Markdown report with fixed-order scenario tables plus ranked callouts for slowdowns, noisy rows, anomalies, and failures |
 
 ---
 
