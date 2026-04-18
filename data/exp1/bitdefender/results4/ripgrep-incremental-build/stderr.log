@@ -1,0 +1,6 @@
+warning: ripgrep@15.1.0: failed to run `git rev-parse`, so skipping embedding of commit hash: program not found
+   Compiling grep-searcher v0.1.16 (C:\bench\ripgrep\crates\searcher)
+   Compiling grep-printer v0.3.1 (C:\bench\ripgrep\crates\printer)
+   Compiling grep v0.4.1 (C:\bench\ripgrep\crates\grep)
+   Compiling ripgrep v15.1.0 (C:\bench\ripgrep)
+    Finished `release` profile [optimized + debuginfo] target(s) in 6.37s

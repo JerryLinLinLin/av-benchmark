@@ -1,0 +1,38 @@
+{
+  "scenario_id": "mem-map-file",
+  "av_name": "eset",
+  "av_product": "ESET Security",
+  "av_version": "19.1.12.0",
+  "timestamp_utc": "2026-04-17T21:57:28.3378575Z",
+  "command": "mem-map-file",
+  "working_dir": "C:\\bench\\microbench\\mem-map-file",
+  "exit_code": 0,
+  "wall_ms": 5652,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 150016,
+  "system_disk_write_bytes": 40992768,
+  "p50_us": 548.1,
+  "p95_us": 655.2,
+  "p99_us": 891,
+  "max_us": 2193.2,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 1774.407759470937,
+    "mean_latency_us": 563.29645,
+    "p50_us": 548.1,
+    "p95_us": 655.2,
+    "p99_us": 891,
+    "max_us": 2193.2
+  }
+}

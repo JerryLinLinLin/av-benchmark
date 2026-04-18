@@ -1,0 +1,38 @@
+{
+  "scenario_id": "dll-load-unique",
+  "av_name": "bitdefender",
+  "av_product": "Bitdefender Antivirus",
+  "av_version": "27.0.3.9",
+  "timestamp_utc": "2026-04-18T00:23:21.2089745Z",
+  "command": "dll-load-unique",
+  "working_dir": "C:\\bench\\microbench\\dll-load-unique",
+  "exit_code": 0,
+  "wall_ms": 15844,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 2761728,
+  "system_disk_write_bytes": 4021262336,
+  "p50_us": 7045.2,
+  "p95_us": 8103.1,
+  "p99_us": 22305.7,
+  "max_us": 84536.8,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 2000,
+    "ops_per_sec": 126.23396461781894,
+    "mean_latency_us": 7916.102849999999,
+    "p50_us": 7045.2,
+    "p95_us": 8103.1,
+    "p99_us": 22305.7,
+    "max_us": 84536.8
+  }
+}

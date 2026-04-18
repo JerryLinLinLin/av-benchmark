@@ -1,0 +1,38 @@
+{
+  "scenario_id": "new-exe-run",
+  "av_name": "bitdefender",
+  "av_product": "Bitdefender Antivirus",
+  "av_version": "27.0.3.9",
+  "timestamp_utc": "2026-04-18T02:02:26.7692914Z",
+  "command": "new-exe-run",
+  "working_dir": "C:\\bench\\microbench\\new-exe-run",
+  "exit_code": 0,
+  "wall_ms": 14973,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 3705344,
+  "system_disk_write_bytes": 12660736,
+  "p50_us": 290747.5,
+  "p95_us": 380016.8,
+  "p99_us": 393839.9,
+  "max_us": 393839.9,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 50,
+    "ops_per_sec": 3.339225842562647,
+    "mean_latency_us": 298863.87,
+    "p50_us": 290747.5,
+    "p95_us": 380016.8,
+    "p99_us": 393839.9,
+    "max_us": 393839.9
+  }
+}

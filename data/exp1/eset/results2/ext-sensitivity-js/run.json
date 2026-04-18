@@ -1,0 +1,38 @@
+{
+  "scenario_id": "ext-sensitivity-js",
+  "av_name": "eset",
+  "av_product": "ESET Security",
+  "av_version": "19.1.12.0",
+  "timestamp_utc": "2026-04-17T21:54:02.913495Z",
+  "command": "ext-sensitivity-js",
+  "working_dir": "C:\\bench\\microbench\\ext-sensitivity-js",
+  "exit_code": 0,
+  "wall_ms": 7653,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 31232,
+  "system_disk_write_bytes": 54624256,
+  "p50_us": 732.3,
+  "p95_us": 892.4,
+  "p99_us": 1319.1,
+  "max_us": 29539.6,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 1306.7344572626093,
+    "mean_latency_us": 763.9149,
+    "p50_us": 732.3,
+    "p95_us": 892.4,
+    "p99_us": 1319.1,
+    "max_us": 29539.6
+  }
+}

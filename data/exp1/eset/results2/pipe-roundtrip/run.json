@@ -1,0 +1,38 @@
+{
+  "scenario_id": "pipe-roundtrip",
+  "av_name": "eset",
+  "av_product": "ESET Security",
+  "av_version": "19.1.12.0",
+  "timestamp_utc": "2026-04-17T21:58:11.9214253Z",
+  "command": "pipe-roundtrip",
+  "working_dir": "C:\\bench\\microbench\\pipe-roundtrip",
+  "exit_code": 0,
+  "wall_ms": 152,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 406528,
+  "system_disk_write_bytes": 409600,
+  "p50_us": 50.5,
+  "p95_us": 66.5,
+  "p99_us": 157.3,
+  "max_us": 695.7,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 2000,
+    "ops_per_sec": 17867.92742762596,
+    "mean_latency_us": 55.7996,
+    "p50_us": 50.5,
+    "p95_us": 66.5,
+    "p99_us": 157.3,
+    "max_us": 695.7
+  }
+}

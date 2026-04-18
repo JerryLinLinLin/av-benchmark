@@ -1,0 +1,38 @@
+{
+  "scenario_id": "process-create-wait",
+  "av_name": "eset",
+  "av_product": "ESET Security",
+  "av_version": "19.1.12.0",
+  "timestamp_utc": "2026-04-17T21:53:12.9356525Z",
+  "command": "process-create-wait",
+  "working_dir": "C:\\bench\\microbench\\process-create-wait",
+  "exit_code": 0,
+  "wall_ms": 19516,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 669184,
+  "system_disk_write_bytes": 34615296,
+  "p50_us": 38567.6,
+  "p95_us": 41326.9,
+  "p99_us": 43511.9,
+  "max_us": 163640.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 500,
+    "ops_per_sec": 25.620409357469185,
+    "mean_latency_us": 39030.5508,
+    "p50_us": 38567.6,
+    "p95_us": 41326.9,
+    "p99_us": 43511.9,
+    "max_us": 163640.4
+  }
+}

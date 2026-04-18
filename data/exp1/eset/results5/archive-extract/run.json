@@ -1,0 +1,38 @@
+{
+  "scenario_id": "archive-extract",
+  "av_name": "eset",
+  "av_product": "ESET Security",
+  "av_version": "19.1.12.0",
+  "timestamp_utc": "2026-04-17T22:44:57.6635747Z",
+  "command": "archive-extract",
+  "working_dir": "C:\\bench\\microbench\\archive-extract",
+  "exit_code": 0,
+  "wall_ms": 16006,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 154698752,
+  "system_disk_write_bytes": 317313024,
+  "p50_us": 1547388.9,
+  "p95_us": 2074676.5,
+  "p99_us": 2074676.5,
+  "max_us": 2074676.5,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10,
+    "ops_per_sec": 0.6252347873858156,
+    "mean_latency_us": 1599389.6099999999,
+    "p50_us": 1547388.9,
+    "p95_us": 2074676.5,
+    "p99_us": 2074676.5,
+    "max_us": 2074676.5
+  }
+}
