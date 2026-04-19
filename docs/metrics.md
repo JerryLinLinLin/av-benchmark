@@ -112,7 +112,7 @@ This is usually the number you want in a summary table or executive comparison. 
 
 ### `first_run_wall_ms` and `first_run_slowdown_pct`
 
-`first_run_wall_ms` preserves the earliest successful run for that AV/scenario pair, ordered by `timestamp_utc`, before compare-time outlier exclusion. `baseline_first_run_wall_ms` is the same value for the baseline.
+`first_run_wall_ms` preserves the earliest successful run for that AV/scenario pair, ordered by `timestamp_utc`. `baseline_first_run_wall_ms` is the same value for the baseline.
 
 `first_run_slowdown_pct` compares those first-run wall times:
 
@@ -172,7 +172,7 @@ Because these are system-wide, they include background OS activity (indexer, upd
 
 `avbench-compare` groups results by `av_name` and `scenario_id` and computes one comparison row per group.
 
-Important implementation detail: averages are computed from **successful runs only** (`exit_code == 0`), but `sessions` still counts all runs seen for that scenario group. A row can therefore show `sessions = 5` even if only 4 runs contributed to the mean.
+Important implementation detail: first-run values are computed from the earliest successful run, ordered by `timestamp_utc`. Steady-state aggregates such as `mean_wall_ms`, `median_wall_ms`, `cv_pct`, disk averages, CPU averages, and latency medians are computed from the remaining successful runs after that first successful run is removed. `sessions` still counts all runs seen for that scenario group, while `steady_state_samples` tells you how many runs contributed to the steady-state aggregate.
 
 The main derived columns in `compare.csv` are:
 
@@ -180,21 +180,21 @@ The main derived columns in `compare.csv` are:
 |---|---|
 | `sessions` | Number of discovered runs for that AV/scenario pair |
 | `baseline_sessions` | Number of discovered baseline runs for the same scenario |
-| `mean_wall_ms` | Mean wall time across successful runs |
-| `median_wall_ms` | Median wall time across successful runs |
-| `first_run_wall_ms` | Earliest successful wall time for that AV/scenario pair, ordered by `timestamp_utc`, before outlier exclusion |
+| `steady_state_samples` | Number of successful AV runs remaining after excluding the first successful run |
+| `baseline_steady_state_samples` | Number of successful baseline runs remaining after excluding the first successful baseline run |
+| `mean_wall_ms` | Mean wall time across steady-state samples |
+| `median_wall_ms` | Median wall time across steady-state samples |
+| `first_run_wall_ms` | Earliest successful wall time for that AV/scenario pair, ordered by `timestamp_utc` |
 | `baseline_first_run_wall_ms` | Earliest successful baseline wall time for the same scenario |
-| `mean_cpu_ms` | Mean total CPU time (`user + kernel`) across successful runs |
+| `mean_cpu_ms` | Mean total CPU time (`user + kernel`) across steady-state samples |
 | `kernel_cpu_pct` | Kernel share of total CPU for that AV/scenario pair |
 | `baseline_kernel_cpu_pct` | Same metric for the baseline |
 | `kernel_cpu_slowdown_pct` | Percentage-point difference from baseline |
-| `peak_memory_mb` | Maximum peak job memory across successful runs |
+| `peak_memory_mb` | Maximum peak job memory across steady-state samples |
 | `slowdown_pct` | Wall-time slowdown versus baseline, computed from median values |
 | `first_run_slowdown_pct` | Wall-time slowdown versus baseline, computed from first-run values |
 | `cv_pct` | Coefficient of variation of AV wall time |
 | `baseline_cv_pct` | Coefficient of variation of baseline wall time |
-| `excluded_runs` | Number of outlier runs excluded on the AV side (0 or 1) |
-| `baseline_excluded_runs` | Number of outlier runs excluded on the baseline side (0 or 1) |
 | `status` | `ok`, `failed`, `insufficient`, `noisy`, or `anomaly` |
 
 `summary.md` shows a narrower table focused on the columns that are meaningful for every scenario:
@@ -209,28 +209,26 @@ Rows in each `summary.md` table use the suite's fixed scenario order instead of 
 
 When two or more AV inputs are compared, `summary.md` emits two cross-AV tables:
 
-- `Cross-AV steady-state comparison` uses median wall-time slowdown after compare-time outlier handling.
-- `Cross-AV first-run comparison` uses earliest successful wall-time slowdown before outlier handling, which is useful for cloud reputation and scan-cache effects.
+- `Cross-AV steady-state comparison` uses median wall-time slowdown after excluding each side's earliest successful run.
+- `Cross-AV first-run comparison` uses earliest successful wall-time slowdown, which is useful for cloud reputation and scan-cache effects.
 
-Only the steady-state cross-AV table marks `noisy` and `insufficient` cells with `*`. The first-run table does not inherit those markers because CV and repeat-run status are not meaningful for a single first-run sample. In the first-run table, `failed*` means no successful first run was available, and a negative first-run slowdown is marked with `*` as an anomaly.
+Only the steady-state cross-AV table marks `noisy` and `insufficient` cells with `*`. The first-run table does not inherit those markers because CV and steady-state sample count are not meaningful for a single first-run sample. In the first-run table, `failed*` means no successful first run was available, and a negative first-run slowdown is marked with `*` as an anomaly.
 
 Status is assigned like this:
 
 - `failed`: at least one run in the group failed, or no successful runs exist
-- `insufficient`: fewer than 3 sessions exist on either side
-- `noisy`: all runs succeeded, but `cv_pct > 10` or `baseline_cv_pct > 10` even after attempting outlier exclusion (see below)
-- `anomaly`: all runs succeeded and were stable, but the AV side appears more than 10% faster than baseline, which usually points to cache or ordering artifacts rather than a real security-product speedup
-- `ok`: all runs succeeded and both `cv_pct` and `baseline_cv_pct` are ≤ 10 (possibly after outlier exclusion)
+- `insufficient`: fewer than 3 steady-state samples remain on either side after first-run exclusion
+- `anomaly`: all runs succeeded, but the AV side appears faster than baseline, which usually points to cache or ordering artifacts rather than a real security-product speedup
+- `noisy`: all runs succeeded and steady-state slowdown is non-negative, but `cv_pct > 10` or `baseline_cv_pct > 10` on the steady-state samples
+- `ok`: all runs succeeded, both `cv_pct` and `baseline_cv_pct` are at or below 10, and steady-state slowdown is non-negative
 
 That makes `status` intentionally conservative. If even one run failed, the row is marked `failed` even when some successful samples were available.
 
-### Automatic outlier exclusion
+### First-run exclusion
 
-When a scenario's CV exceeds 10% and at least 4 successful runs exist, the engine attempts to rescue the data by excluding the single run whose wall time is furthest from the median. If the remaining N−1 runs have CV ≤ 10%, they are used for all aggregation (wall, CPU, kernel, disk, latency percentiles) and `excluded_runs` (or `baseline_excluded_runs`) is set to 1. If dropping that one run is not enough to bring CV under the threshold, all runs are kept and the scenario is marked `noisy` as before.
+The comparison engine always separates the earliest successful run from the repeated-run aggregate. The first run is reported through `first_run_wall_ms` and `first_run_slowdown_pct`. All steady-state aggregates, including median wall time, mean CPU, system disk averages, latency medians, and CV, use only the successful runs after that first successful run.
 
-This is applied independently to the AV side and the baseline side. At most one run is excluded per side per scenario. The exclusion only affects the comparison aggregation layer — raw `run.json` and `runs.csv` files are never modified. `sessions` / `baseline_sessions` still report the total number of runs discovered, so the reader always knows how many were attempted.
-
-In `summary.md`, scenarios with excluded outliers are marked with a † footnote.
+No additional outlier run is removed after the first-run split. This is deliberate: first-run cost is where cloud reputation and scan-cache effects tend to appear, while CV is meant to describe the remaining steady-state repeatability. The exclusion only affects the comparison aggregation layer; raw `run.json` and `runs.csv` files are never modified.
 
 For microbench scenarios, the comparison columns derived from `user_cpu_ms`, `kernel_cpu_ms`, and `peak_job_memory_mb` stay at `0` because those source fields are not populated by the in-process execution path.
 
@@ -244,9 +242,9 @@ For microbench scenarios, the comparison columns derived from `user_cpu_ms`, `ke
 
 `baseline_cv_pct` is the same metric for the baseline side.
 
-Both are needed because noisy results on either side make the `slowdown_pct` unreliable. A 2% slowdown in a scenario with a 9% AV CV but a 15% baseline CV is weak evidence — the baseline instability alone could explain the difference.
+Both are needed because noisy steady-state results on either side make the `slowdown_pct` unreliable. A 2% slowdown in a scenario with a 9% AV CV but a 15% baseline CV is weak evidence - the baseline instability alone could explain the difference.
 
-Note: the CV values reported in `compare.csv` and `summary.md` reflect the **post-exclusion** sample set when an outlier was removed. Check `excluded_runs` / `baseline_excluded_runs` to tell whether the reported CV used all runs or N−1.
+Note: the CV values reported in `compare.csv` and `summary.md` always exclude the earliest successful run and do not exclude any other run. Check `steady_state_samples` / `baseline_steady_state_samples` to see how many samples contributed to CV and median wall time.
 
 ### `status`
 
@@ -255,7 +253,7 @@ Note: the CV values reported in `compare.csv` and `summary.md` reflect the **pos
 - `ok` means the repeated measurements were stable enough for ordinary comparison.
 - `noisy` means the scenario likely needs more investigation or more runs.
 - `failed` means you should not treat the comparison row as clean evidence.
-- `insufficient` means there are too few sessions to make a reliable comparison.
+- `insufficient` means there are too few steady-state samples to make a reliable comparison.
 - `anomaly` means the direction of the result is suspicious enough that it should be investigated before drawing conclusions.
 
 ## The shortest useful reading of a result

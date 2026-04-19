@@ -7,8 +7,6 @@ public static class SummaryRenderer
 {
     private const double SignificantDiskDeltaMb = 100.0;
     private const double SignificantKernelShiftPp = 1.0;
-    private const string OutlierMarker = "\u2020";
-    private const string ExcludedOutlierFootnote = "\u2020 1 outlier run excluded to reduce CV";
     private static readonly string[] ScenarioOrder =
     [
         "file-create-delete",
@@ -64,20 +62,15 @@ public static class SummaryRenderer
             builder.AppendLine("| Scenario | Median Wall (ms) | First-Run Wall (ms) | Slowdown | First-Run Slowdown | p95 Slowdown | Disk Read Delta (MB) | Disk Write Delta (MB) | CV % | Baseline CV % | Status |");
             builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|");
 
-            var hasExcludedOutliers = false;
-
             foreach (var row in OrderRows(group))
             {
                 var diskReadDeltaMb = BytesToMb(row.SystemDiskReadBytes - row.BaselineSystemDiskReadBytes);
                 var diskWriteDeltaMb = BytesToMb(row.SystemDiskWriteBytes - row.BaselineSystemDiskWriteBytes);
-                var hasExcludedOutlier = row.ExcludedRuns > 0;
-                hasExcludedOutliers |= hasExcludedOutlier;
-                var scenarioLabel = hasExcludedOutlier ? $"{row.ScenarioId}{OutlierMarker}" : row.ScenarioId;
 
                 builder.AppendLine(string.Format(
                     CultureInfo.InvariantCulture,
                     "| {0} | {1:F1} | {2} | {3} | {4} | {5} | {6} | {7} | {8:F1}% | {9:F1}% | {10} |",
-                    scenarioLabel,
+                    row.ScenarioId,
                     row.MedianWallMs,
                     FormatWall(row.FirstRunWallMs),
                     FormatPercent(row.SlowdownPct),
@@ -88,12 +81,6 @@ public static class SummaryRenderer
                     row.CvPct,
                     row.BaselineCvPct,
                     row.Status));
-            }
-
-            if (hasExcludedOutliers)
-            {
-                builder.AppendLine();
-                builder.AppendLine(ExcludedOutlierFootnote);
             }
 
             var worstSlowdown = group
@@ -156,7 +143,7 @@ public static class SummaryRenderer
             if (insufficient.Count > 0)
             {
                 builder.AppendLine();
-                builder.AppendLine($"Insufficient data (< 3 sessions): {string.Join(", ", insufficient.Select(static row => row.ScenarioId))}");
+                builder.AppendLine($"Insufficient data (< 3 steady-state samples after first-run exclusion): {string.Join(", ", insufficient.Select(static row => row.ScenarioId))}");
             }
 
             var anomalies = group.Where(static row => string.Equals(row.Status, "anomaly", StringComparison.OrdinalIgnoreCase)).ToList();
@@ -210,7 +197,7 @@ public static class SummaryRenderer
             rows,
             builder,
             "## Cross-AV steady-state comparison",
-            "Cells are slowdown vs baseline using median wall time after compare-time outlier handling.",
+            "Cells are slowdown vs baseline using median wall time after excluding each side's earliest successful run.",
             "baseline median (ms)",
             static row => row.BaselineMedianWallMs,
             FormatSteadyStateCrossAvCell);
@@ -219,13 +206,13 @@ public static class SummaryRenderer
             rows,
             builder,
             "## Cross-AV first-run comparison",
-            "Cells are slowdown vs baseline using the earliest successful run for each scenario before outlier trimming.",
+            "Cells are slowdown vs baseline using the earliest successful run for each scenario.",
             "baseline first-run (ms)",
             static row => row.BaselineFirstRunWallMs,
             FormatFirstRunCrossAvCell);
 
         builder.AppendLine("`*` in the steady-state table marks a non-ok result (`failed`, `insufficient`, `noisy`, or `anomaly`).");
-        builder.AppendLine("First-run cells do not inherit `noisy` or `insufficient` markers because CV and repeat-run status are not meaningful for a single first-run sample; `failed*` means no successful first run was available, and a negative first-run slowdown is marked as an anomaly.");
+        builder.AppendLine("First-run cells do not inherit `noisy` or `insufficient` markers because CV and steady-state sample count are not meaningful for a single first-run sample; `failed*` means no successful first run was available, and a negative first-run slowdown is marked as an anomaly.");
         builder.AppendLine();
     }
 
@@ -279,9 +266,17 @@ public static class SummaryRenderer
     }
 
     private static string FormatPercent(double value)
-        => value >= 0
-            ? $"+{value:F1}%"
-            : $"{value:F1}%";
+    {
+        var rounded = Math.Round(value, 1);
+        if (rounded == 0)
+        {
+            return "0.0%";
+        }
+
+        return rounded > 0
+            ? $"+{rounded:F1}%"
+            : $"{rounded:F1}%";
+    }
 
     private static string FormatNullablePercent(double? value)
         => value.HasValue
@@ -310,14 +305,11 @@ public static class SummaryRenderer
             return "-";
         }
 
-        if (string.Equals(row.Status, "failed", StringComparison.OrdinalIgnoreCase) && row.MedianWallMs <= 0)
+        if (row.MedianWallMs <= 0 || row.BaselineMedianWallMs <= 0)
         {
-            return "failed*";
-        }
-
-        if (row.MedianWallMs <= 0)
-        {
-            return "-";
+            return string.Equals(row.Status, "failed", StringComparison.OrdinalIgnoreCase)
+                ? "failed*"
+                : "-";
         }
 
         var formatted = FormatPercent(row.SlowdownPct);
@@ -333,7 +325,7 @@ public static class SummaryRenderer
             return "-";
         }
 
-        if (row.FirstRunWallMs <= 0)
+        if (row.FirstRunWallMs <= 0 || row.BaselineFirstRunWallMs <= 0)
         {
             return string.Equals(row.Status, "failed", StringComparison.OrdinalIgnoreCase)
                 ? "failed*"
