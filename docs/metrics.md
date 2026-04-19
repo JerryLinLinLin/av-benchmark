@@ -212,6 +212,8 @@ When two or more AV inputs are compared, `summary.md` emits two cross-AV tables:
 - `Cross-AV steady-state comparison` uses median wall-time slowdown after compare-time outlier handling.
 - `Cross-AV first-run comparison` uses earliest successful wall-time slowdown before outlier handling, which is useful for cloud reputation and scan-cache effects.
 
+Only the steady-state cross-AV table marks `noisy` and `insufficient` cells with `*`. The first-run table does not inherit those markers because CV and repeat-run status are not meaningful for a single first-run sample. In the first-run table, `failed*` means no successful first run was available, and a negative first-run slowdown is marked with `*` as an anomaly.
+
 Status is assigned like this:
 
 - `failed`: at least one run in the group failed, or no successful runs exist

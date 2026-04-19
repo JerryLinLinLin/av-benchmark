@@ -213,7 +213,7 @@ public static class SummaryRenderer
             "Cells are slowdown vs baseline using median wall time after compare-time outlier handling.",
             "baseline median (ms)",
             static row => row.BaselineMedianWallMs,
-            static row => FormatCrossAvCell(row, firstRun: false));
+            FormatSteadyStateCrossAvCell);
 
         AppendCrossAvComparisonTable(
             rows,
@@ -222,9 +222,10 @@ public static class SummaryRenderer
             "Cells are slowdown vs baseline using the earliest successful run for each scenario before outlier trimming.",
             "baseline first-run (ms)",
             static row => row.BaselineFirstRunWallMs,
-            static row => FormatCrossAvCell(row, firstRun: true));
+            FormatFirstRunCrossAvCell);
 
-        builder.AppendLine("`*` marks a non-ok result (`failed`, `insufficient`, `noisy`, or `anomaly`).");
+        builder.AppendLine("`*` in the steady-state table marks a non-ok result (`failed`, `insufficient`, `noisy`, or `anomaly`).");
+        builder.AppendLine("First-run cells do not inherit `noisy` or `insufficient` markers because CV and repeat-run status are not meaningful for a single first-run sample; `failed*` means no successful first run was available, and a negative first-run slowdown is marked as an anomaly.");
         builder.AppendLine();
     }
 
@@ -302,27 +303,46 @@ public static class SummaryRenderer
             ? value.ToString("F1", CultureInfo.InvariantCulture)
             : "-";
 
-    private static string FormatCrossAvCell(ComparisonRow? row, bool firstRun)
+    private static string FormatSteadyStateCrossAvCell(ComparisonRow? row)
     {
         if (row is null)
         {
             return "-";
         }
 
-        var wallMs = firstRun ? row.FirstRunWallMs : row.MedianWallMs;
-        if (string.Equals(row.Status, "failed", StringComparison.OrdinalIgnoreCase) && wallMs <= 0)
+        if (string.Equals(row.Status, "failed", StringComparison.OrdinalIgnoreCase) && row.MedianWallMs <= 0)
         {
             return "failed*";
         }
 
-        if (wallMs <= 0)
+        if (row.MedianWallMs <= 0)
         {
             return "-";
         }
 
-        var formatted = FormatPercent(firstRun ? row.FirstRunSlowdownPct : row.SlowdownPct);
+        var formatted = FormatPercent(row.SlowdownPct);
         return string.Equals(row.Status, "ok", StringComparison.OrdinalIgnoreCase)
             ? formatted
             : $"{formatted}*";
+    }
+
+    private static string FormatFirstRunCrossAvCell(ComparisonRow? row)
+    {
+        if (row is null)
+        {
+            return "-";
+        }
+
+        if (row.FirstRunWallMs <= 0)
+        {
+            return string.Equals(row.Status, "failed", StringComparison.OrdinalIgnoreCase)
+                ? "failed*"
+                : "-";
+        }
+
+        var formatted = FormatPercent(row.FirstRunSlowdownPct);
+        return row.FirstRunSlowdownPct < 0
+            ? $"{formatted}*"
+            : formatted;
     }
 }
