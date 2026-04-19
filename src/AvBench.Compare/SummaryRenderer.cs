@@ -61,8 +61,8 @@ public static class SummaryRenderer
             var first = group.First();
             builder.AppendLine($"## {group.Key} ({first.AvProduct} v{first.AvVersion}) vs {first.BaselineName}");
             builder.AppendLine();
-            builder.AppendLine("| Scenario | Median Wall (ms) | Slowdown | p95 Slowdown | Disk Read Delta (MB) | Disk Write Delta (MB) | CV % | Baseline CV % | Status |");
-            builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---|");
+            builder.AppendLine("| Scenario | Median Wall (ms) | First-Run Wall (ms) | Slowdown | First-Run Slowdown | p95 Slowdown | Disk Read Delta (MB) | Disk Write Delta (MB) | CV % | Baseline CV % | Status |");
+            builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|");
 
             var hasExcludedOutliers = false;
 
@@ -76,10 +76,12 @@ public static class SummaryRenderer
 
                 builder.AppendLine(string.Format(
                     CultureInfo.InvariantCulture,
-                    "| {0} | {1:F1} | {2} | {3} | {4} | {5} | {6:F1}% | {7:F1}% | {8} |",
+                    "| {0} | {1:F1} | {2} | {3} | {4} | {5} | {6} | {7} | {8:F1}% | {9:F1}% | {10} |",
                     scenarioLabel,
                     row.MedianWallMs,
+                    FormatWall(row.FirstRunWallMs),
                     FormatPercent(row.SlowdownPct),
+                    FormatPercent(row.FirstRunSlowdownPct),
                     FormatNullablePercent(row.P95SlowdownPct),
                     FormatDeltaMb(diskReadDeltaMb),
                     FormatDeltaMb(diskWriteDeltaMb),
@@ -204,10 +206,48 @@ public static class SummaryRenderer
             return;
         }
 
-        builder.AppendLine("## Cross-AV comparison");
+        AppendCrossAvComparisonTable(
+            rows,
+            builder,
+            "## Cross-AV steady-state comparison",
+            "Cells are slowdown vs baseline using median wall time after compare-time outlier handling.",
+            "baseline median (ms)",
+            static row => row.BaselineMedianWallMs,
+            static row => FormatCrossAvCell(row, firstRun: false));
+
+        AppendCrossAvComparisonTable(
+            rows,
+            builder,
+            "## Cross-AV first-run comparison",
+            "Cells are slowdown vs baseline using the earliest successful run for each scenario before outlier trimming.",
+            "baseline first-run (ms)",
+            static row => row.BaselineFirstRunWallMs,
+            static row => FormatCrossAvCell(row, firstRun: true));
+
+        builder.AppendLine("`*` marks a non-ok result (`failed`, `insufficient`, `noisy`, or `anomaly`).");
+        builder.AppendLine();
+    }
+
+    private static void AppendCrossAvComparisonTable(
+        IReadOnlyList<ComparisonRow> rows,
+        StringBuilder builder,
+        string title,
+        string description,
+        string baselineHeader,
+        Func<ComparisonRow, double> baselineSelector,
+        Func<ComparisonRow?, string> cellFormatter)
+    {
+        var avGroups = rows
+            .GroupBy(static row => row.AvName)
+            .OrderBy(static group => group.Key, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        builder.AppendLine(title);
+        builder.AppendLine();
+        builder.AppendLine(description);
         builder.AppendLine();
 
-        var headers = new List<string> { "Scenario", "baseline (ms)" };
+        var headers = new List<string> { "Scenario", baselineHeader };
         headers.AddRange(avGroups.Select(static group => group.Key));
         builder.AppendLine($"| {string.Join(" | ", headers)} |");
         builder.AppendLine($"|{string.Join("|", Enumerable.Repeat("---", headers.Count))}|");
@@ -222,20 +262,18 @@ public static class SummaryRenderer
             var cells = new List<string>
             {
                 scenarioGroup.Key,
-                FormatBaselineWall(scenarioGroup.FirstOrDefault()?.BaselineMedianWallMs)
+                FormatBaselineWall(scenarioGroup.FirstOrDefault() is { } firstRow ? baselineSelector(firstRow) : null)
             };
 
             foreach (var avGroup in avGroups)
             {
                 var row = scenarioGroup.FirstOrDefault(item => string.Equals(item.AvName, avGroup.Key, StringComparison.OrdinalIgnoreCase));
-                cells.Add(FormatCrossAvCell(row));
+                cells.Add(cellFormatter(row));
             }
 
             builder.AppendLine($"| {string.Join(" | ", cells)} |");
         }
 
-        builder.AppendLine();
-        builder.AppendLine("`*` marks a non-ok result (`failed`, `insufficient`, `noisy`, or `anomaly`).");
         builder.AppendLine();
     }
 
@@ -259,19 +297,30 @@ public static class SummaryRenderer
             ? value.Value.ToString("F1", CultureInfo.InvariantCulture)
             : "-";
 
-    private static string FormatCrossAvCell(ComparisonRow? row)
+    private static string FormatWall(double value)
+        => value > 0
+            ? value.ToString("F1", CultureInfo.InvariantCulture)
+            : "-";
+
+    private static string FormatCrossAvCell(ComparisonRow? row, bool firstRun)
     {
         if (row is null)
         {
             return "-";
         }
 
-        if (string.Equals(row.Status, "failed", StringComparison.OrdinalIgnoreCase) && row.MedianWallMs <= 0)
+        var wallMs = firstRun ? row.FirstRunWallMs : row.MedianWallMs;
+        if (string.Equals(row.Status, "failed", StringComparison.OrdinalIgnoreCase) && wallMs <= 0)
         {
             return "failed*";
         }
 
-        var formatted = FormatPercent(row.SlowdownPct);
+        if (wallMs <= 0)
+        {
+            return "-";
+        }
+
+        var formatted = FormatPercent(firstRun ? row.FirstRunSlowdownPct : row.SlowdownPct);
         return string.Equals(row.Status, "ok", StringComparison.OrdinalIgnoreCase)
             ? formatted
             : $"{formatted}*";

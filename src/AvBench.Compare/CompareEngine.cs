@@ -33,6 +33,10 @@ public static class CompareEngine
             foreach (var group in grouped)
             {
                 var scenarioRuns = group.ToList();
+                var firstSuccessfulRun = scenarioRuns
+                    .Where(static run => run.ExitCode == 0)
+                    .OrderBy(static run => run.TimestampUtc)
+                    .FirstOrDefault();
                 var successfulRuns = scenarioRuns.Where(static run => run.ExitCode == 0).ToList();
                 var hasFailures = successfulRuns.Count != scenarioRuns.Count;
 
@@ -59,6 +63,9 @@ public static class CompareEngine
 
                 allBaselineByScenario.TryGetValue(group.Key, out var allBaselineScenarioRuns);
                 baselineByScenario.TryGetValue(group.Key, out var baselineScenarioRuns);
+                var baselineFirstSuccessfulRun = baselineScenarioRuns?
+                    .OrderBy(static run => run.TimestampUtc)
+                    .FirstOrDefault();
                 var baselineHasFailures = allBaselineScenarioRuns is null
                     || baselineScenarioRuns is null
                     || baselineScenarioRuns.Count != allBaselineScenarioRuns.Count;
@@ -124,6 +131,15 @@ public static class CompareEngine
                 var slowdownPct = baselineMedianWall > 0
                     ? Math.Round((medianWall - baselineMedianWall) / baselineMedianWall * 100.0, 1)
                     : 0.0;
+                var firstRunWallMs = firstSuccessfulRun?.WallMs > 0
+                    ? (double)firstSuccessfulRun.WallMs
+                    : 0.0;
+                var baselineFirstRunWallMs = baselineFirstSuccessfulRun?.WallMs > 0
+                    ? (double)baselineFirstSuccessfulRun.WallMs
+                    : 0.0;
+                var firstRunSlowdownPct = baselineFirstRunWallMs > 0 && firstRunWallMs > 0
+                    ? Math.Round((firstRunWallMs - baselineFirstRunWallMs) / baselineFirstRunWallMs * 100.0, 1)
+                    : 0.0;
                 double? p95SlowdownPct = medianP95Us.HasValue && baselineMedianP95Us.HasValue && baselineMedianP95Us.Value > 0
                     ? Math.Round((medianP95Us.Value - baselineMedianP95Us.Value) / baselineMedianP95Us.Value * 100.0, 1)
                     : null;
@@ -149,6 +165,8 @@ public static class CompareEngine
                     MeanWallMs = Math.Round(meanWall, 1),
                     MedianWallMs = Math.Round(medianWall, 1),
                     BaselineMedianWallMs = Math.Round(baselineMedianWall, 1),
+                    FirstRunWallMs = Math.Round(firstRunWallMs, 1),
+                    BaselineFirstRunWallMs = Math.Round(baselineFirstRunWallMs, 1),
                     MeanCpuMs = Math.Round(meanCpu, 1),
                     KernelCpuPct = Math.Round(kernelCpuPct, 1),
                     BaselineKernelCpuPct = Math.Round(baselineKernelCpuPct, 1),
@@ -159,6 +177,7 @@ public static class CompareEngine
                     SystemDiskWriteBytes = (long)Math.Round(meanSystemDiskWriteBytes, MidpointRounding.AwayFromZero),
                     BaselineSystemDiskWriteBytes = (long)Math.Round(baselineMeanSystemDiskWriteBytes, MidpointRounding.AwayFromZero),
                     SlowdownPct = slowdownPct,
+                    FirstRunSlowdownPct = firstRunSlowdownPct,
                     CvPct = Math.Round(cvPct, 1),
                     BaselineCvPct = Math.Round(baselineCvPct, 1),
                     MedianP50Us = RoundNullable(medianP50Us),
@@ -317,6 +336,10 @@ public sealed class ComparisonRow
 
     public double BaselineMedianWallMs { get; init; }
 
+    public double FirstRunWallMs { get; init; }
+
+    public double BaselineFirstRunWallMs { get; init; }
+
     public double MeanCpuMs { get; init; }
 
     public double KernelCpuPct { get; init; }
@@ -336,6 +359,8 @@ public sealed class ComparisonRow
     public long BaselineSystemDiskWriteBytes { get; init; }
 
     public double SlowdownPct { get; init; }
+
+    public double FirstRunSlowdownPct { get; init; }
 
     public double CvPct { get; init; }
 

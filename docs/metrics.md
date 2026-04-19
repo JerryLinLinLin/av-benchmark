@@ -110,6 +110,16 @@ Median is used instead of mean because it is robust to outliers at any sample si
 
 This is usually the number you want in a summary table or executive comparison. It translates the raw timing difference into a form that is easy to compare across scenarios with very different runtimes.
 
+### `first_run_wall_ms` and `first_run_slowdown_pct`
+
+`first_run_wall_ms` preserves the earliest successful run for that AV/scenario pair, ordered by `timestamp_utc`, before compare-time outlier exclusion. `baseline_first_run_wall_ms` is the same value for the baseline.
+
+`first_run_slowdown_pct` compares those first-run wall times:
+
+`(first_run_wall_ms - baseline_first_run_wall_ms) / baseline_first_run_wall_ms * 100`
+
+This is intentionally separate from the median slowdown. Median wall time is the steadier repeated-run signal; first-run wall time is the cold/cloud-sensitive signal. AV products may use reputation, cloud verdicts, or scan caches that survive local VM snapshot resets, so the first observed successful run can tell a different story than the median of repeated runs.
+
 ### `p95_us` and `p99_us`
 
 For microbench scenarios, tail latency is usually more informative than the mean.
@@ -172,12 +182,15 @@ The main derived columns in `compare.csv` are:
 | `baseline_sessions` | Number of discovered baseline runs for the same scenario |
 | `mean_wall_ms` | Mean wall time across successful runs |
 | `median_wall_ms` | Median wall time across successful runs |
+| `first_run_wall_ms` | Earliest successful wall time for that AV/scenario pair, ordered by `timestamp_utc`, before outlier exclusion |
+| `baseline_first_run_wall_ms` | Earliest successful baseline wall time for the same scenario |
 | `mean_cpu_ms` | Mean total CPU time (`user + kernel`) across successful runs |
 | `kernel_cpu_pct` | Kernel share of total CPU for that AV/scenario pair |
 | `baseline_kernel_cpu_pct` | Same metric for the baseline |
 | `kernel_cpu_slowdown_pct` | Percentage-point difference from baseline |
 | `peak_memory_mb` | Maximum peak job memory across successful runs |
 | `slowdown_pct` | Wall-time slowdown versus baseline, computed from median values |
+| `first_run_slowdown_pct` | Wall-time slowdown versus baseline, computed from first-run values |
 | `cv_pct` | Coefficient of variation of AV wall time |
 | `baseline_cv_pct` | Coefficient of variation of baseline wall time |
 | `excluded_runs` | Number of outlier runs excluded on the AV side (0 or 1) |
@@ -187,12 +200,17 @@ The main derived columns in `compare.csv` are:
 `summary.md` shows a narrower table focused on the columns that are meaningful for every scenario:
 
 ```
-| Scenario | Median Wall (ms) | Slowdown | Disk Read Δ (MB) | Disk Write Δ (MB) | CV % | Baseline CV % | Status |
+| Scenario | Median Wall (ms) | First-Run Wall (ms) | Slowdown | First-Run Slowdown | p95 Slowdown | Disk Read Δ (MB) | Disk Write Δ (MB) | CV % | Baseline CV % | Status |
 ```
 
 Kernel CPU shift and peak memory are omitted from the summary table because they are zero for all 27 microbenchmarks (which run in-process without Job Object accounting). When a compilation scenario has a significant kernel CPU shift, it appears as a footnote callout below the table. The full data remains in `compare.csv` for detailed analysis.
 
 Rows in each `summary.md` table use the suite's fixed scenario order instead of sorting by slowdown. This keeps reports stable between AV products and between repeated comparisons. The ranked callouts below each table, such as highest slowdown or largest disk delta, still sort by the metric they summarize.
+
+When two or more AV inputs are compared, `summary.md` emits two cross-AV tables:
+
+- `Cross-AV steady-state comparison` uses median wall-time slowdown after compare-time outlier handling.
+- `Cross-AV first-run comparison` uses earliest successful wall-time slowdown before outlier handling, which is useful for cloud reputation and scan-cache effects.
 
 Status is assigned like this:
 
