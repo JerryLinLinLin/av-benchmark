@@ -206,9 +206,9 @@ public static class SummaryRenderer
             rows,
             builder,
             "## Cross-AV first-run comparison",
-            "Cells are slowdown vs baseline using the earliest successful run for each scenario.",
-            "baseline first-run (ms)",
-            static row => row.BaselineFirstRunWallMs,
+            "Cells are slowdown vs baseline using the AV's earliest successful run against the baseline steady-state median.",
+            "baseline median (ms)",
+            static row => row.BaselineMedianWallMs,
             FormatFirstRunCrossAvCell);
 
         builder.AppendLine("`*` in the steady-state table marks a non-ok result (`failed`, `insufficient`, `noisy`, or `anomaly`).");
@@ -325,7 +325,7 @@ public static class SummaryRenderer
             return "-";
         }
 
-        if (row.FirstRunWallMs <= 0 || row.BaselineFirstRunWallMs <= 0)
+        if (row.FirstRunWallMs <= 0 || row.BaselineMedianWallMs <= 0)
         {
             return string.Equals(row.Status, "failed", StringComparison.OrdinalIgnoreCase)
                 ? "failed*"

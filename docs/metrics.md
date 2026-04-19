@@ -114,9 +114,9 @@ This is usually the number you want in a summary table or executive comparison. 
 
 `first_run_wall_ms` preserves the earliest successful run for that AV/scenario pair, ordered by `timestamp_utc`. `baseline_first_run_wall_ms` is the same value for the baseline.
 
-`first_run_slowdown_pct` compares those first-run wall times:
+`first_run_slowdown_pct` compares the AV first run with the baseline steady-state median:
 
-`(first_run_wall_ms - baseline_first_run_wall_ms) / baseline_first_run_wall_ms * 100`
+`(first_run_wall_ms - baseline_median_wall_ms) / baseline_median_wall_ms * 100`
 
 This is intentionally separate from the median slowdown. Median wall time is the steadier repeated-run signal; first-run wall time is the cold/cloud-sensitive signal. AV products may use reputation, cloud verdicts, or scan caches that survive local VM snapshot resets, so the first observed successful run can tell a different story than the median of repeated runs.
 
@@ -192,7 +192,7 @@ The main derived columns in `compare.csv` are:
 | `kernel_cpu_slowdown_pct` | Percentage-point difference from baseline |
 | `peak_memory_mb` | Maximum peak job memory across steady-state samples |
 | `slowdown_pct` | Wall-time slowdown versus baseline, computed from median values |
-| `first_run_slowdown_pct` | Wall-time slowdown versus baseline, computed from first-run values |
+| `first_run_slowdown_pct` | Wall-time slowdown versus baseline, computed from AV first-run wall time versus baseline steady-state median wall time |
 | `cv_pct` | Coefficient of variation of AV wall time |
 | `baseline_cv_pct` | Coefficient of variation of baseline wall time |
 | `status` | `ok`, `failed`, `insufficient`, `noisy`, or `anomaly` |
@@ -210,7 +210,7 @@ Rows in each `summary.md` table use the suite's fixed scenario order instead of 
 When two or more AV inputs are compared, `summary.md` emits two cross-AV tables:
 
 - `Cross-AV steady-state comparison` uses median wall-time slowdown after excluding each side's earliest successful run.
-- `Cross-AV first-run comparison` uses earliest successful wall-time slowdown, which is useful for cloud reputation and scan-cache effects.
+- `Cross-AV first-run comparison` uses each AV's earliest successful wall time against the baseline steady-state median, which is useful for cloud reputation and scan-cache effects.
 
 Only the steady-state cross-AV table marks `noisy` and `insufficient` cells with `*`. The first-run table does not inherit those markers because CV and steady-state sample count are not meaningful for a single first-run sample. In the first-run table, `failed*` means no successful first run was available, and a negative first-run slowdown is marked with `*` as an anomaly.
 

@@ -125,8 +125,8 @@ public static class CompareEngine
                 var baselineFirstRunWallMs = baselineFirstSuccessfulRun?.WallMs > 0
                     ? (double)baselineFirstSuccessfulRun.WallMs
                     : 0.0;
-                var firstRunSlowdownPct = baselineFirstRunWallMs > 0 && firstRunWallMs > 0
-                    ? Math.Round((firstRunWallMs - baselineFirstRunWallMs) / baselineFirstRunWallMs * 100.0, 1)
+                var firstRunSlowdownPct = baselineMedianWall > 0 && firstRunWallMs > 0
+                    ? Math.Round((firstRunWallMs - baselineMedianWall) / baselineMedianWall * 100.0, 1)
                     : 0.0;
                 double? p95SlowdownPct = medianP95Us.HasValue && baselineMedianP95Us.HasValue && baselineMedianP95Us.Value > 0
                     ? Math.Round((medianP95Us.Value - baselineMedianP95Us.Value) / baselineMedianP95Us.Value * 100.0, 1)
