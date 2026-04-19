@@ -1,0 +1,38 @@
+{
+  "scenario_id": "mem-map-file",
+  "av_name": "avira",
+  "av_product": "Avira Security",
+  "av_version": "1.0.2604.8504",
+  "timestamp_utc": "2026-04-19T03:00:08.2646418Z",
+  "command": "mem-map-file",
+  "working_dir": "C:\\bench\\microbench\\mem-map-file",
+  "exit_code": 0,
+  "wall_ms": 11116,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 90112,
+  "system_disk_write_bytes": 109899776,
+  "p50_us": 1068,
+  "p95_us": 1360.1,
+  "p99_us": 1758.7,
+  "max_us": 6838.1,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 900.5257629614474,
+    "mean_latency_us": 1110.21597,
+    "p50_us": 1068,
+    "p95_us": 1360.1,
+    "p99_us": 1758.7,
+    "max_us": 6838.1
+  }
+}

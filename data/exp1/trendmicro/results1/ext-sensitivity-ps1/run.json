@@ -1,0 +1,38 @@
+{
+  "scenario_id": "ext-sensitivity-ps1",
+  "av_name": "trendmicro",
+  "av_product": "Trend Micro Maximum Security",
+  "av_version": "7.7",
+  "timestamp_utc": "2026-04-18T23:57:22.9278622Z",
+  "command": "ext-sensitivity-ps1",
+  "working_dir": "C:\\bench\\microbench\\ext-sensitivity-ps1",
+  "exit_code": 0,
+  "wall_ms": 39883,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 156150272,
+  "system_disk_write_bytes": 189083648,
+  "p50_us": 3929.1,
+  "p95_us": 4593,
+  "p99_us": 5451.8,
+  "max_us": 78468.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 250.73111186370562,
+    "mean_latency_us": 3985.86059,
+    "p50_us": 3929.1,
+    "p95_us": 4593,
+    "p99_us": 5451.8,
+    "max_us": 78468.4
+  }
+}

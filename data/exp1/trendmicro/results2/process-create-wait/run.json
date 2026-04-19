@@ -1,0 +1,38 @@
+{
+  "scenario_id": "process-create-wait",
+  "av_name": "trendmicro",
+  "av_product": "Trend Micro Maximum Security",
+  "av_version": "7.7",
+  "timestamp_utc": "2026-04-19T00:16:31.8492526Z",
+  "command": "process-create-wait",
+  "working_dir": "C:\\bench\\microbench\\process-create-wait",
+  "exit_code": 0,
+  "wall_ms": 24969,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 951808,
+  "system_disk_write_bytes": 1052672,
+  "p50_us": 48590.1,
+  "p95_us": 51185.8,
+  "p99_us": 55592.5,
+  "max_us": 543707.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 500,
+    "ops_per_sec": 20.025030968309892,
+    "mean_latency_us": 49936.7308,
+    "p50_us": 48590.1,
+    "p95_us": 51185.8,
+    "p99_us": 55592.5,
+    "max_us": 543707.4
+  }
+}

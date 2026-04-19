@@ -1,0 +1,38 @@
+{
+  "scenario_id": "hardlink-create",
+  "av_name": "trendmicro",
+  "av_product": "Trend Micro Maximum Security",
+  "av_version": "7.7",
+  "timestamp_utc": "2026-04-19T01:00:46.4977904Z",
+  "command": "hardlink-create",
+  "working_dir": "C:\\bench\\microbench\\hardlink-create",
+  "exit_code": 0,
+  "wall_ms": 7690,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 48051712,
+  "system_disk_write_bytes": 14434304,
+  "p50_us": 1475.1,
+  "p95_us": 1979.4,
+  "p99_us": 2245.6,
+  "max_us": 3127.6,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 650.6677783889572,
+    "mean_latency_us": 1534.89062,
+    "p50_us": 1475.1,
+    "p95_us": 1979.4,
+    "p99_us": 2245.6,
+    "max_us": 3127.6
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "scenario_id": "file-write-content",
+  "av_name": "trendmicro",
+  "av_product": "Trend Micro Maximum Security",
+  "av_version": "7.7",
+  "timestamp_utc": "2026-04-18T23:59:58.2131095Z",
+  "command": "file-write-content",
+  "working_dir": "C:\\bench\\microbench\\file-write-content",
+  "exit_code": 0,
+  "wall_ms": 89653,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 944128,
+  "system_disk_write_bytes": 932786176,
+  "p50_us": 12601.8,
+  "p95_us": 14359.3,
+  "p99_us": 15258.3,
+  "max_us": 130640.9,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 111.54154895705595,
+    "mean_latency_us": 8953.00945,
+    "p50_us": 12601.8,
+    "p95_us": 14359.3,
+    "p99_us": 15258.3,
+    "max_us": 130640.9
+  }
+}

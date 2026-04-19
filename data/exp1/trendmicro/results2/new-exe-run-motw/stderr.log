@@ -1,0 +1,9 @@
+System.ComponentModel.Win32Exception: An error occurred trying to start process 'C:\bench\microbench\new-exe-run-motw\bench_00000\noop.exe' with working directory 'C:\Users\User'. Access is denied.
+   at System.Diagnostics.Process.StartWithCreateProcess(ProcessStartInfo startInfo)
+   at System.Diagnostics.Process.Start()
+   at AvBench.Core.Microbench.MicrobenchWorker.RunExecutable(String exePath) in C:\projects\av-benchmark\src\AvBench.Core\Microbench\MicrobenchWorker.cs:line 261
+   at AvBench.Core.Microbench.MicrobenchWorker.ExecuteMotw(String root, String unsignedExePath, Int32 totalOperations, Boolean applyMotw) in C:\projects\av-benchmark\src\AvBench.Core\Microbench\MicrobenchWorker.cs:line 215
+   at AvBench.Core.Microbench.MicrobenchWorker.Execute(MicrobenchRequest request) in C:\projects\av-benchmark\src\AvBench.Core\Microbench\MicrobenchWorker.cs:line 45
+   at AvBench.Core.Scenarios.MicrobenchScenarioFactory.ExecuteInProcessAsync(MicrobenchRequest request, MicrobenchSupportEntry support, CancellationToken cancellationToken) in C:\projects\av-benchmark\src\AvBench.Core\Scenarios\MicrobenchScenarioFactory.cs:line 290
+   at AvBench.Core.Scenarios.MicrobenchScenarioFactory.<>c__DisplayClass30_0.<CreateScenario>b__1(CancellationToken cancellationToken) in C:\projects\av-benchmark\src\AvBench.Core\Scenarios\MicrobenchScenarioFactory.cs:line 277
+   at AvBench.Core.Scenarios.ScenarioRunner.RunOnceAsync(ScenarioDefinition scenario, String outputDirectory, CancellationToken cancellationToken) in C:\projects\av-benchmark\src\AvBench.Core\Scenarios\ScenarioRunner.cs:line 100

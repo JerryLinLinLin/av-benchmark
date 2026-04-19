@@ -1,0 +1,38 @@
+{
+  "scenario_id": "fs-watcher",
+  "av_name": "avira",
+  "av_product": "Avira Security",
+  "av_version": "1.0.2604.8504",
+  "timestamp_utc": "2026-04-19T03:32:55.7069056Z",
+  "command": "fs-watcher",
+  "working_dir": "C:\\bench\\microbench\\fs-watcher",
+  "exit_code": 0,
+  "wall_ms": 4111,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 88576,
+  "system_disk_write_bytes": 30113792,
+  "p50_us": 780.1,
+  "p95_us": 942.8,
+  "p99_us": 1096.3,
+  "max_us": 21306.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 1253.1259854269467,
+    "mean_latency_us": 796.5396599999999,
+    "p50_us": 780.1,
+    "p95_us": 942.8,
+    "p99_us": 1096.3,
+    "max_us": 21306.4
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "scenario_id": "thread-create",
+  "av_name": "trendmicro",
+  "av_product": "Trend Micro Maximum Security",
+  "av_version": "7.7",
+  "timestamp_utc": "2026-04-19T00:01:24.7051479Z",
+  "command": "thread-create",
+  "working_dir": "C:\\bench\\microbench\\thread-create",
+  "exit_code": 0,
+  "wall_ms": 1878,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 32768,
+  "system_disk_write_bytes": 163840,
+  "p50_us": 345.2,
+  "p95_us": 544.9,
+  "p99_us": 610.2,
+  "max_us": 2627.6,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 2663.0429398630577,
+    "mean_latency_us": 375.342,
+    "p50_us": 345.2,
+    "p95_us": 544.9,
+    "p99_us": 610.2,
+    "max_us": 2627.6
+  }
+}

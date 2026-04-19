@@ -1,0 +1,38 @@
+{
+  "scenario_id": "process-create-wait",
+  "av_name": "avira",
+  "av_product": "Avira Security",
+  "av_version": "1.0.2604.8504",
+  "timestamp_utc": "2026-04-19T03:46:18.0954212Z",
+  "command": "process-create-wait",
+  "working_dir": "C:\\bench\\microbench\\process-create-wait",
+  "exit_code": 0,
+  "wall_ms": 18350,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 738816,
+  "system_disk_write_bytes": 110731264,
+  "p50_us": 36380.6,
+  "p95_us": 38958.2,
+  "p99_us": 42069.6,
+  "max_us": 91629.1,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 500,
+    "ops_per_sec": 27.24770842684974,
+    "mean_latency_us": 36699.383,
+    "p50_us": 36380.6,
+    "p95_us": 38958.2,
+    "p99_us": 42069.6,
+    "max_us": 91629.1
+  }
+}

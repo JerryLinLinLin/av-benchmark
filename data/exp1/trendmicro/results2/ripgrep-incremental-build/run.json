@@ -1,0 +1,24 @@
+{
+  "scenario_id": "ripgrep-incremental-build",
+  "av_name": "trendmicro",
+  "av_product": "Trend Micro Maximum Security",
+  "av_version": "7.7",
+  "timestamp_utc": "2026-04-19T00:27:39.8932307Z",
+  "command": "cargo build --release",
+  "working_dir": "C:\\bench\\ripgrep",
+  "exit_code": 0,
+  "wall_ms": 6007,
+  "user_cpu_ms": 31968,
+  "kernel_cpu_ms": 750,
+  "peak_job_memory_mb": 470,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 23719936,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d"
+}
