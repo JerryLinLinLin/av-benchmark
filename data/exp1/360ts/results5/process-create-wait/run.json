@@ -1,0 +1,38 @@
+{
+  "scenario_id": "process-create-wait",
+  "av_name": "360ts",
+  "av_product": "360 Total Security",
+  "av_version": "9, 2, 0, 1031",
+  "timestamp_utc": "2026-04-19T23:54:44.2812732Z",
+  "command": "process-create-wait",
+  "working_dir": "C:\\bench\\microbench\\process-create-wait",
+  "exit_code": 0,
+  "wall_ms": 43038,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 123155456,
+  "system_disk_write_bytes": 131141632,
+  "p50_us": 85444.2,
+  "p95_us": 89546.5,
+  "p99_us": 93296.6,
+  "max_us": 205451.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 500,
+    "ops_per_sec": 11.617516864045568,
+    "mean_latency_us": 86075.9694,
+    "p50_us": 85444.2,
+    "p95_us": 89546.5,
+    "p99_us": 93296.6,
+    "max_us": 205451.4
+  }
+}

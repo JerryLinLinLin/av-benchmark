@@ -1,0 +1,38 @@
+{
+  "scenario_id": "file-create-delete",
+  "av_name": "360ts",
+  "av_product": "360 Total Security",
+  "av_version": "9, 2, 0, 1031",
+  "timestamp_utc": "2026-04-19T23:51:57.6778023Z",
+  "command": "file-create-delete",
+  "working_dir": "C:\\bench\\microbench\\file-create-delete",
+  "exit_code": 0,
+  "wall_ms": 3348,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 39344640,
+  "system_disk_write_bytes": 39768064,
+  "p50_us": 644.2,
+  "p95_us": 814,
+  "p99_us": 1031.4,
+  "max_us": 12637.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 100,
+    "total_operations": 5000,
+    "ops_per_sec": 1494.9793063469435,
+    "mean_latency_us": 664.17378,
+    "p50_us": 644.2,
+    "p95_us": 814,
+    "p99_us": 1031.4,
+    "max_us": 12637.4
+  }
+}

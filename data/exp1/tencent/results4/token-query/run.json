@@ -1,0 +1,38 @@
+{
+  "scenario_id": "token-query",
+  "av_name": "tencent-pcmgr",
+  "av_product": "\u817E\u8BAF\u7535\u8111\u7BA1\u5BB6\u7CFB\u7EDF\u9632\u62A4",
+  "av_version": "17,1,20399,201",
+  "timestamp_utc": "2026-04-19T16:58:49.1952146Z",
+  "command": "token-query",
+  "working_dir": "C:\\bench\\microbench\\token-query",
+  "exit_code": 0,
+  "wall_ms": 65,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 98304,
+  "system_disk_write_bytes": 0,
+  "p50_us": 1,
+  "p95_us": 1.3,
+  "p99_us": 1.7,
+  "max_us": 9810,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 50000,
+    "ops_per_sec": 775196.2021587664,
+    "mean_latency_us": 1.250798,
+    "p50_us": 1,
+    "p95_us": 1.3,
+    "p99_us": 1.7,
+    "max_us": 9810
+  }
+}

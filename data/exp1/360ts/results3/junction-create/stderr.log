@@ -1,0 +1,7 @@
+System.ComponentModel.Win32Exception: DeviceIoControl(FSCTL_SET_REPARSE_POINT) failed for C:\bench\microbench\junction-create\junction_00000.
+   at AvBench.Core.Microbench.MicrobenchWorker.CreateMountPointJunction(String junctionPath, String targetPath) in C:\projects\av-benchmark\src\AvBench.Core\Microbench\MicrobenchWorker.FileSystem.cs:line 273
+   at AvBench.Core.Microbench.MicrobenchWorker.ExecuteJunctionCreate(String root, Int32 totalOperations) in C:\projects\av-benchmark\src\AvBench.Core\Microbench\MicrobenchWorker.FileSystem.cs:line 111
+   at AvBench.Core.Microbench.MicrobenchWorker.Execute(MicrobenchRequest request) in C:\projects\av-benchmark\src\AvBench.Core\Microbench\MicrobenchWorker.cs:line 31
+   at AvBench.Core.Scenarios.MicrobenchScenarioFactory.ExecuteInProcessAsync(MicrobenchRequest request, MicrobenchSupportEntry support, CancellationToken cancellationToken) in C:\projects\av-benchmark\src\AvBench.Core\Scenarios\MicrobenchScenarioFactory.cs:line 290
+   at AvBench.Core.Scenarios.MicrobenchScenarioFactory.<>c__DisplayClass30_0.<CreateScenario>b__1(CancellationToken cancellationToken) in C:\projects\av-benchmark\src\AvBench.Core\Scenarios\MicrobenchScenarioFactory.cs:line 277
+   at AvBench.Core.Scenarios.ScenarioRunner.RunOnceAsync(ScenarioDefinition scenario, String outputDirectory, CancellationToken cancellationToken) in C:\projects\av-benchmark\src\AvBench.Core\Scenarios\ScenarioRunner.cs:line 100

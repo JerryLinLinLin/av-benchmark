@@ -1,0 +1,38 @@
+{
+  "scenario_id": "mem-alloc-protect",
+  "av_name": "tencent-pcmgr",
+  "av_product": "\u817E\u8BAF\u7535\u8111\u7BA1\u5BB6\u7CFB\u7EDF\u9632\u62A4",
+  "av_version": "17,1,20399,201",
+  "timestamp_utc": "2026-04-19T16:38:56.6662596Z",
+  "command": "mem-alloc-protect",
+  "working_dir": "C:\\bench\\microbench\\mem-alloc-protect",
+  "exit_code": 0,
+  "wall_ms": 162,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 0,
+  "p50_us": 2.9,
+  "p95_us": 4.9,
+  "p99_us": 6.8,
+  "max_us": 400.9,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 50000,
+    "ops_per_sec": 310200.830221502,
+    "mean_latency_us": 3.183238,
+    "p50_us": 2.9,
+    "p95_us": 4.9,
+    "p99_us": 6.8,
+    "max_us": 400.9
+  }
+}

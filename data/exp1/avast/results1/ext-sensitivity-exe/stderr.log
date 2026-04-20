@@ -1,0 +1,5 @@
+System.InvalidOperationException: Instance '_Total' does not exist in the specified Category.
+   at System.Diagnostics.CounterDefinitionSample.GetInstanceValue(String instanceName)
+   at System.Diagnostics.PerformanceCounter.NextSample()
+   at AvBench.Core.Collectors.DiskIoSnapshot.SnapshotBefore() in C:\projects\av-benchmark\src\AvBench.Core\Collectors\DiskIoSnapshot.cs:line 38
+   at AvBench.Core.Scenarios.ScenarioRunner.RunOnceAsync(ScenarioDefinition scenario, String outputDirectory, CancellationToken cancellationToken) in C:\projects\av-benchmark\src\AvBench.Core\Scenarios\ScenarioRunner.cs:line 99

@@ -1,0 +1,38 @@
+{
+  "scenario_id": "dll-load-unique",
+  "av_name": "360ts",
+  "av_product": "360 Total Security",
+  "av_version": "9, 2, 0, 1031",
+  "timestamp_utc": "2026-04-19T20:25:41.3688192Z",
+  "command": "dll-load-unique",
+  "working_dir": "C:\\bench\\microbench\\dll-load-unique",
+  "exit_code": 0,
+  "wall_ms": 10677,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 1990656,
+  "system_disk_write_bytes": 4026015744,
+  "p50_us": 5248.1,
+  "p95_us": 6459.3,
+  "p99_us": 7242.3,
+  "max_us": 15668.6,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 2000,
+    "ops_per_sec": 187.32640052686676,
+    "mean_latency_us": 5334.15465,
+    "p50_us": 5248.1,
+    "p95_us": 6459.3,
+    "p99_us": 7242.3,
+    "max_us": 15668.6
+  }
+}

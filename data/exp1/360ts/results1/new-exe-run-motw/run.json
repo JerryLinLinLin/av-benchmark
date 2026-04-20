@@ -1,0 +1,38 @@
+{
+  "scenario_id": "new-exe-run-motw",
+  "av_name": "360ts",
+  "av_product": "360 Total Security",
+  "av_version": "9, 2, 0, 1031",
+  "timestamp_utc": "2026-04-19T20:26:37.1470492Z",
+  "command": "new-exe-run-motw",
+  "working_dir": "C:\\bench\\microbench\\new-exe-run-motw",
+  "exit_code": 0,
+  "wall_ms": 9395,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 57344,
+  "system_disk_write_bytes": 39505920,
+  "p50_us": 186663.5,
+  "p95_us": 193292.1,
+  "p99_us": 218098.7,
+  "max_us": 218098.7,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 50,
+    "ops_per_sec": 5.321546575963672,
+    "mean_latency_us": 187664.742,
+    "p50_us": 186663.5,
+    "p95_us": 193292.1,
+    "p99_us": 218098.7,
+    "max_us": 218098.7
+  }
+}

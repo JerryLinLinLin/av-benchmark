@@ -1,0 +1,38 @@
+{
+  "scenario_id": "hardlink-create",
+  "av_name": "360ts",
+  "av_product": "360 Total Security",
+  "av_version": "9, 2, 0, 1031",
+  "timestamp_utc": "2026-04-19T20:39:20.5471856Z",
+  "command": "hardlink-create",
+  "working_dir": "C:\\bench\\microbench\\hardlink-create",
+  "exit_code": 0,
+  "wall_ms": 3236,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 0,
+  "p50_us": 633.2,
+  "p95_us": 732.6,
+  "p99_us": 1125.2,
+  "max_us": 1899.2,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 1545.9696709814784,
+    "mean_latency_us": 645.3484,
+    "p50_us": 633.2,
+    "p95_us": 732.6,
+    "p99_us": 1125.2,
+    "max_us": 1899.2
+  }
+}

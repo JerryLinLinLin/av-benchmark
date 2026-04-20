@@ -1,0 +1,38 @@
+{
+  "scenario_id": "net-dns-resolve",
+  "av_name": "360ts",
+  "av_product": "360 Total Security",
+  "av_version": "9, 2, 0, 1031",
+  "timestamp_utc": "2026-04-19T21:05:54.2947304Z",
+  "command": "net-dns-resolve",
+  "working_dir": "C:\\bench\\microbench\\net-dns-resolve",
+  "exit_code": 0,
+  "wall_ms": 1218,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 8192,
+  "system_disk_write_bytes": 3100672,
+  "p50_us": 243.2,
+  "p95_us": 269.8,
+  "p99_us": 294.2,
+  "max_us": 6950.6,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 4105.339059131826,
+    "mean_latency_us": 243.45497999999998,
+    "p50_us": 243.2,
+    "p95_us": 269.8,
+    "p99_us": 294.2,
+    "max_us": 6950.6
+  }
+}

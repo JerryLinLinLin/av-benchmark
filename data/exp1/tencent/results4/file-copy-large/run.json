@@ -1,0 +1,38 @@
+{
+  "scenario_id": "file-copy-large",
+  "av_name": "tencent-pcmgr",
+  "av_product": "\u817E\u8BAF\u7535\u8111\u7BA1\u5BB6\u7CFB\u7EDF\u9632\u62A4",
+  "av_version": "17,1,20399,201",
+  "timestamp_utc": "2026-04-19T16:52:51.9421458Z",
+  "command": "file-copy-large",
+  "working_dir": "C:\\bench\\microbench\\file-copy-large",
+  "exit_code": 0,
+  "wall_ms": 864,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 570368,
+  "system_disk_write_bytes": 104886272,
+  "p50_us": 35229.6,
+  "p95_us": 69908,
+  "p99_us": 69908,
+  "max_us": 69908,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10,
+    "ops_per_sec": 25.811400740838824,
+    "mean_latency_us": 38733.43,
+    "p50_us": 35229.6,
+    "p95_us": 69908,
+    "p99_us": 69908,
+    "max_us": 69908
+  }
+}

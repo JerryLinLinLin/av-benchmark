@@ -1,0 +1,38 @@
+{
+  "scenario_id": "dll-load-unique",
+  "av_name": "avast",
+  "av_product": "Avast Antivirus",
+  "av_version": "21.4.6162.0",
+  "timestamp_utc": "2026-04-19T18:24:09.6500146Z",
+  "command": "dll-load-unique",
+  "working_dir": "C:\\bench\\microbench\\dll-load-unique",
+  "exit_code": 0,
+  "wall_ms": 8502,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 1957888,
+  "system_disk_write_bytes": 4020506624,
+  "p50_us": 4147,
+  "p95_us": 4953.2,
+  "p99_us": 5905.4,
+  "max_us": 12345.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 2000,
+    "ops_per_sec": 235.23757483657076,
+    "mean_latency_us": 4246.90195,
+    "p50_us": 4147,
+    "p95_us": 4953.2,
+    "p99_us": 5905.4,
+    "max_us": 12345.4
+  }
+}

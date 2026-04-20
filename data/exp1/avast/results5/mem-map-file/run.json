@@ -1,0 +1,38 @@
+{
+  "scenario_id": "mem-map-file",
+  "av_name": "avast",
+  "av_product": "Avast Antivirus",
+  "av_version": "21.4.6162.0",
+  "timestamp_utc": "2026-04-19T19:37:56.523209Z",
+  "command": "mem-map-file",
+  "working_dir": "C:\\bench\\microbench\\mem-map-file",
+  "exit_code": 0,
+  "wall_ms": 4247,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 293376,
+  "system_disk_write_bytes": 106377216,
+  "p50_us": 409.3,
+  "p95_us": 570.6,
+  "p99_us": 848.1,
+  "max_us": 8514.8,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 2361.6583073409224,
+    "mean_latency_us": 423.16740999999996,
+    "p50_us": 409.3,
+    "p95_us": 570.6,
+    "p99_us": 848.1,
+    "max_us": 8514.8
+  }
+}

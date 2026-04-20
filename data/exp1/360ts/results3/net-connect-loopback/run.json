@@ -1,0 +1,38 @@
+{
+  "scenario_id": "net-connect-loopback",
+  "av_name": "360ts",
+  "av_product": "360 Total Security",
+  "av_version": "9, 2, 0, 1031",
+  "timestamp_utc": "2026-04-19T21:05:43.0586696Z",
+  "command": "net-connect-loopback",
+  "working_dir": "C:\\bench\\microbench\\net-connect-loopback",
+  "exit_code": 0,
+  "wall_ms": 697,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 167936,
+  "system_disk_write_bytes": 102400,
+  "p50_us": 327.7,
+  "p95_us": 415.2,
+  "p99_us": 1126.6,
+  "max_us": 2277.8,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 2000,
+    "ops_per_sec": 2910.6836351760776,
+    "mean_latency_us": 343.34365,
+    "p50_us": 327.7,
+    "p95_us": 415.2,
+    "p99_us": 1126.6,
+    "max_us": 2277.8
+  }
+}

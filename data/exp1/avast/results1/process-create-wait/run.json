@@ -1,0 +1,38 @@
+{
+  "scenario_id": "process-create-wait",
+  "av_name": "avast",
+  "av_product": "Avast Antivirus",
+  "av_version": "21.4.6162.0",
+  "timestamp_utc": "2026-04-19T18:22:59.9762609Z",
+  "command": "process-create-wait",
+  "working_dir": "C:\\bench\\microbench\\process-create-wait",
+  "exit_code": 0,
+  "wall_ms": 25049,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 1863680,
+  "system_disk_write_bytes": 0,
+  "p50_us": 46688.1,
+  "p95_us": 49416.4,
+  "p99_us": 51165,
+  "max_us": 1667307.5,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 500,
+    "ops_per_sec": 19.960499130325044,
+    "mean_latency_us": 50097.9862,
+    "p50_us": 46688.1,
+    "p95_us": 49416.4,
+    "p99_us": 51165,
+    "max_us": 1667307.5
+  }
+}

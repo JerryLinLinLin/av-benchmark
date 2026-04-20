@@ -1,0 +1,38 @@
+{
+  "scenario_id": "new-exe-run",
+  "av_name": "avast",
+  "av_product": "Avast Antivirus",
+  "av_version": "21.4.6162.0",
+  "timestamp_utc": "2026-04-19T18:39:45.8455233Z",
+  "command": "new-exe-run",
+  "working_dir": "C:\\bench\\microbench\\new-exe-run",
+  "exit_code": 0,
+  "wall_ms": 6330,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 576000,
+  "system_disk_write_bytes": 12406784,
+  "p50_us": 122700.4,
+  "p95_us": 140284.9,
+  "p99_us": 213739.2,
+  "max_us": 213739.2,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 50,
+    "ops_per_sec": 7.899065488418889,
+    "mean_latency_us": 126364.52,
+    "p50_us": 122700.4,
+    "p95_us": 140284.9,
+    "p99_us": 213739.2,
+    "max_us": 213739.2
+  }
+}

@@ -1,0 +1,668 @@
+
+  Determining projects to restore...
+  Restored C:\bench\roslyn\src\Dependencies\CodeAnalysis.Debugging\Microsoft.CodeAnalysis.Debugging.Package.csproj (in 335 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\Core\Source\FunctionResolver\Microsoft.CodeAnalysis.FunctionResolver.csproj (in 335 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\Core\Source\ResultProvider\Portable\Microsoft.CodeAnalysis.ResultProvider.csproj (in 335 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\XunitHook\Microsoft.CodeAnalysis.XunitHook.csproj (in 335 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\CSharp\Source\ExpressionCompiler\Microsoft.CodeAnalysis.CSharp.ExpressionCompiler.csproj (in 335 ms).
+  Restored C:\bench\roslyn\src\Dependencies\Contracts\Microsoft.CodeAnalysis.Contracts.Package.csproj (in 334 ms).
+  Restored C:\bench\roslyn\src\Compilers\VisualBasic\vbc\arm64\vbc-arm64.csproj (in 334 ms).
+  Restored C:\bench\roslyn\src\Dependencies\Threading\Microsoft.CodeAnalysis.Threading.Package.csproj (in 335 ms).
+  Restored C:\bench\roslyn\src\Dependencies\Collections\Microsoft.CodeAnalysis.Collections.Package.csproj (in 335 ms).
+  Restored C:\bench\roslyn\src\Dependencies\PooledObjects\Microsoft.CodeAnalysis.PooledObjects.Package.csproj (in 334 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\Core\Source\ExpressionCompiler\Microsoft.CodeAnalysis.ExpressionCompiler.csproj (in 334 ms).
+  Restored C:\bench\roslyn\src\Compilers\VisualBasic\vbc\AnyCpu\vbc.csproj (in 335 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\Setup.ServiceHub\x64\Roslyn.VisualStudio.ServiceHub.Setup.x64.csproj (in 8 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\Setup.ServiceHub\arm64\Roslyn.VisualStudio.ServiceHub.Setup.arm64.csproj (in 37 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Tools\RulesetToEditorconfigConverter\Source\RulesetToEditorconfigConverter.csproj (in 960 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Utilities.UnitTests\Analyzer.Utilities.UnitTests.csproj (in 993 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Tools\RulesetToEditorconfigConverter\Tests\RulesetToEditorconfigConverter.UnitTests.csproj (in 993 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\IntegrationTest\Harness\XUnit\Microsoft.VisualStudio.Extensibility.Testing.Xunit.csproj (in 1.43 sec).
+  Restored C:\bench\roslyn\src\Compilers\VisualBasic\Portable\Microsoft.CodeAnalysis.VisualBasic.vbproj (in 7 ms).
+  Restored C:\bench\roslyn\src\Compilers\Test\Resources\Core\Microsoft.CodeAnalysis.Compiler.Test.Resources.csproj (in 4 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\LiveShare\Impl\Microsoft.VisualStudio.LanguageServices.LiveShare.csproj (in 1.05 sec).
+  Restored C:\bench\roslyn\src\Compilers\Server\VBCSCompiler\arm64\VBCSCompiler-arm64.csproj (in 6 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Tools\Metrics\Metrics.csproj (in 1.04 sec).
+  Restored C:\bench\roslyn\src\Compilers\Server\VBCSCompiler\AnyCpu\VBCSCompiler.csproj (in 9 ms).
+  Restored C:\bench\roslyn\src\Compilers\Extension\Roslyn.Compilers.Extension.csproj (in 17 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\Core\Test\ExpressionCompiler\Microsoft.CodeAnalysis.ExpressionCompiler.Test.Utilities.csproj (in 1.65 sec).
+  Restored C:\bench\roslyn\src\Compilers\VisualBasic\Test\CommandLine\Microsoft.CodeAnalysis.VisualBasic.CommandLine.UnitTests.vbproj (in 241 ms).
+  Restored C:\bench\roslyn\src\Scripting\CoreTest.Desktop\Microsoft.CodeAnalysis.Scripting.Desktop.UnitTests.csproj (in 1.21 sec).
+  Restored C:\bench\roslyn\src\VisualStudio\Setup.Dependencies\Roslyn.VisualStudio.Setup.Dependencies.csproj (in 1.26 sec).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\Core\Test\FunctionResolver\Microsoft.CodeAnalysis.FunctionResolver.UnitTests.csproj (in 1.66 sec).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\Core\Test\ResultProvider\Microsoft.CodeAnalysis.ResultProvider.Utilities.csproj (in 1.67 sec).
+  Restored C:\bench\roslyn\src\Compilers\Test\Core\Microsoft.CodeAnalysis.Test.Utilities.csproj (in 207 ms).
+  Restored C:\bench\roslyn\src\Compilers\VisualBasic\Test\IOperation\Roslyn.Compilers.VisualBasic.IOperation.UnitTests.vbproj (in 1.67 sec).
+  Restored C:\bench\roslyn\src\Compilers\Test\Utilities\CSharp\Microsoft.CodeAnalysis.CSharp.Test.Utilities.csproj (in 234 ms).
+  Restored C:\bench\roslyn\src\Compilers\VisualBasic\Test\Syntax\Microsoft.CodeAnalysis.VisualBasic.Syntax.UnitTests.vbproj (in 1.68 sec).
+  Restored C:\bench\roslyn\src\Compilers\Test\Utilities\VisualBasic\Microsoft.CodeAnalysis.VisualBasic.Test.Utilities.vbproj (in 237 ms).
+  Restored C:\bench\roslyn\src\Scripting\CoreTestUtilities\Microsoft.CodeAnalysis.Scripting.TestUtilities.csproj (in 1.21 sec).
+  Restored C:\bench\roslyn\src\Compilers\VisualBasic\Test\Emit\Microsoft.CodeAnalysis.VisualBasic.Emit.UnitTests.vbproj (in 1.2 sec).
+  Restored C:\bench\roslyn\src\Compilers\VisualBasic\Test\Semantic\Microsoft.CodeAnalysis.VisualBasic.Semantic.UnitTests.vbproj (in 1.68 sec).
+  Restored C:\bench\roslyn\src\Compilers\VisualBasic\Test\Symbol\Microsoft.CodeAnalysis.VisualBasic.Symbol.UnitTests.vbproj (in 1.68 sec).
+  Restored C:\bench\roslyn\src\Scripting\CoreTest\Microsoft.CodeAnalysis.Scripting.UnitTests.csproj (in 1.24 sec).
+  Restored C:\bench\roslyn\src\Compilers\Server\VBCSCompilerTests\VBCSCompiler.UnitTests.csproj (in 135 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.csproj (in 14 ms).
+  Restored C:\bench\roslyn\src\Features\ExternalAccess\OmniSharp\Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.csproj (in 36 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\Text\Microsoft.CodeAnalysis.EditorFeatures.Text.csproj (in 35 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\csc\arm64\csc-arm64.csproj (in 13 ms).
+  Restored C:\bench\roslyn\src\Compilers\Core\Portable\Microsoft.CodeAnalysis.csproj (in 13 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\csc\AnyCpu\csc.csproj (in 17 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\VisualBasic\Microsoft.CodeAnalysis.VisualBasic.EditorFeatures.vbproj (in 42 ms).
+  Restored C:\bench\roslyn\src\Compilers\Core\MSBuildTask\Sdk\Microsoft.Build.Tasks.CodeAnalysis.Sdk.csproj (in 14 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\Test\WinRT\Microsoft.CodeAnalysis.CSharp.WinRT.UnitTests.csproj (in 35 ms).
+  Restored C:\bench\roslyn\src\Compilers\Core\MSBuildTask\MSBuild\Microsoft.Build.Tasks.CodeAnalysis.csproj (in 41 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\Test\Syntax\Microsoft.CodeAnalysis.CSharp.Syntax.UnitTests.csproj (in 45 ms).
+  Restored C:\bench\roslyn\src\Compilers\Core\Rebuild\Microsoft.CodeAnalysis.Rebuild.csproj (in 59 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\VisualBasic\Source\ResultProvider\Portable\Microsoft.CodeAnalysis.VisualBasic.ResultProvider.vbproj (in 4 ms).
+  Restored C:\bench\roslyn\src\Compilers\Core\SdkTaskTests\Microsoft.Build.Tasks.CodeAnalysis.Sdk.UnitTests.csproj (in 45 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\Test\Semantic\Microsoft.CodeAnalysis.CSharp.Semantic.UnitTests.csproj (in 53 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\Test\Symbol\Microsoft.CodeAnalysis.CSharp.Symbol.UnitTests.csproj (in 54 ms).
+  Restored C:\bench\roslyn\src\Features\Core\Portable\Microsoft.CodeAnalysis.Features.csproj (in 26 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\VisualBasic\Source\ExpressionCompiler\Microsoft.CodeAnalysis.VisualBasic.ExpressionCompiler.vbproj (in 9 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\CSharp\Source\ResultProvider\Portable\Microsoft.CodeAnalysis.CSharp.ResultProvider.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\Compilers\Core\RebuildTest\Microsoft.CodeAnalysis.Rebuild.UnitTests.csproj (in 48 ms).
+  Restored C:\bench\roslyn\src\Features\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.Features.csproj (in 42 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\Setup\Roslyn.VisualStudio.Setup.csproj (in 1.76 sec).
+  Restored C:\bench\roslyn\src\Tools\Source\CompilerGeneratorTools\Source\CSharpErrorFactsGenerator\CSharpErrorFactsGenerator.csproj (in 3 ms).
+  Restored C:\bench\roslyn\src\Compilers\Core\CodeAnalysisTest\Microsoft.CodeAnalysis.UnitTests.csproj (in 43 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\Package\ExpressionEvaluatorPackage.csproj (in 13 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\VisualBasic\Test\ResultProvider\Microsoft.CodeAnalysis.VisualBasic.ResultProvider.UnitTests.vbproj (in 37 ms).
+  Restored C:\bench\roslyn\src\Tools\Source\CompilerGeneratorTools\Source\BoundTreeGenerator\CompilersBoundTreeGenerator.csproj (in 2 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.Analyzers\VisualBasic\Microsoft.CodeAnalysis.VisualBasic.Analyzers.vbproj (in 46 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\VisualBasic\Test\ExpressionCompiler\Microsoft.CodeAnalysis.VisualBasic.ExpressionCompiler.UnitTests.vbproj (in 39 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.Analyzers\UnitTests\Microsoft.CodeAnalysis.Analyzers.UnitTests.csproj (in 11 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.Analyzers\CSharp\Microsoft.CodeAnalysis.CSharp.Analyzers.csproj (in 27 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.Analyzers\Setup\Microsoft.CodeAnalysis.Analyzers.Setup.csproj (in 28 ms).
+  Restored C:\bench\roslyn\src\Compilers\Core\MSBuildTaskTests\Microsoft.Build.Tasks.CodeAnalysis.UnitTests.csproj (in 102 ms).
+  Restored C:\bench\roslyn\src\Tools\SemanticSearch\Extensions\Microsoft.CodeAnalysis.SemanticSearch.Extensions.csproj (in 9 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\IntegrationTest\TestSetup\Microsoft.VisualStudio.IntegrationTest.Setup.csproj (in 1.35 sec).
+  Restored C:\bench\roslyn\src\Tools\PrepareTests\PrepareTests.csproj (in 14 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Roslyn.Diagnostics.Analyzers\Core\Roslyn.Diagnostics.Analyzers.csproj (in 6 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Roslyn.Diagnostics.Analyzers\VisualBasic\Roslyn.Diagnostics.VisualBasic.Analyzers.vbproj (in 6 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Roslyn.Diagnostics.Analyzers\CSharp\Roslyn.Diagnostics.CSharp.Analyzers.csproj (in 8 ms).
+  Restored C:\bench\roslyn\src\Tools\SemanticSearch\ReferenceAssemblies\SemanticSearch.ReferenceAssemblies.csproj (in 11 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Roslyn.Diagnostics.Analyzers\Setup\Roslyn.Diagnostics.Analyzers.Setup.csproj (in 10 ms).
+  Restored C:\bench\roslyn\src\Tools\SemanticSearch\BuildTask\SemanticSearch.BuildTask.csproj (in 18 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\LiveShare\Test\Microsoft.VisualStudio.LanguageServices.LiveShare.UnitTests.csproj (in 1.35 sec).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\PublicApiAnalyzers\Core\Analyzers\Microsoft.CodeAnalysis.PublicApiAnalyzers.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\CSharp\Test\ExpressionCompiler\Microsoft.CodeAnalysis.CSharp.ExpressionCompiler.UnitTests.csproj (in 35 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\PublicApiAnalyzers\Core\CodeFixes\Microsoft.CodeAnalysis.PublicApiAnalyzers.CodeFixes.csproj (in 7 ms).
+  Restored C:\bench\roslyn\src\ExpressionEvaluator\CSharp\Test\ResultProvider\Microsoft.CodeAnalysis.CSharp.ResultProvider.UnitTests.csproj (in 40 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Roslyn.Diagnostics.Analyzers\UnitTests\Roslyn.Diagnostics.Analyzers.UnitTests.csproj (in 18 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\TestUtilities2\Microsoft.VisualStudio.LanguageServices.Test.Utilities2.vbproj (in 1.79 sec).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\PerformanceSensitiveAnalyzers\Setup\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.Setup.csproj (in 8 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\PublicApiAnalyzers\Setup\Microsoft.CodeAnalysis.PublicApiAnalyzers.Setup.csproj (in 21 ms).
+  Restored C:\bench\roslyn\src\Features\Test\Microsoft.CodeAnalysis.Features.UnitTests.csproj (in 137 ms).
+  Restored C:\bench\roslyn\src\Features\VisualBasicTest\Microsoft.CodeAnalysis.VisualBasic.Features.UnitTests.vbproj (in 216 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\PublicApiAnalyzers\UnitTests\Microsoft.CodeAnalysis.PublicApiAnalyzers.UnitTests.csproj (in 13 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\PerformanceSensitiveAnalyzers\UnitTests\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.UnitTests.csproj (in 14 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\IntegrationTest\Harness\XUnitIntegrationTests\Microsoft.VisualStudio.Extensibility.Testing.Xunit.IntegrationTests.csproj (in 1.81 sec).
+  Restored C:\bench\roslyn\src\Deployment\RoslynDeployment.csproj (in 3 ms).
+  Restored C:\bench\roslyn\src\Tools\SemanticSearch\Tests\SemanticSearch.BuildTask.UnitTests.csproj (in 46 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\IntegrationTest\New.IntegrationTests\Microsoft.VisualStudio.LanguageServices.New.IntegrationTests.csproj (in 1.81 sec).
+  Restored C:\bench\roslyn\src\EditorFeatures\VisualBasicTest\Microsoft.CodeAnalysis.VisualBasic.EditorFeatures.UnitTests.vbproj (in 119 ms).
+  Restored C:\bench\roslyn\src\Features\TestUtilities\Microsoft.CodeAnalysis.Features.Test.Utilities.csproj (in 206 ms).
+  Restored C:\bench\roslyn\src\CodeStyle\VisualBasic\Analyzers\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.vbproj (in 12 ms).
+  Restored C:\bench\roslyn\src\CodeStyle\Tools\CodeStyleConfigFileGenerator.csproj (in 13 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\Test\IOperation\Microsoft.CodeAnalysis.CSharp.IOperation.UnitTests.csproj (in 77 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\Test\EndToEnd\Microsoft.CodeAnalysis.CSharp.EndToEnd.UnitTests.csproj (in 85 ms).
+  Restored C:\bench\roslyn\src\Features\CSharpTest\Microsoft.CodeAnalysis.CSharp.Features.UnitTests.csproj (in 132 ms).
+  Restored C:\bench\roslyn\src\CodeStyle\VisualBasic\CodeFixes\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.Fixes.vbproj (in 23 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\Test\Emit\Microsoft.CodeAnalysis.CSharp.Emit.UnitTests.csproj (in 84 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\Test\Emit3\Microsoft.CodeAnalysis.CSharp.Emit3.UnitTests.csproj (in 84 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\IntegrationTest\Harness\SourceGenerator\Microsoft.VisualStudio.Extensibility.Testing.SourceGenerator.csproj (in 4 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\ExternalAccess\Debugger\Microsoft.CodeAnalysis.ExternalAccess.Debugger.csproj (in 81 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\Test\CommandLine\Microsoft.CodeAnalysis.CSharp.CommandLine.UnitTests.csproj (in 80 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\Test\Emit2\Microsoft.CodeAnalysis.CSharp.Emit2.UnitTests.csproj (in 90 ms).
+  Restored C:\bench\roslyn\src\Compilers\CSharp\Test\CSharp15\Microsoft.CodeAnalysis.CSharp.CSharp15.UnitTests.csproj (in 84 ms).
+  Restored C:\bench\roslyn\src\Tools\Replay\Replay.csproj (in 143 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\Core\Microsoft.CodeAnalysis.EditorFeatures.csproj (in 46 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\CSharp\Microsoft.CodeAnalysis.CSharp.EditorFeatures.csproj (in 82 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\IntegrationTest\Harness\SourceGeneratorUnitTests\Microsoft.VisualStudio.Extensibility.Testing.SourceGenerator.UnitTests.csproj (in 26 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\IntegrationTest\Harness\IntegrationTestServiceDev18\Microsoft.VisualStudio.IntegrationTestService.Dev18.csproj (in 31 ms).
+  Restored C:\bench\roslyn\src\Tools\ExternalAccess\RazorCompiler\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.csproj (in 11 ms).
+  Restored C:\bench\roslyn\src\Tools\ExternalAccess\Extensions\Microsoft.CodeAnalysis.ExternalAccess.Extensions.csproj (in 19 ms).
+  Restored C:\bench\roslyn\src\Tools\BuildBoss\BuildBoss.csproj (in 31 ms).
+  Restored C:\bench\roslyn\src\Tools\BuildActionTelemetryTable\BuildActionTelemetryTable.csproj (in 18 ms).
+  Restored C:\bench\roslyn\src\Tools\ExternalAccess\RazorCompilerTest\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.UnitTests.csproj (in 48 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\CSharpTest2\Microsoft.CodeAnalysis.CSharp.EditorFeatures2.UnitTests.csproj (in 149 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\PerformanceSensitiveAnalyzers\CSharp\Analyzers\Microsoft.CodeAnalysis.CSharp.PerformanceSensitiveAnalyzers.csproj (in 7 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\PerformanceSensitiveAnalyzers\CSharp\CodeFixes\Microsoft.CodeAnalysis.CSharp.PerformanceSensitiveAnalyzers.CodeFixes.csproj (in 6 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\ExternalAccess\FSharp\Microsoft.CodeAnalysis.ExternalAccess.FSharp.csproj (in 80 ms).
+  Restored C:\bench\roslyn\src\Tools\BuildValidator\BuildValidator.csproj (in 96 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\PerformanceSensitiveAnalyzers\Core\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.csproj (in 10 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\CSharp\Impl\Microsoft.VisualStudio.LanguageServices.CSharp.csproj (in 87 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\TestUtilities\Microsoft.CodeAnalysis.EditorFeatures.Test.Utilities.csproj (in 177 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.ResxSourceGenerator\Microsoft.CodeAnalysis.ResxSourceGenerator\Microsoft.CodeAnalysis.ResxSourceGenerator.csproj (in 4 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\ExternalAccess\Copilot\Microsoft.VisualStudio.LanguageServices.ExternalAccess.Copilot.csproj (in 96 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.ResxSourceGenerator\Microsoft.CodeAnalysis.ResxSourceGenerator.VisualBasic\Microsoft.CodeAnalysis.ResxSourceGenerator.VisualBasic.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\NuGet\Microsoft.CodeAnalysis.Analyzers\Microsoft.CodeAnalysis.Analyzers.Package.csproj (in 8 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\ExternalAccess\Apex\Microsoft.CodeAnalysis.ExternalAccess.Apex.csproj (in 92 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\NuGet\Text.Analyzers\Text.Analyzers.Package.csproj (in 16 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.ResxSourceGenerator\Microsoft.CodeAnalysis.ResxSourceGenerator.CSharp\Microsoft.CodeAnalysis.ResxSourceGenerator.CSharp.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\ExternalAccess\EditorConfigGenerator\Microsoft.CodeAnalysis.ExternalAccess.EditorConfigGenerator.csproj (in 98 ms).
+  Restored C:\bench\roslyn\src\Tools\ExternalAccess\Xaml\Microsoft.CodeAnalysis.ExternalAccess.Xaml.csproj (in 104 ms).
+  Restored C:\bench\roslyn\src\Tools\ExternalAccess\Razor\EditorFeatures\Microsoft.CodeAnalysis.ExternalAccess.Razor.EditorFeatures.csproj (in 36 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.BannedApiAnalyzers\VisualBasic\Microsoft.CodeAnalysis.VisualBasic.BannedApiAnalyzers.vbproj (in 6 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\DiagnosticsTestUtilities\Microsoft.CodeAnalysis.EditorFeatures.DiagnosticsTests.Utilities.csproj (in 177 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.BannedApiAnalyzers\UnitTests\Microsoft.CodeAnalysis.BannedApiAnalyzers.UnitTests.csproj (in 11 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.BannedApiAnalyzers\Setup\Microsoft.CodeAnalysis.BannedApiAnalyzers.Setup.csproj (in 8 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\DevKit\Impl\Microsoft.VisualStudio.LanguageServices.DevKit.csproj (in 162 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\ExternalAccess\FSharpTest\Microsoft.CodeAnalysis.ExternalAccess.FSharp.UnitTests.csproj (in 120 ms).
+  Restored C:\bench\roslyn\src\Tools\ExternalAccess\Razor\Features\Microsoft.CodeAnalysis.ExternalAccess.Razor.Features.csproj (in 111 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\Test\Microsoft.CodeAnalysis.EditorFeatures.UnitTests.csproj (in 202 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\CSharpTest\Microsoft.CodeAnalysis.CSharp.EditorFeatures.UnitTests.csproj (in 189 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.BannedApiAnalyzers\CSharp\Microsoft.CodeAnalysis.CSharp.BannedApiAnalyzers.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\CodeStyle\VisualBasic\Tests\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.UnitTests.vbproj (in 137 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.BannedApiAnalyzers\Core\Microsoft.CodeAnalysis.BannedApiAnalyzers.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.AnalyzerUtilities\Microsoft.CodeAnalysis.AnalyzerUtilities.csproj (in 3 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.Analyzers\Core\Microsoft.CodeAnalysis.Analyzers.csproj (in 6 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\TestUtilities2\Microsoft.CodeAnalysis.EditorFeatures.Test.Utilities2.vbproj (in 249 ms).
+  Restored C:\bench\roslyn\src\EditorFeatures\Test2\Microsoft.CodeAnalysis.EditorFeatures2.UnitTests.vbproj (in 252 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Microsoft.CodeAnalysis.ResxSourceGenerator\Microsoft.CodeAnalysis.ResxSourceGenerator.UnitTests\Microsoft.CodeAnalysis.ResxSourceGenerator.UnitTests.csproj (in 32 ms).
+  Restored C:\bench\roslyn\src\CodeStyle\Core\Analyzers\Microsoft.CodeAnalysis.CodeStyle.csproj (in 4 ms).
+  Restored C:\bench\roslyn\src\CodeStyle\CSharp\Analyzers\Microsoft.CodeAnalysis.CSharp.CodeStyle.csproj (in 6 ms).
+  Restored C:\bench\roslyn\src\CodeStyle\Core\CodeFixes\Microsoft.CodeAnalysis.CodeStyle.Fixes.csproj (in 7 ms).
+  Restored C:\bench\roslyn\src\NuGet\Microsoft.CodeAnalysis.Scripting.Package\Microsoft.CodeAnalysis.Scripting.Package.csproj (in 15 ms).
+  Restored C:\bench\roslyn\src\Tools\ExternalAccess\RazorTest\Microsoft.CodeAnalysis.ExternalAccess.Razor.UnitTests.csproj (in 130 ms).
+  Restored C:\bench\roslyn\src\CodeStyle\CSharp\CodeFixes\Microsoft.CodeAnalysis.CSharp.CodeStyle.Fixes.csproj (in 8 ms).
+  Restored C:\bench\roslyn\src\NuGet\Microsoft.Net.Compilers.Toolset\arm64\Microsoft.Net.Compilers.Toolset.Arm64.Package.csproj (in 22 ms).
+  Restored C:\bench\roslyn\src\Tools\AnalyzerRunner\AnalyzerRunner.csproj (in 188 ms).
+  Restored C:\bench\roslyn\src\NuGet\Microsoft.Net.Compilers.Toolset\Framework\Microsoft.Net.Compilers.Toolset.Framework.Package.csproj (in 23 ms).
+  Restored C:\bench\roslyn\src\Tools\GenerateRulesMissingDocumentation\GenerateRulesMissingDocumentation.csproj (in 12 ms).
+  Restored C:\bench\roslyn\src\NuGet\VS.Tools.Roslyn.Package\VS.Tools.Roslyn.Package.csproj (in 30 ms).
+  Restored C:\bench\roslyn\src\NuGet\Microsoft.Net.Compilers.Toolset\AnyCpu\Microsoft.Net.Compilers.Toolset.Package.csproj (in 17 ms).
+  Restored C:\bench\roslyn\src\CodeStyle\Core\Tests\UnitTestUtilities\Microsoft.CodeAnalysis.CodeStyle.UnitTestUtilities.csproj (in 23 ms).
+  Restored C:\bench\roslyn\src\Tools\Source\CompilerGeneratorTools\Source\VisualBasicSyntaxGenerator\VisualBasicSyntaxGenerator.vbproj (in 2 ms).
+  Restored C:\bench\roslyn\src\Tools\Source\CompilerGeneratorTools\Source\IOperationGenerator\CompilersIOperationGenerator.csproj (in 2 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\CSharp\Test\Microsoft.VisualStudio.LanguageServices.CSharp.UnitTests.csproj (in 257 ms).
+  Restored C:\bench\roslyn\src\Tools\Source\CompilerGeneratorTools\Source\VisualBasicErrorFactsGenerator\VisualBasicErrorFactsGenerator.vbproj (in 3 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\CodeLens\Microsoft.VisualStudio.LanguageServices.CodeLens.csproj (in 14 ms).
+  Restored C:\bench\roslyn\src\Tools\Source\CompilerGeneratorTools\Source\CSharpSyntaxGenerator\CSharpSyntaxGenerator.csproj (in 9 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\Core\Impl\Microsoft.VisualStudio.LanguageServices.Implementation.csproj (in 36 ms).
+  Restored C:\bench\roslyn\src\Tools\TestDiscoveryWorker\TestDiscoveryWorker.csproj (in 30 ms).
+  Restored C:\bench\roslyn\src\LanguageServer\Microsoft.CommonLanguageServerProtocol.Framework\Microsoft.CommonLanguageServerProtocol.Framework.Package.csproj (in 6 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\Core\Def\Microsoft.VisualStudio.LanguageServices.csproj (in 42 ms).
+  Restored C:\bench\roslyn\src\LanguageServer\Protocol\Microsoft.CodeAnalysis.LanguageServer.Protocol.csproj (in 32 ms).
+  Restored C:\bench\roslyn\src\Workspaces\TestAnalyzerReference\Microsoft.CodeAnalysis.TestAnalyzerReference.csproj (in 10 ms).
+  Restored C:\bench\roslyn\src\LanguageServer\Microsoft.CommonLanguageServerProtocol.Framework.Example\Microsoft.CommonLanguageServerProtocol.Framework.Example.csproj (in 31 ms).
+  Restored C:\bench\roslyn\src\CodeStyle\Core\Tests\LegacyTestFramework\Microsoft.CodeAnalysis.CodeStyle.LegacyTestFramework.UnitTestUtilities.csproj (in 43 ms).
+  Restored C:\bench\roslyn\src\NuGet\VS.ExternalAPIs.Roslyn.Package\VS.ExternalAPIs.Roslyn.Package.csproj (in 78 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Tools\GenerateDocumentationAndConfigFiles\GenerateDocumentationAndConfigFiles.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\Workspaces\VisualBasic\Portable\Microsoft.CodeAnalysis.VisualBasic.Workspaces.vbproj (in 14 ms).
+  Restored C:\bench\roslyn\src\CodeStyle\CSharp\Tests\Microsoft.CodeAnalysis.CSharp.CodeStyle.UnitTests.csproj (in 53 ms).
+  Restored C:\bench\roslyn\src\Scripting\Core\Microsoft.CodeAnalysis.Scripting.csproj (in 7 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Tools\GenerateDocumentationAndConfigFilesForBrokenRuntime\GenerateDocumentationAndConfigFilesForBrokenRuntime.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\Scripting\CSharp\Microsoft.CodeAnalysis.CSharp.Scripting.csproj (in 16 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\Core\Test.Next\Roslyn.VisualStudio.Next.UnitTests.csproj (in 78 ms).
+  Restored C:\bench\roslyn\src\Scripting\CSharpTest.Desktop\Microsoft.CodeAnalysis.CSharp.Scripting.Desktop.UnitTests.csproj (in 21 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\Core\Test\Microsoft.VisualStudio.LanguageServices.UnitTests.vbproj (in 95 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Tools\GenerateAnalyzerNuspec\GenerateAnalyzerNuspec.csproj (in 2 ms).
+  Restored C:\bench\roslyn\src\Scripting\CSharpTest\Microsoft.CodeAnalysis.CSharp.Scripting.UnitTests.csproj (in 24 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Text.Analyzers\VisualBasic\Text.VisualBasic.Analyzers.vbproj (in 5 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\TestReferenceAssembly\TestReferenceAssembly.csproj (in 3 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Text.Analyzers\Setup\Text.Analyzers.Setup.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Text.Analyzers\Core\Text.Analyzers.csproj (in 3 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Text.Analyzers\CSharp\Text.CSharp.Analyzers.csproj (in 4 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Tools\Metrics.Legacy\Metrics.Legacy.csproj (in 54 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Text.Analyzers\UnitTests\Text.Analyzers.UnitTests.csproj (in 7 ms).
+  Restored C:\bench\roslyn\src\Workspaces\VisualBasicTest\Microsoft.CodeAnalysis.VisualBasic.Workspaces.UnitTests.vbproj (in 51 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\Test.Utilities\Test.Utilities.csproj (in 25 ms).
+  Restored C:\bench\roslyn\src\LanguageServer\Protocol.TestUtilities\Microsoft.CodeAnalysis.LanguageServer.Protocol.Test.Utilities.csproj (in 74 ms).
+  Restored C:\bench\roslyn\src\NuGet\Microsoft.CodeAnalysis.BuildClient.Package\Microsoft.CodeAnalysis.BuildClient.Package.csproj (in 4 ms).
+  Restored C:\bench\roslyn\src\NuGet\Microsoft.CodeAnalysis.Compilers.Package\Microsoft.CodeAnalysis.Compilers.Package.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\LanguageServer\Microsoft.CommonLanguageServerProtocol.Framework.UnitTests\Microsoft.CommonLanguageServerProtocol.Framework.UnitTests.csproj (in 80 ms).
+  Restored C:\bench\roslyn\src\NuGet\Microsoft.CodeAnalysis.Package\Microsoft.CodeAnalysis.Package.csproj (in 10 ms).
+  Restored C:\bench\roslyn\src\LanguageServer\ProtocolUnitTests\Microsoft.CodeAnalysis.LanguageServer.Protocol.UnitTests.csproj (in 109 ms).
+  Restored C:\bench\roslyn\src\NuGet\Microsoft.CodeAnalysis.EditorFeatures.Package\Microsoft.CodeAnalysis.EditorFeatures.Package.csproj (in 16 ms).
+  Restored C:\bench\roslyn\src\Features\ExternalAccess\OmniSharp.CSharp\Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp.csproj (in 9 ms).
+  Restored C:\bench\roslyn\src\Features\ExternalAccess\HotReload\Microsoft.CodeAnalysis.ExternalAccess.HotReload.csproj (in 9 ms).
+  Restored C:\bench\roslyn\src\Features\ExternalAccess\OmniSharpTest\Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.UnitTests.csproj (in 13 ms).
+  Restored C:\bench\roslyn\src\Features\ExternalAccess\Copilot\Microsoft.CodeAnalysis.ExternalAccess.Copilot.csproj (in 8 ms).
+  Restored C:\bench\roslyn\src\Workspaces\MSBuild\Contracts\Microsoft.CodeAnalysis.Workspaces.MSBuild.Contracts.csproj (in 6 ms).
+  Restored C:\bench\roslyn\src\Workspaces\MSBuild\BuildHost\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.csproj (in 7 ms).
+  Restored C:\bench\roslyn\src\Tools\Source\RunTests\RunTests.csproj (in 203 ms).
+  Restored C:\bench\roslyn\src\Test\Perf\Utilities\Roslyn.Test.Performance.Utilities.csproj (in 4 ms).
+  Restored C:\bench\roslyn\src\Features\ExternalAccess\AspNetCore\Microsoft.CodeAnalysis.ExternalAccess.AspNetCore.csproj (in 9 ms).
+  Restored C:\bench\roslyn\src\Test\Perf\tests\Roslyn.PerformanceTests.csproj (in 3 ms).
+  Restored C:\bench\roslyn\src\Workspaces\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.Workspaces.csproj (in 9 ms).
+  Restored C:\bench\roslyn\src\Test\Perf\StackDepthTest\StackDepthTest.csproj (in 10 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\NuGet\PublicApiAnalyzers\Microsoft.CodeAnalysis.PublicApiAnalyzers.Package.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\Features\ExternalAccess\HotReloadTest\Microsoft.CodeAnalysis.ExternalAccess.HotReload.UnitTests.csproj (in 25 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\NuGet\Roslyn.Diagnostics.Analyzers\Roslyn.Diagnostics.Analyzers.Package.csproj (in 6 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\NuGet\PerformanceSensitiveAnalyzers\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.Package.csproj (in 6 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\NuGet\Microsoft.CodeAnalysis.RulesetToEditorconfigConverter\Microsoft.CodeAnalysis.RulesetToEditorconfigConverter.Package.csproj (in 4 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\NuGet\Microsoft.CodeAnalysis.ResxSourceGenerator\Microsoft.CodeAnalysis.ResxSourceGenerator.Package.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\NuGet\Microsoft.CodeAnalysis.BannedApiAnalyzers\Microsoft.CodeAnalysis.BannedApiAnalyzers.Package.csproj (in 5 ms).
+  Restored C:\bench\roslyn\src\RoslynAnalyzers\NuGet\Microsoft.CodeAnalysis.Metrics\Microsoft.CodeAnalysis.Metrics.Package.csproj (in 12 ms).
+  Restored C:\bench\roslyn\src\Test\PdbUtilities\Roslyn.Test.PdbUtilities.csproj (in 18 ms).
+  Restored C:\bench\roslyn\src\LanguageServer\ExternalAccess\VisualDiagnostics\Microsoft.CodeAnalysis.ExternalAccess.VisualDiagnostics.csproj (in 16 ms).
+  Restored C:\bench\roslyn\src\Interactive\Host\Microsoft.CodeAnalysis.InteractiveHost.csproj (in 10 ms).
+  Restored C:\bench\roslyn\src\LanguageServer\ExternalAccess\Copilot\Microsoft.CodeAnalysis.LanguageServer.ExternalAccess.Copilot.csproj (in 13 ms).
+  Restored C:\bench\roslyn\src\LanguageServer\ExternalAccess\CompilerDeveloperSDK\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.csproj (in 9 ms).
+  Restored C:\bench\roslyn\src\Workspaces\CSharpTest\Microsoft.CodeAnalysis.CSharp.Workspaces.UnitTests.csproj (in 37 ms).
+  Restored C:\bench\roslyn\src\Features\DiagnosticsTestUtilities\Microsoft.CodeAnalysis.Features.DiagnosticsTests.Utilities.csproj (in 56 ms).
+  Restored C:\bench\roslyn\src\Interactive\vbi\vbi.vbproj (in 32 ms).
+  Restored C:\bench\roslyn\src\Interactive\HostTest\InteractiveHost.UnitTests.csproj (in 22 ms).
+  Restored C:\bench\roslyn\src\Interactive\HostProcess\x86\InteractiveHost32.csproj (in 30 ms).
+  Restored C:\bench\roslyn\src\Workspaces\SharedUtilitiesAndExtensions\Compiler\Extensions\Microsoft.CodeAnalysis.Extensions.Package.csproj (in 4 ms).
+  Restored C:\bench\roslyn\src\Interactive\csi\csi.csproj (in 15 ms).
+  Restored C:\bench\roslyn\src\Scripting\VisualBasic\Microsoft.CodeAnalysis.VisualBasic.Scripting.vbproj (in 11 ms).
+  Restored C:\bench\roslyn\src\Features\VisualBasic\Portable\Microsoft.CodeAnalysis.VisualBasic.Features.vbproj (in 18 ms).
+  Restored C:\bench\roslyn\src\Setup\DevDivVsix\CompilersPackage\x86\Microsoft.CodeAnalysis.Compilers.Setup.x86.csproj (in 20 ms).
+  Restored C:\bench\roslyn\src\Setup\DevDivVsix\CompilersPackage\x64\Microsoft.CodeAnalysis.Compilers.Setup.x64.csproj (in 22 ms).
+  Restored C:\bench\roslyn\src\Interactive\HostProcess\x64\InteractiveHost64.csproj (in 46 ms).
+  Restored C:\bench\roslyn\src\Setup\DevDivVsix\CompilersPackage\arm64\Microsoft.CodeAnalysis.Compilers.Setup.arm64.csproj (in 21 ms).
+  Restored C:\bench\roslyn\src\Scripting\VisualBasicTest.Desktop\Microsoft.CodeAnalysis.VisualBasic.Scripting.Desktop.UnitTests.vbproj (in 18 ms).
+  Restored C:\bench\roslyn\src\Scripting\VisualBasicTest\Microsoft.CodeAnalysis.VisualBasic.Scripting.UnitTests.vbproj (in 21 ms).
+  Restored C:\bench\roslyn\src\Workspaces\Core\Desktop\Microsoft.CodeAnalysis.Workspaces.Desktop.csproj (in 7 ms).
+  Restored C:\bench\roslyn\src\Workspaces\Remote\Core\Microsoft.CodeAnalysis.Remote.Workspaces.csproj (in 19 ms).
+  Restored C:\bench\roslyn\src\Workspaces\Core\Portable\Microsoft.CodeAnalysis.Workspaces.csproj (in 17 ms).
+  Restored C:\bench\roslyn\src\Workspaces\Remote\ServiceHub\Microsoft.CodeAnalysis.Remote.ServiceHub.csproj (in 32 ms).
+  Restored C:\bench\roslyn\src\Workspaces\MSBuild\Core\Microsoft.CodeAnalysis.Workspaces.MSBuild.csproj (in 14 ms).
+  Restored C:\bench\roslyn\src\Setup\DevDivInsertionFiles\DevDivInsertionFiles.csproj (in 60 ms).
+  Restored C:\bench\roslyn\src\LanguageServer\Microsoft.CodeAnalysis.LanguageServer.UnitTests\Microsoft.CodeAnalysis.LanguageServer.UnitTests.csproj (in 76 ms).
+  Restored C:\bench\roslyn\src\Workspaces\Remote\ServiceHubTest\Microsoft.CodeAnalysis.Remote.ServiceHub.UnitTests.csproj (in 40 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\Xaml\Impl\Microsoft.VisualStudio.LanguageServices.Xaml.csproj (in 34 ms).
+  Restored C:\bench\roslyn\src\Tools\IdeCoreBenchmarks\IdeCoreBenchmarks.csproj (in 454 ms).
+  Restored C:\bench\roslyn\src\Tools\IdeBenchmarks\IdeBenchmarks.csproj (in 436 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\VisualStudioDiagnosticsToolWindow\Roslyn.VisualStudio.DiagnosticsWindow.csproj (in 40 ms).
+  Restored C:\bench\roslyn\src\Workspaces\MSBuild\Test\Microsoft.CodeAnalysis.Workspaces.MSBuild.UnitTests.csproj (in 58 ms).
+  Restored C:\bench\roslyn\src\VisualStudio\VisualBasic\Impl\Microsoft.VisualStudio.LanguageServices.VisualBasic.vbproj (in 48 ms).
+  Restored C:\bench\roslyn\src\Workspaces\CoreTest\Microsoft.CodeAnalysis.Workspaces.UnitTests.csproj (in 46 ms).
+  Restored C:\bench\roslyn\src\Workspaces\CoreTestUtilities\Microsoft.CodeAnalysis.Workspaces.Test.Utilities.csproj (in 62 ms).
+  Restored C:\bench\roslyn\src\Workspaces\Remote\ServiceHub.CoreComponents\x64\Microsoft.CodeAnalysis.Remote.ServiceHub.CoreComponents.x64.csproj (in 140 ms).
+  Restored C:\bench\roslyn\src\Workspaces\Remote\ServiceHub.CoreComponents\arm64\Microsoft.CodeAnalysis.Remote.ServiceHub.CoreComponents.arm64.csproj (in 138 ms).
+  Restored C:\bench\roslyn\src\LanguageServer\Microsoft.CodeAnalysis.LanguageServer\Microsoft.CodeAnalysis.LanguageServer.csproj (in 1.08 sec).
+  TestReferenceAssembly -> C:\bench\roslyn\artifacts\bin\TestReferenceAssembly\Release\netstandard2.0\TestReferenceAssembly.dll
+  RulesetToEditorconfigConverter -> C:\bench\roslyn\artifacts\bin\RulesetToEditorconfigConverter\Release\net472\RulesetToEditorconfigConverter.exe
+  CSharpSyntaxGenerator -> C:\bench\roslyn\artifacts\bin\CSharpSyntaxGenerator\Release\netstandard2.0\CSharpSyntaxGenerator.dll
+  GenerateAnalyzerNuspec -> C:\bench\roslyn\artifacts\bin\GenerateAnalyzerNuspec\Release\net10.0\GenerateAnalyzerNuspec.dll
+  Microsoft.CodeAnalysis.Debugging.Package -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Debugging.Package\Release\netstandard2.0\Microsoft.CodeAnalysis.Debugging.Package.dll
+  Microsoft.CodeAnalysis.Contracts.Package -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Contracts.Package\Release\net8.0\Microsoft.CodeAnalysis.Contracts.Package.dll
+  Microsoft.CodeAnalysis.Threading.Package -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Threading.Package\Release\net10.0\Microsoft.CodeAnalysis.Threading.Package.dll
+  Microsoft.CodeAnalysis.XunitHook -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.XunitHook\Release\net472\Microsoft.CodeAnalysis.XunitHook.dll
+  Microsoft.CodeAnalysis.Contracts.Package -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Contracts.Package\Release\net10.0\Microsoft.CodeAnalysis.Contracts.Package.dll
+  Microsoft.CodeAnalysis.PooledObjects.Package -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.PooledObjects.Package\Release\netstandard2.0\Microsoft.CodeAnalysis.PooledObjects.Package.dll
+  Microsoft.Build.Tasks.CodeAnalysis.Sdk -> C:\bench\roslyn\artifacts\bin\Microsoft.Build.Tasks.CodeAnalysis.Sdk\Release\net472\Microsoft.Build.Tasks.CodeAnalysis.Sdk.dll
+  Microsoft.CodeAnalysis.Contracts.Package -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Contracts.Package\Release\netstandard2.0\Microsoft.CodeAnalysis.Contracts.Package.dll
+  Microsoft.Build.Tasks.CodeAnalysis -> C:\bench\roslyn\artifacts\bin\Microsoft.Build.Tasks.CodeAnalysis\Release\net472\Microsoft.Build.Tasks.CodeAnalysis.dll
+  Microsoft.CodeAnalysis.Collections.Package -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Collections.Package\Release\net10.0\Microsoft.CodeAnalysis.Collections.Package.dll
+  Microsoft.CodeAnalysis.Threading.Package -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Threading.Package\Release\netstandard2.0\Microsoft.CodeAnalysis.Threading.Package.dll
+  Microsoft.CodeAnalysis.PublicApiAnalyzers -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.PublicApiAnalyzers\Release\netstandard2.0\Microsoft.CodeAnalysis.PublicApiAnalyzers.dll
+  Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers\Release\netstandard2.0\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.dll
+  Microsoft.Build.Tasks.CodeAnalysis -> C:\bench\roslyn\artifacts\bin\Microsoft.Build.Tasks.CodeAnalysis\Release\net8.0\Microsoft.Build.Tasks.CodeAnalysis.dll
+  Microsoft.CodeAnalysis.ResxSourceGenerator -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ResxSourceGenerator\Release\netstandard2.0\Microsoft.CodeAnalysis.ResxSourceGenerator.dll
+  Microsoft.Build.Tasks.CodeAnalysis -> C:\bench\roslyn\artifacts\bin\Microsoft.Build.Tasks.CodeAnalysis\Release\net10.0\Microsoft.Build.Tasks.CodeAnalysis.dll
+  Metrics.Legacy -> C:\bench\roslyn\artifacts\bin\Metrics.Legacy\Release\net472\Metrics.Legacy.exe
+  Metrics -> C:\bench\roslyn\artifacts\bin\Metrics\Release\net472\Metrics.exe
+  Roslyn.Diagnostics.Analyzers -> C:\bench\roslyn\artifacts\bin\Roslyn.Diagnostics.Analyzers\Release\netstandard2.0\Roslyn.Diagnostics.Analyzers.dll
+  Microsoft.CodeAnalysis.BannedApiAnalyzers -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.BannedApiAnalyzers\Release\netstandard2.0\Microsoft.CodeAnalysis.BannedApiAnalyzers.dll
+  Microsoft.CodeAnalysis.FunctionResolver -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.FunctionResolver\Release\netstandard2.0\Microsoft.CodeAnalysis.ExpressionEvaluator.FunctionResolver.dll
+  Microsoft.CodeAnalysis.Collections.Package -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Collections.Package\Release\netstandard2.0\Microsoft.CodeAnalysis.Collections.Package.dll
+  Microsoft.CommonLanguageServerProtocol.Framework.Package -> C:\bench\roslyn\artifacts\bin\Microsoft.CommonLanguageServerProtocol.Framework.Package\Release\netstandard2.0\Microsoft.CommonLanguageServerProtocol.Framework.Package.dll
+  Roslyn.Test.Performance.Utilities -> C:\bench\roslyn\artifacts\bin\Roslyn.Test.Performance.Utilities\Release\net472\Roslyn.Test.Performance.Utilities.dll
+  Microsoft.CodeAnalysis.PublicApiAnalyzers.CodeFixes -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.PublicApiAnalyzers.CodeFixes\Release\netstandard2.0\Microsoft.CodeAnalysis.PublicApiAnalyzers.CodeFixes.dll
+  Microsoft.Build.Tasks.CodeAnalysis -> C:\bench\roslyn\artifacts\bin\Microsoft.Build.Tasks.CodeAnalysis\Release\net10.0\publish\
+  Microsoft.CodeAnalysis -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis\Release\netstandard2.0\Microsoft.CodeAnalysis.dll
+  TestReferenceAssembly -> C:\bench\roslyn\artifacts\bin\TestReferenceAssembly\Release\net472\TestReferenceAssembly.dll
+  Microsoft.CodeAnalysis.AnalyzerUtilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.AnalyzerUtilities\Release\netstandard2.0\Microsoft.CodeAnalysis.AnalyzerUtilities.dll
+  BuildBoss -> C:\bench\roslyn\artifacts\bin\BuildBoss\Release\net472\BuildBoss.exe
+  Microsoft.CodeAnalysis.Analyzers -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Analyzers\Release\netstandard2.0\Microsoft.CodeAnalysis.Analyzers.dll
+  PrepareTests -> C:\bench\roslyn\artifacts\bin\PrepareTests\Release\net10.0\PrepareTests.dll
+  CompilersIOperationGenerator -> C:\bench\roslyn\artifacts\bin\CompilersIOperationGenerator\Release\net10.0\IOperationGenerator.dll
+  Microsoft.CodeAnalysis.CSharp.BannedApiAnalyzers -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.BannedApiAnalyzers\Release\netstandard2.0\Microsoft.CodeAnalysis.CSharp.BannedApiAnalyzers.dll
+  CSharpSyntaxGenerator -> C:\bench\roslyn\artifacts\bin\CSharpSyntaxGenerator\Release\net10.0\CSharpSyntaxGenerator.dll
+  CSharpErrorFactsGenerator -> C:\bench\roslyn\artifacts\bin\CSharpErrorFactsGenerator\Release\net10.0\CSharpErrorFactsGenerator.dll
+  Roslyn.PerformanceTests -> C:\bench\roslyn\artifacts\bin\Roslyn.PerformanceTests\Release\net472\Roslyn.PerformanceTests.dll
+  CompilersBoundTreeGenerator -> C:\bench\roslyn\artifacts\bin\CompilersBoundTreeGenerator\Release\net10.0\BoundTreeGenerator.dll
+  Microsoft.CodeAnalysis.ResxSourceGenerator.CSharp -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ResxSourceGenerator.CSharp\Release\netstandard2.0\Microsoft.CodeAnalysis.ResxSourceGenerator.CSharp.dll
+  Microsoft.CodeAnalysis.ResxSourceGenerator.VisualBasic -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ResxSourceGenerator.VisualBasic\Release\netstandard2.0\Microsoft.CodeAnalysis.ResxSourceGenerator.VisualBasic.dll
+  TestDiscoveryWorker -> C:\bench\roslyn\artifacts\bin\TestDiscoveryWorker\Release\net10.0\TestDiscoveryWorker.dll
+  Microsoft.CodeAnalysis.VisualBasic.BannedApiAnalyzers -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.BannedApiAnalyzers\Release\netstandard2.0\Microsoft.CodeAnalysis.VisualBasic.BannedApiAnalyzers.dll
+  VisualBasicErrorFactsGenerator -> C:\bench\roslyn\artifacts\bin\VisualBasicErrorFactsGenerator\Release\net10.0\VBErrorFactsGenerator.dll
+  Microsoft.CodeAnalysis.Compiler.Test.Resources -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Compiler.Test.Resources\Release\netstandard2.0\Microsoft.CodeAnalysis.Compiler.Test.Resources.dll
+  Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler\Release\netstandard2.0\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.dll
+  VisualBasicSyntaxGenerator -> C:\bench\roslyn\artifacts\bin\VisualBasicSyntaxGenerator\Release\net10.0\VBSyntaxGenerator.dll
+  Microsoft.CodeAnalysis.PublicApiAnalyzers.Setup -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.PublicApiAnalyzers.Setup\Release\netstandard2.0\Microsoft.CodeAnalysis.PublicApiAnalyzers.Setup.dll
+  TestDiscoveryWorker -> C:\bench\roslyn\artifacts\bin\TestDiscoveryWorker\Release\net472\TestDiscoveryWorker.exe
+  Microsoft.CodeAnalysis.CSharp.PerformanceSensitiveAnalyzers -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.PerformanceSensitiveAnalyzers\Release\netstandard2.0\Microsoft.CodeAnalysis.CSharp.PerformanceSensitiveAnalyzers.dll
+  GenerateDocumentationAndConfigFiles -> C:\bench\roslyn\artifacts\bin\GenerateDocumentationAndConfigFiles\Release\net10.0\GenerateDocumentationAndConfigFiles.dll
+  Text.Analyzers -> C:\bench\roslyn\artifacts\bin\Text.Analyzers\Release\netstandard2.0\Text.Analyzers.dll
+  Microsoft.CodeAnalysis.ResultProvider -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ResultProvider\Release\netstandard2.0\Microsoft.CodeAnalysis.ExpressionEvaluator.ResultProvider.dll
+  Microsoft.VisualStudio.Extensibility.Testing.SourceGenerator -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.Extensibility.Testing.SourceGenerator\Release\netstandard2.0\Microsoft.VisualStudio.Extensibility.Testing.SourceGenerator.dll
+  Microsoft.VisualStudio.IntegrationTestService.Dev18 -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.IntegrationTestService.Dev18\Release\net472\Microsoft.VisualStudio.IntegrationTestService.dll
+  Microsoft.CodeAnalysis.ExpressionCompiler -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExpressionCompiler\Release\netstandard2.0\Microsoft.CodeAnalysis.ExpressionEvaluator.ExpressionCompiler.dll
+  Roslyn.VisualStudio.Setup.Dependencies -> C:\bench\roslyn\artifacts\bin\Roslyn.VisualStudio.Setup.Dependencies\Release\net472\Roslyn.VisualStudio.Setup.Dependencies.dll
+  Roslyn.Diagnostics.VisualBasic.Analyzers -> C:\bench\roslyn\artifacts\bin\Roslyn.Diagnostics.VisualBasic.Analyzers\Release\netstandard2.0\Roslyn.Diagnostics.VisualBasic.Analyzers.dll
+  Microsoft.CodeAnalysis -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis\Release\net10.0\Microsoft.CodeAnalysis.dll
+  Text.CSharp.Analyzers -> C:\bench\roslyn\artifacts\bin\Text.CSharp.Analyzers\Release\netstandard2.0\Text.CSharp.Analyzers.dll
+  Microsoft.CodeAnalysis.CSharp.ResultProvider -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.ResultProvider\Release\netstandard2.0\Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator.ResultProvider.dll
+  Microsoft.CodeAnalysis.Workspaces.MSBuild.Contracts -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.MSBuild.Contracts\Release\net472\Microsoft.CodeAnalysis.Workspaces.MSBuild.Contracts.dll
+  Microsoft.CodeAnalysis.Extensions.Package -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Extensions.Package\Release\netstandard2.0\Microsoft.CodeAnalysis.Extensions.Package.dll
+  Microsoft.CodeAnalysis.VisualBasic.Analyzers -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Analyzers\Release\netstandard2.0\Microsoft.CodeAnalysis.VisualBasic.Analyzers.dll
+  Microsoft.CodeAnalysis.CodeStyle -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CodeStyle\Release\netstandard2.0\Microsoft.CodeAnalysis.CodeStyle.dll
+  GenerateDocumentationAndConfigFilesForBrokenRuntime -> C:\bench\roslyn\artifacts\bin\GenerateDocumentationAndConfigFilesForBrokenRuntime\Release\net10.0\GenerateDocumentationAndConfigFilesForBrokenRuntime.dll
+  Text.VisualBasic.Analyzers -> C:\bench\roslyn\artifacts\bin\Text.VisualBasic.Analyzers\Release\netstandard2.0\Text.VisualBasic.Analyzers.dll
+  Microsoft.CodeAnalysis -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis\Release\net8.0\Microsoft.CodeAnalysis.dll
+  Microsoft.CodeAnalysis.VisualBasic.ResultProvider -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.ResultProvider\Release\netstandard2.0\Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator.ResultProvider.dll
+  Microsoft.CodeAnalysis.Workspaces.MSBuild.Contracts -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.MSBuild.Contracts\Release\net8.0\Microsoft.CodeAnalysis.Workspaces.MSBuild.Contracts.dll
+  Microsoft.CodeAnalysis.Scripting -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Scripting\Release\netstandard2.0\Microsoft.CodeAnalysis.Scripting.dll
+  Microsoft.CodeAnalysis.BannedApiAnalyzers.Setup -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.BannedApiAnalyzers.Setup\Release\net472\Microsoft.CodeAnalysis.BannedApiAnalyzers.Setup.dll
+  Microsoft.CodeAnalysis.CSharp.PerformanceSensitiveAnalyzers.CodeFixes -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.PerformanceSensitiveAnalyzers.CodeFixes\Release\netstandard2.0\Microsoft.CodeAnalysis.CSharp.PerformanceSensitiveAnalyzers.CodeFixes.dll
+  Text.Analyzers.Setup -> C:\bench\roslyn\artifacts\bin\Text.Analyzers.Setup\Release\net472\Text.Analyzers.Setup.dll
+  Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost\Release\net472\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe
+  Microsoft.CodeAnalysis.CSharp.Analyzers -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Analyzers\Release\netstandard2.0\Microsoft.CodeAnalysis.CSharp.Analyzers.dll
+  Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.Setup -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.Setup\Release\net472\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.Setup.dll
+  Microsoft.CodeAnalysis.Analyzers.Setup -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Analyzers.Setup\Release\net472\Microsoft.CodeAnalysis.Analyzers.Setup.dll
+  Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler\Release\net10.0\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.dll
+  Microsoft.CodeAnalysis.SemanticSearch.Extensions -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.SemanticSearch.Extensions\Release\net10.0\Microsoft.CodeAnalysis.SemanticSearch.Extensions.dll
+  Microsoft.VisualStudio.Extensibility.Testing.Xunit -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.Extensibility.Testing.Xunit\Release\net472\Microsoft.VisualStudio.Extensibility.Testing.Xunit.dll
+  Microsoft.CodeAnalysis.VisualBasic -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic\Release\netstandard2.0\Microsoft.CodeAnalysis.VisualBasic.dll
+  Roslyn.Diagnostics.CSharp.Analyzers -> C:\bench\roslyn\artifacts\bin\Roslyn.Diagnostics.CSharp.Analyzers\Release\netstandard2.0\Roslyn.Diagnostics.CSharp.Analyzers.dll
+  The package Microsoft.VisualStudio.Extensibility.Testing.Xunit.5.7.0-dev is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'C:\bench\roslyn\artifacts\packages\Release\Shipping\Microsoft.VisualStudio.Extensibility.Testing.Xunit.5.7.0-dev.nupkg'.
+  Microsoft.CodeAnalysis.Scripting -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Scripting\Release\net10.0\Microsoft.CodeAnalysis.Scripting.dll
+  Microsoft.CodeAnalysis.InteractiveHost -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.InteractiveHost\Release\net472\Microsoft.CodeAnalysis.InteractiveHost.dll
+  Microsoft.VisualStudio.Extensibility.Testing.SourceGenerator.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.Extensibility.Testing.SourceGenerator.UnitTests\Release\net472\Microsoft.VisualStudio.Extensibility.Testing.SourceGenerator.UnitTests.dll
+  Roslyn.Diagnostics.Analyzers.Setup -> C:\bench\roslyn\artifacts\bin\Roslyn.Diagnostics.Analyzers.Setup\Release\net472\Roslyn.Diagnostics.Analyzers.Setup.dll
+  Microsoft.CodeAnalysis.Workspaces -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces\Release\net10.0\Microsoft.CodeAnalysis.Workspaces.dll
+  Microsoft.CodeAnalysis.VisualBasic -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic\Release\net10.0\Microsoft.CodeAnalysis.VisualBasic.dll
+  Microsoft.CodeAnalysis.CSharp -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp\Release\netstandard2.0\Microsoft.CodeAnalysis.CSharp.dll
+  Microsoft.CodeAnalysis.Workspaces -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces\Release\netstandard2.0\Microsoft.CodeAnalysis.Workspaces.dll
+  Microsoft.CodeAnalysis.SemanticSearch.Extensions -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.SemanticSearch.Extensions\Release\net8.0\Microsoft.CodeAnalysis.SemanticSearch.Extensions.dll
+  Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost\Release\net8.0\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll
+  Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler\Release\net8.0\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.dll
+  Microsoft.CodeAnalysis.VisualBasic.Scripting -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Scripting\Release\netstandard2.0\Microsoft.CodeAnalysis.VisualBasic.Scripting.dll
+  Microsoft.CodeAnalysis.EditorFeatures.Text -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.EditorFeatures.Text\Release\netstandard2.0\Microsoft.CodeAnalysis.EditorFeatures.Text.dll
+  Microsoft.CodeAnalysis.Scripting -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Scripting\Release\net8.0\Microsoft.CodeAnalysis.Scripting.dll
+  Microsoft.CodeAnalysis.EditorFeatures.Text -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.EditorFeatures.Text\Release\net10.0\Microsoft.CodeAnalysis.EditorFeatures.Text.dll
+  Microsoft.CodeAnalysis.VisualBasic.CodeStyle -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.CodeStyle\Release\netstandard2.0\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.dll
+  vbc -> C:\bench\roslyn\artifacts\bin\vbc\Release\net472\vbc.exe
+  StackDepthTest -> C:\bench\roslyn\artifacts\bin\StackDepthTest\Release\net472\StackDepthTest.exe
+  csc-arm64 -> C:\bench\roslyn\artifacts\bin\csc-arm64\Release\net472\csc.exe
+  Microsoft.CodeAnalysis.VisualBasic -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic\Release\net8.0\Microsoft.CodeAnalysis.VisualBasic.dll
+  Microsoft.CodeAnalysis.CSharp.Scripting -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Scripting\Release\netstandard2.0\Microsoft.CodeAnalysis.CSharp.Scripting.dll
+  Microsoft.CodeAnalysis.CodeStyle.Fixes -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CodeStyle.Fixes\Release\netstandard2.0\Microsoft.CodeAnalysis.CodeStyle.Fixes.dll
+  Microsoft.CodeAnalysis.VisualBasic.Workspaces -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Workspaces\Release\net10.0\Microsoft.CodeAnalysis.VisualBasic.Workspaces.dll
+  Microsoft.CodeAnalysis.CSharp.Workspaces -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Workspaces\Release\netstandard2.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+  Microsoft.CodeAnalysis.Workspaces -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces\Release\net8.0\Microsoft.CodeAnalysis.Workspaces.dll
+  Microsoft.CodeAnalysis.VisualBasic.Scripting -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Scripting\Release\net10.0\Microsoft.CodeAnalysis.VisualBasic.Scripting.dll
+  vbc -> C:\bench\roslyn\artifacts\bin\vbc\Release\net10.0\vbc.dll
+  csc -> C:\bench\roslyn\artifacts\bin\csc\Release\net472\csc.exe
+  Microsoft.CodeAnalysis.TestAnalyzerReference -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.TestAnalyzerReference\Release\netstandard2.0\Microsoft.CodeAnalysis.TestAnalyzerReference.dll
+  VBCSCompiler -> C:\bench\roslyn\artifacts\bin\VBCSCompiler\Release\net472\VBCSCompiler.exe
+  Microsoft.CodeAnalysis.VisualBasic.Scripting -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Scripting\Release\net8.0\Microsoft.CodeAnalysis.VisualBasic.Scripting.dll
+  vbc-arm64 -> C:\bench\roslyn\artifacts\bin\vbc-arm64\Release\net472\vbc.exe
+  Test.Utilities -> C:\bench\roslyn\artifacts\bin\Test.Utilities\Release\net10.0\Test.Utilities.dll
+  Microsoft.CodeAnalysis.CSharp -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp\Release\net10.0\Microsoft.CodeAnalysis.CSharp.dll
+  vbi -> C:\bench\roslyn\artifacts\bin\vbi\Release\net8.0\vbi.dll
+  Microsoft.CodeAnalysis.InteractiveHost -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.InteractiveHost\Release\net10.0\Microsoft.CodeAnalysis.InteractiveHost.dll
+  Microsoft.CodeAnalysis.Workspaces.Desktop -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.Desktop\Release\net472\Microsoft.CodeAnalysis.Workspaces.Desktop.dll
+  Microsoft.CodeAnalysis.VisualBasic.Workspaces -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Workspaces\Release\net8.0\Microsoft.CodeAnalysis.VisualBasic.Workspaces.dll
+  Microsoft.CodeAnalysis.CSharp.CodeStyle -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.CodeStyle\Release\netstandard2.0\Microsoft.CodeAnalysis.CSharp.CodeStyle.dll
+  Microsoft.CodeAnalysis.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Test.Utilities\Release\net472\Microsoft.CodeAnalysis.Test.Utilities.dll
+  Microsoft.CodeAnalysis.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Test.Utilities\Release\net10.0\Microsoft.CodeAnalysis.Test.Utilities.dll
+  InteractiveHost64 -> C:\bench\roslyn\artifacts\bin\InteractiveHost64\Release\net472\win-x64\InteractiveHost64.exe
+  Microsoft.CodeAnalysis.Features -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Features\Release\netstandard2.0\Microsoft.CodeAnalysis.Features.dll
+  Microsoft.CodeAnalysis.ResultProvider.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ResultProvider.Utilities\Release\net10.0\Microsoft.CodeAnalysis.ExpressionEvaluator.ResultProvider.Utilities.dll
+  VBCSCompiler -> C:\bench\roslyn\artifacts\bin\VBCSCompiler\Release\net10.0\VBCSCompiler.dll
+  Microsoft.CodeAnalysis.Workspaces.Desktop -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.Desktop\Release\net10.0\Microsoft.CodeAnalysis.Workspaces.Desktop.dll
+  InteractiveHost32 -> C:\bench\roslyn\artifacts\bin\InteractiveHost32\Release\net472\win-x86\InteractiveHost32.exe
+  Roslyn.Test.PdbUtilities -> C:\bench\roslyn\artifacts\bin\Roslyn.Test.PdbUtilities\Release\net10.0\Roslyn.Test.PdbUtilities.dll
+  CodeStyleConfigFileGenerator -> C:\bench\roslyn\artifacts\bin\CodeStyleConfigFileGenerator\Release\net10.0\CodeStyleConfigFileGenerator.dll
+  RunTests -> C:\bench\roslyn\artifacts\bin\RunTests\Release\net10.0\RunTests.dll
+  Microsoft.CodeAnalysis.CSharp -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp\Release\net8.0\Microsoft.CodeAnalysis.CSharp.dll
+  vbc -> C:\bench\roslyn\artifacts\bin\vbc\Release\net8.0\vbc.dll
+  RulesetToEditorconfigConverter.UnitTests -> C:\bench\roslyn\artifacts\bin\RulesetToEditorconfigConverter.UnitTests\Release\net10.0\RulesetToEditorconfigConverter.UnitTests.dll
+  csc -> C:\bench\roslyn\artifacts\bin\csc\Release\net10.0\csc.dll
+  csc -> C:\bench\roslyn\artifacts\bin\csc\Release\net10.0\publish\
+  VBCSCompiler-arm64 -> C:\bench\roslyn\artifacts\bin\VBCSCompiler-arm64\Release\net472\VBCSCompiler.exe
+  Microsoft.CodeAnalysis.CSharp.Scripting -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Scripting\Release\net10.0\Microsoft.CodeAnalysis.CSharp.Scripting.dll
+  Microsoft.CodeAnalysis.CSharp.Workspaces -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Workspaces\Release\net10.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+  SemanticSearch.BuildTask -> C:\bench\roslyn\artifacts\bin\SemanticSearch.BuildTask\Release\net472\SemanticSearch.BuildTask.dll
+  Microsoft.CodeAnalysis.PublicApiAnalyzers.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.PublicApiAnalyzers.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.PublicApiAnalyzers.UnitTests.dll
+  Microsoft.CodeAnalysis.Scripting.TestUtilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Scripting.TestUtilities\Release\net472\Microsoft.CodeAnalysis.Scripting.TestUtilities.dll
+  Microsoft.CodeAnalysis.Rebuild -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Rebuild\Release\netstandard2.0\Microsoft.CodeAnalysis.Rebuild.dll
+  Microsoft.CodeAnalysis.VisualBasic.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Test.Utilities\Release\net10.0\Microsoft.CodeAnalysis.VisualBasic.Test.Utilities.dll
+  Roslyn.Test.PdbUtilities -> C:\bench\roslyn\artifacts\bin\Roslyn.Test.PdbUtilities\Release\net472\Roslyn.Test.PdbUtilities.dll
+  csi -> C:\bench\roslyn\artifacts\bin\csi\Release\net472\csi.exe
+  Microsoft.CodeAnalysis.CSharp.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Test.Utilities\Release\net10.0\Microsoft.CodeAnalysis.CSharp.Test.Utilities.dll
+  SemanticSearch.BuildTask -> C:\bench\roslyn\artifacts\bin\SemanticSearch.BuildTask\Release\net10.0\SemanticSearch.BuildTask.dll
+  Microsoft.CodeAnalysis.VisualBasic.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Test.Utilities\Release\net472\Microsoft.CodeAnalysis.VisualBasic.Test.Utilities.dll
+  Microsoft.CodeAnalysis.CSharp.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Test.Utilities\Release\net472\Microsoft.CodeAnalysis.CSharp.Test.Utilities.dll
+  csc -> C:\bench\roslyn\artifacts\bin\csc\Release\net8.0\csc.dll
+  Microsoft.CodeAnalysis.Rebuild -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Rebuild\Release\net8.0\Microsoft.CodeAnalysis.Rebuild.dll
+  Microsoft.CodeAnalysis.VisualBasic.Workspaces -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Workspaces\Release\netstandard2.0\Microsoft.CodeAnalysis.VisualBasic.Workspaces.dll
+  VBCSCompiler -> C:\bench\roslyn\artifacts\bin\VBCSCompiler\Release\net8.0\VBCSCompiler.dll
+  vbi -> C:\bench\roslyn\artifacts\bin\vbi\Release\net472\vbi.exe
+  VBCSCompiler -> C:\bench\roslyn\artifacts\bin\VBCSCompiler\Release\net10.0\publish\
+  Microsoft.CodeAnalysis.Rebuild -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Rebuild\Release\net10.0\Microsoft.CodeAnalysis.Rebuild.dll
+  Microsoft.CodeAnalysis.Features -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Features\Release\net10.0\Microsoft.CodeAnalysis.Features.dll
+  Microsoft.CodeAnalysis.BannedApiAnalyzers.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.BannedApiAnalyzers.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.BannedApiAnalyzers.UnitTests.dll
+  InteractiveHost64 -> C:\bench\roslyn\artifacts\bin\InteractiveHost64\Release\net10.0-windows\win-x64\InteractiveHost64.dll
+  Microsoft.CodeAnalysis.CodeStyle.UnitTestUtilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CodeStyle.UnitTestUtilities\Release\net472\Microsoft.CodeAnalysis.CodeStyle.UnitTestUtilities.dll
+  csi -> C:\bench\roslyn\artifacts\bin\csi\Release\net10.0\csi.dll
+  Microsoft.CodeAnalysis.VisualBasic.CodeStyle.Fixes -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.Fixes\Release\netstandard2.0\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.Fixes.dll
+  Microsoft.CodeAnalysis.Features -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Features\Release\net8.0\Microsoft.CodeAnalysis.Features.dll
+  Microsoft.CodeAnalysis.CSharp.Workspaces -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Workspaces\Release\net8.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+  csi -> C:\bench\roslyn\artifacts\bin\csi\Release\net10.0\publish\
+  Microsoft.CodeAnalysis.ResxSourceGenerator.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ResxSourceGenerator.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.ResxSourceGenerator.UnitTests.dll
+  Microsoft.CodeAnalysis.ExternalAccess.Copilot -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.Copilot\Release\netstandard2.0\Microsoft.CodeAnalysis.ExternalAccess.Copilot.dll
+  BuildValidator -> C:\bench\roslyn\artifacts\bin\BuildValidator\Release\net10.0\BuildValidator.dll
+  Microsoft.CodeAnalysis.ExpressionCompiler.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExpressionCompiler.Test.Utilities\Release\net472\Microsoft.CodeAnalysis.ExpressionEvaluator.ExpressionCompiler.Utilities.dll
+  Roslyn.Diagnostics.Analyzers.UnitTests -> C:\bench\roslyn\artifacts\bin\Roslyn.Diagnostics.Analyzers.UnitTests\Release\net10.0\Roslyn.Diagnostics.Analyzers.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.Scripting -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Scripting\Release\net8.0\Microsoft.CodeAnalysis.CSharp.Scripting.dll
+  Microsoft.CodeAnalysis.ExternalAccess.Extensions -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.Extensions\Release\netstandard2.0\Microsoft.CodeAnalysis.ExternalAccess.Extensions.dll
+  Microsoft.CodeAnalysis.CSharp.CodeStyle.Fixes -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.CodeStyle.Fixes\Release\netstandard2.0\Microsoft.CodeAnalysis.CSharp.CodeStyle.Fixes.dll
+  Roslyn.Compilers.VisualBasic.IOperation.UnitTests -> C:\bench\roslyn\artifacts\bin\Roslyn.Compilers.VisualBasic.IOperation.UnitTests\Release\net472\Roslyn.Compilers.VisualBasic.IOperation.UnitTests.dll
+  Microsoft.CodeAnalysis.Analyzers.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Analyzers.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.Analyzers.UnitTests.dll
+  Replay -> C:\bench\roslyn\artifacts\bin\Replay\Release\net8.0\Replay.dll
+  BuildValidator -> C:\bench\roslyn\artifacts\bin\BuildValidator\Release\net472\BuildValidator.exe
+  Microsoft.CodeAnalysis.CSharp.ExpressionCompiler -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.ExpressionCompiler\Release\netstandard2.0\Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator.ExpressionCompiler.dll
+  Microsoft.CodeAnalysis.Remote.Workspaces -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Remote.Workspaces\Release\net10.0\Microsoft.CodeAnalysis.Remote.Workspaces.dll
+  Microsoft.CodeAnalysis.VisualBasic.Features -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Features\Release\netstandard2.0\Microsoft.CodeAnalysis.VisualBasic.Features.dll
+  Microsoft.CodeAnalysis.VisualBasic.ExpressionCompiler -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.ExpressionCompiler\Release\netstandard2.0\Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator.ExpressionCompiler.dll
+  Microsoft.CodeAnalysis.LanguageServer.Protocol -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.LanguageServer.Protocol\Release\netstandard2.0\Microsoft.CodeAnalysis.LanguageServer.Protocol.dll
+  Microsoft.CodeAnalysis.LanguageServer.ExternalAccess.Copilot -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.LanguageServer.ExternalAccess.Copilot\Release\netstandard2.0\Microsoft.CodeAnalysis.LanguageServer.ExternalAccess.Copilot.dll
+  Microsoft.CodeAnalysis.ExternalAccess.Xaml -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.Xaml\Release\netstandard2.0\Microsoft.CodeAnalysis.ExternalAccess.Xaml.dll
+  Microsoft.CommonLanguageServerProtocol.Framework.Example -> C:\bench\roslyn\artifacts\bin\Microsoft.CommonLanguageServerProtocol.Framework.Example\Release\netstandard2.0\Microsoft.CommonLanguageServerProtocol.Framework.Example.dll
+  Microsoft.CodeAnalysis.VisualBasic.Features -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Features\Release\net10.0\Microsoft.CodeAnalysis.VisualBasic.Features.dll
+  Microsoft.CodeAnalysis.VisualBasic.Symbol.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Symbol.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.Symbol.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.Features -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Features\Release\netstandard2.0\Microsoft.CodeAnalysis.CSharp.Features.dll
+  Microsoft.CodeAnalysis.ExternalAccess.Copilot -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.Copilot\Release\net10.0\Microsoft.CodeAnalysis.ExternalAccess.Copilot.dll
+  Microsoft.CodeAnalysis.ResultProvider.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ResultProvider.Utilities\Release\net472\Microsoft.CodeAnalysis.ExpressionEvaluator.ResultProvider.Utilities.dll
+  Microsoft.CodeAnalysis.CSharp.Features -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Features\Release\net10.0\Microsoft.CodeAnalysis.CSharp.Features.dll
+  Microsoft.CodeAnalysis.ExternalAccess.OmniSharp -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.OmniSharp\Release\netstandard2.0\Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.dll
+  SemanticSearch.ReferenceAssemblies -> C:\bench\roslyn\artifacts\bin\SemanticSearch.ReferenceAssemblies\Release\net10.0\SemanticSearch.ReferenceAssemblies.dll
+  vbc -> C:\bench\roslyn\artifacts\bin\vbc\Release\net10.0\publish\
+  Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp\Release\netstandard2.0\Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.CSharp.dll
+  Microsoft.CodeAnalysis.ExternalAccess.AspNetCore -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.AspNetCore\Release\netstandard2.0\Microsoft.CodeAnalysis.ExternalAccess.AspNetCore.dll
+  Microsoft.CodeAnalysis.Remote.Workspaces -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Remote.Workspaces\Release\netstandard2.0\Microsoft.CodeAnalysis.Remote.Workspaces.dll
+  Microsoft.CodeAnalysis.ExternalAccess.VisualDiagnostics -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.VisualDiagnostics\Release\netstandard2.0\Microsoft.CodeAnalysis.ExternalAccess.VisualDiagnostics.dll
+  Microsoft.CodeAnalysis.ExternalAccess.Razor.Features -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.Razor.Features\Release\netstandard2.0\Microsoft.CodeAnalysis.ExternalAccess.Razor.Features.dll
+  Microsoft.CodeAnalysis.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Test.Utilities\Release\net8.0\Microsoft.CodeAnalysis.Test.Utilities.dll
+  Text.Analyzers.UnitTests -> C:\bench\roslyn\artifacts\bin\Text.Analyzers.UnitTests\Release\net10.0\Text.Analyzers.UnitTests.dll
+  Microsoft.CodeAnalysis.Remote.ServiceHub -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Remote.ServiceHub\Release\netstandard2.0\Microsoft.CodeAnalysis.Remote.ServiceHub.dll
+  Microsoft.CodeAnalysis.Rebuild.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Rebuild.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.Rebuild.UnitTests.dll
+  vbi -> C:\bench\roslyn\artifacts\bin\vbi\Release\net10.0\vbi.dll
+  csi -> C:\bench\roslyn\artifacts\bin\csi\Release\net8.0\csi.dll
+  Roslyn.Test.PdbUtilities -> C:\bench\roslyn\artifacts\bin\Roslyn.Test.PdbUtilities\Release\net8.0\Roslyn.Test.PdbUtilities.dll
+  Microsoft.CommonLanguageServerProtocol.Framework.Example -> C:\bench\roslyn\artifacts\bin\Microsoft.CommonLanguageServerProtocol.Framework.Example\Release\net8.0\Microsoft.CommonLanguageServerProtocol.Framework.Example.dll
+  Microsoft.CodeAnalysis.Workspaces.MSBuild -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.MSBuild\Release\net472\Microsoft.CodeAnalysis.Workspaces.MSBuild.dll
+  Microsoft.CodeAnalysis.VisualBasic.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Test.Utilities\Release\net8.0\Microsoft.CodeAnalysis.VisualBasic.Test.Utilities.dll
+  Microsoft.CodeAnalysis.CSharp.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Test.Utilities\Release\net8.0\Microsoft.CodeAnalysis.CSharp.Test.Utilities.dll
+  Microsoft.CodeAnalysis.Workspaces.MSBuild -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.MSBuild\Release\net8.0\Microsoft.CodeAnalysis.Workspaces.MSBuild.dll
+  Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.PerformanceSensitiveAnalyzers.UnitTests.dll
+  Microsoft.CodeAnalysis.LanguageServer.Protocol -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.LanguageServer.Protocol\Release\net10.0\Microsoft.CodeAnalysis.LanguageServer.Protocol.dll
+  Microsoft.CodeAnalysis.VisualBasic.Features -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Features\Release\net8.0\Microsoft.CodeAnalysis.VisualBasic.Features.dll
+  Microsoft.CodeAnalysis.Workspaces.MSBuild -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.MSBuild\Release\net10.0\Microsoft.CodeAnalysis.Workspaces.MSBuild.dll
+  Microsoft.CodeAnalysis.EditorFeatures -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.EditorFeatures\Release\net472\Microsoft.CodeAnalysis.EditorFeatures.dll
+  Microsoft.CodeAnalysis.ExternalAccess.HotReload -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.HotReload\Release\net10.0\Microsoft.CodeAnalysis.ExternalAccess.HotReload.dll
+  Microsoft.CodeAnalysis.ExternalAccess.Razor.EditorFeatures -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.Razor.EditorFeatures\Release\net472\Microsoft.CodeAnalysis.ExternalAccess.Razor.EditorFeatures.dll
+  Microsoft.CodeAnalysis.ExternalAccess.Debugger -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.Debugger\Release\net472\Microsoft.CodeAnalysis.ExternalAccess.Debugger.dll
+  Microsoft.CodeAnalysis.VisualBasic.EditorFeatures -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.EditorFeatures\Release\net472\Microsoft.CodeAnalysis.VisualBasic.EditorFeatures.dll
+  Microsoft.CodeAnalysis.CSharp.Features -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Features\Release\net8.0\Microsoft.CodeAnalysis.CSharp.Features.dll
+  Analyzer.Utilities.UnitTests -> C:\bench\roslyn\artifacts\bin\Analyzer.Utilities.UnitTests\Release\net10.0\Analyzer.Utilities.UnitTests.dll
+  GenerateRulesMissingDocumentation -> C:\bench\roslyn\artifacts\bin\GenerateRulesMissingDocumentation\Release\net10.0\GenerateRulesMissingDocumentation.dll
+  Replay -> C:\bench\roslyn\artifacts\bin\Replay\Release\net10.0\Replay.dll
+  BuildActionTelemetryTable -> C:\bench\roslyn\artifacts\bin\BuildActionTelemetryTable\Release\net10.0\BuildActionTelemetryTable.dll
+  Microsoft.CommonLanguageServerProtocol.Framework.Example -> C:\bench\roslyn\artifacts\bin\Microsoft.CommonLanguageServerProtocol.Framework.Example\Release\net10.0\Microsoft.CommonLanguageServerProtocol.Framework.Example.dll
+  Microsoft.VisualStudio.LanguageServices.CodeLens -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.CodeLens\Release\net10.0\Microsoft.VisualStudio.LanguageServices.CodeLens.dll
+  Microsoft.CodeAnalysis.ExternalAccess.Razor.Features -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.Razor.Features\Release\net10.0\Microsoft.CodeAnalysis.ExternalAccess.Razor.Features.dll
+  SemanticSearch.BuildTask.UnitTests -> C:\bench\roslyn\artifacts\bin\SemanticSearch.BuildTask.UnitTests\Release\net10.0\SemanticSearch.BuildTask.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.ResultProvider.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.ResultProvider.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator.ResultProvider.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.WinRT.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.WinRT.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.WinRT.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.CSharp15.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.CSharp15.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.CSharp15.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.EditorFeatures -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.EditorFeatures\Release\net472\Microsoft.CodeAnalysis.CSharp.EditorFeatures.dll
+  Microsoft.CodeAnalysis.CSharp.IOperation.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.IOperation.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.IOperation.UnitTests.dll
+  Microsoft.CodeAnalysis.Remote.ServiceHub -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Remote.ServiceHub\Release\net10.0\Microsoft.CodeAnalysis.Remote.ServiceHub.dll
+  Microsoft.Build.Tasks.CodeAnalysis.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.Build.Tasks.CodeAnalysis.UnitTests\Release\net10.0\Microsoft.Build.Tasks.CodeAnalysis.UnitTests.dll
+  Microsoft.CodeAnalysis.Scripting.TestUtilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Scripting.TestUtilities\Release\net10.0\Microsoft.CodeAnalysis.Scripting.TestUtilities.dll
+  Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.Symbol.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Symbol.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.Symbol.UnitTests.dll
+  Microsoft.CodeAnalysis.Workspaces.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.Test.Utilities\Release\net10.0\Microsoft.CodeAnalysis.Workspaces.Test.Utilities.dll
+  Microsoft.CodeAnalysis.Features.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Features.Test.Utilities\Release\net10.0\Microsoft.CodeAnalysis.Features.Test.Utilities.dll
+  Microsoft.CodeAnalysis.VisualBasic.Emit.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Emit.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.VisualBasic.Emit.UnitTests.dll
+  Microsoft.CodeAnalysis.LanguageServer.Protocol.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.LanguageServer.Protocol.Test.Utilities\Release\net10.0\Microsoft.CodeAnalysis.LanguageServer.Protocol.Test.Utilities.dll
+  Microsoft.CodeAnalysis.CSharp.Emit2.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Emit2.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.Emit2.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.Emit.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Emit.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.Emit.UnitTests.dll
+  Microsoft.CodeAnalysis.Features.DiagnosticsTests.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Features.DiagnosticsTests.Utilities\Release\net10.0\Microsoft.CodeAnalysis.Features.DiagnosticsTests.Utilities.dll
+  Microsoft.CodeAnalysis.CSharp.Emit3.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Emit3.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.Emit3.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.Semantic.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Semantic.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.Semantic.UnitTests.dll
+  Microsoft.CodeAnalysis.VisualBasic.Semantic.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Semantic.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.Semantic.UnitTests.dll
+  Microsoft.CodeAnalysis.VisualBasic.Semantic.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Semantic.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.VisualBasic.Semantic.UnitTests.dll
+  Microsoft.CodeAnalysis.VisualBasic.Emit.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Emit.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.Emit.UnitTests.dll
+  VBCSCompiler.UnitTests -> C:\bench\roslyn\artifacts\bin\VBCSCompiler.UnitTests\Release\net10.0\VBCSCompiler.UnitTests.dll
+  Microsoft.VisualStudio.LanguageServices -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices\Release\net472\Microsoft.VisualStudio.LanguageServices.dll
+  Microsoft.CodeAnalysis.CSharp.Emit3.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Emit3.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.Emit3.UnitTests.dll
+  Microsoft.CodeAnalysis.VisualBasic.ResultProvider.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.ResultProvider.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator.ResultProvider.UnitTests.dll
+  Microsoft.Build.Tasks.CodeAnalysis.Sdk.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.Build.Tasks.CodeAnalysis.Sdk.UnitTests\Release\net472\Microsoft.Build.Tasks.CodeAnalysis.Sdk.UnitTests.dll
+  Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK\Release\net10.0\Microsoft.CodeAnalysis.ExternalAccess.CompilerDeveloperSDK.dll
+  Microsoft.CodeAnalysis.VisualBasic.Syntax.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Syntax.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.VisualBasic.Syntax.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.EndToEnd.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.EndToEnd.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.EndToEnd.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.CSharp15.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.CSharp15.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.CSharp15.UnitTests.dll
+  Microsoft.CodeAnalysis.Scripting.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Scripting.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.Scripting.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.Syntax.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Syntax.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.Syntax.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.Scripting.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Scripting.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.Scripting.UnitTests.dll
+  Microsoft.VisualStudio.LanguageServices.ExternalAccess.Copilot -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.ExternalAccess.Copilot\Release\net472\Microsoft.VisualStudio.LanguageServices.ExternalAccess.Copilot.dll
+  Microsoft.CodeAnalysis.ExternalAccess.Apex -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.Apex\Release\net472\Microsoft.CodeAnalysis.ExternalAccess.Apex.dll
+  Microsoft.VisualStudio.LanguageServices.LiveShare -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.LiveShare\Release\net472\Microsoft.VisualStudio.LanguageServices.LiveShare.dll
+  Microsoft.CodeAnalysis.VisualBasic.Symbol.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Symbol.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.VisualBasic.Symbol.UnitTests.dll
+  Microsoft.VisualStudio.LanguageServices.Xaml -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.Xaml\Release\net472\Microsoft.VisualStudio.LanguageServices.Xaml.dll
+  AnalyzerRunner -> C:\bench\roslyn\artifacts\bin\AnalyzerRunner\Release\net10.0\AnalyzerRunner.dll
+  Microsoft.CodeAnalysis.Remote.ServiceHub.CoreComponents.x64 -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Remote.ServiceHub.CoreComponents.x64\Release\net10.0\Microsoft.CodeAnalysis.Remote.ServiceHub.CoreComponents.x64.dll
+  Microsoft.CodeAnalysis.Remote.ServiceHub.CoreComponents.arm64 -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Remote.ServiceHub.CoreComponents.arm64\Release\net10.0\Microsoft.CodeAnalysis.Remote.ServiceHub.CoreComponents.arm64.dll
+  Roslyn.Compilers.VisualBasic.IOperation.UnitTests -> C:\bench\roslyn\artifacts\bin\Roslyn.Compilers.VisualBasic.IOperation.UnitTests\Release\net10.0\Roslyn.Compilers.VisualBasic.IOperation.UnitTests.dll
+  Roslyn.VisualStudio.ServiceHub.Setup.arm64 -> C:\bench\roslyn\artifacts\bin\Roslyn.VisualStudio.ServiceHub.Setup.arm64\Release\net472\Roslyn.VisualStudio.ServiceHub.Setup.arm64.dll
+  SemanticSearch.BuildTask.UnitTests -> C:\bench\roslyn\artifacts\bin\SemanticSearch.BuildTask.UnitTests\Release\net472\SemanticSearch.BuildTask.UnitTests.dll
+  Roslyn.VisualStudio.ServiceHub.Setup.x64 -> C:\bench\roslyn\artifacts\bin\Roslyn.VisualStudio.ServiceHub.Setup.x64\Release\net472\Roslyn.VisualStudio.ServiceHub.Setup.x64.dll
+  Replay -> C:\bench\roslyn\artifacts\bin\Replay\Release\net472\Replay.exe
+  Microsoft.CodeAnalysis.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.UnitTests\Release\net472\Microsoft.CodeAnalysis.UnitTests.dll
+  Microsoft.CodeAnalysis.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.UnitTests.dll
+  IdeCoreBenchmarks -> C:\bench\roslyn\artifacts\bin\IdeCoreBenchmarks\Release\net10.0\IdeCoreBenchmarks.dll
+  Microsoft.CodeAnalysis.Workspaces.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.Test.Utilities\Release\net472\Microsoft.CodeAnalysis.Workspaces.Test.Utilities.dll
+  Microsoft.CodeAnalysis.CSharp.Emit2.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Emit2.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.Emit2.UnitTests.dll
+  Microsoft.CodeAnalysis.ExternalAccess.FSharp -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.FSharp\Release\net472\Microsoft.CodeAnalysis.ExternalAccess.FSharp.dll
+  Microsoft.CodeAnalysis.CSharp.EndToEnd.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.EndToEnd.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.EndToEnd.UnitTests.dll
+  Roslyn.Compilers.Extension -> C:\bench\roslyn\artifacts\bin\Roslyn.Compilers.Extension\Release\net472\Roslyn.Compilers.Extension.dll
+  Microsoft.VisualStudio.LanguageServices.Implementation -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.Implementation\Release\net472\Microsoft.VisualStudio.LanguageServices.Implementation.dll
+  Microsoft.CodeAnalysis.FunctionResolver.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.FunctionResolver.UnitTests\Release\net472\Microsoft.CodeAnalysis.ExpressionEvaluator.FunctionResolver.UnitTests.dll
+  Microsoft.CodeAnalysis.Workspaces.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.Test.Utilities\Release\net8.0\Microsoft.CodeAnalysis.Workspaces.Test.Utilities.dll
+  Microsoft.CodeAnalysis.ExternalAccess.EditorConfigGenerator -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.EditorConfigGenerator\Release\net472\Microsoft.CodeAnalysis.ExternalAccess.EditorConfigGenerator.dll
+  Roslyn.VisualStudio.DiagnosticsWindow -> C:\bench\roslyn\artifacts\bin\Roslyn.VisualStudio.DiagnosticsWindow\Release\net472\Roslyn.VisualStudio.DiagnosticsWindow.dll
+  Microsoft.CodeAnalysis.CSharp.Emit.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Emit.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.Emit.UnitTests.dll
+  Microsoft.CodeAnalysis.Features.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Features.Test.Utilities\Release\net472\Microsoft.CodeAnalysis.Features.Test.Utilities.dll
+  Microsoft.CodeAnalysis.CSharp.Syntax.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Syntax.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.Syntax.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.Semantic.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Semantic.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.Semantic.UnitTests.dll
+  Microsoft.VisualStudio.LanguageServices.VisualBasic -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.VisualBasic\Release\net472\Microsoft.VisualStudio.LanguageServices.VisualBasic.dll
+  Microsoft.CodeAnalysis.VisualBasic.Syntax.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Syntax.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.Syntax.UnitTests.dll
+  AnalyzerRunner -> C:\bench\roslyn\artifacts\bin\AnalyzerRunner\Release\net472\AnalyzerRunner.exe
+  Microsoft.CodeAnalysis.CSharp.CommandLine.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.CommandLine.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.CommandLine.UnitTests.dll
+  Microsoft.Build.Tasks.CodeAnalysis.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.Build.Tasks.CodeAnalysis.UnitTests\Release\net472\Microsoft.Build.Tasks.CodeAnalysis.UnitTests.dll
+  Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.UnitTests\Release\net472\Microsoft.CodeAnalysis.ExternalAccess.OmniSharp.UnitTests.dll
+  Microsoft.CodeAnalysis.ExternalAccess.Razor.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.Razor.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.ExternalAccess.Razor.UnitTests.dll
+  Microsoft.VisualStudio.LanguageServices.CSharp -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.CSharp\Release\net472\Microsoft.VisualStudio.LanguageServices.CSharp.dll
+  InteractiveHost64 -> C:\bench\roslyn\artifacts\bin\InteractiveHost64\Release\net472\win-x64\publish\
+  InteractiveHost64 -> C:\bench\roslyn\artifacts\bin\InteractiveHost64\Release\net10.0-windows\win-x64\publish\
+  Microsoft.CodeAnalysis.Scripting.Desktop.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Scripting.Desktop.UnitTests\Release\net472\Microsoft.CodeAnalysis.Scripting.Desktop.UnitTests.dll
+  InteractiveHost.UnitTests -> C:\bench\roslyn\artifacts\bin\InteractiveHost.UnitTests\Release\net472\InteractiveHost.UnitTests.dll
+  Microsoft.CodeAnalysis.Scripting.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Scripting.UnitTests\Release\net472\Microsoft.CodeAnalysis.Scripting.UnitTests.dll
+  Microsoft.CodeAnalysis.VisualBasic.Scripting.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Scripting.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.Scripting.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.Scripting.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Scripting.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.Scripting.UnitTests.dll
+  IdeCoreBenchmarks -> C:\bench\roslyn\artifacts\bin\IdeCoreBenchmarks\Release\net472\IdeCoreBenchmarks.exe
+  Microsoft.CodeAnalysis.CSharp.Scripting.Desktop.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Scripting.Desktop.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.Scripting.Desktop.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.CommandLine.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.CommandLine.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.CommandLine.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.Symbol.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Symbol.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.Symbol.UnitTests.dll
+  Microsoft.CodeAnalysis.LanguageServer.Protocol.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.LanguageServer.Protocol.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.LanguageServer.Protocol.UnitTests.dll
+  Microsoft.CodeAnalysis.VisualBasic.Scripting.Desktop.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Scripting.Desktop.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.Scripting.Desktop.UnitTests.dll
+  Microsoft.CodeAnalysis.Remote.ServiceHub.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Remote.ServiceHub.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.Remote.ServiceHub.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.IOperation.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.IOperation.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.IOperation.UnitTests.dll
+  Microsoft.CodeAnalysis.Rebuild.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Rebuild.UnitTests\Release\net472\Microsoft.CodeAnalysis.Rebuild.UnitTests.dll
+  Microsoft.CodeAnalysis.VisualBasic.Workspaces.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Workspaces.UnitTests\Release\net10.0-windows\Microsoft.CodeAnalysis.VisualBasic.Workspaces.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.Workspaces.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Workspaces.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.Workspaces.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.EditorFeatures2.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.EditorFeatures2.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.CSharp.EditorFeatures2.UnitTests.dll
+  VBCSCompiler.UnitTests -> C:\bench\roslyn\artifacts\bin\VBCSCompiler.UnitTests\Release\net472\VBCSCompiler.UnitTests.dll
+  Microsoft.CodeAnalysis.Features.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Features.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.Features.UnitTests.dll
+  Microsoft.CodeAnalysis.VisualBasic.CommandLine.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.CommandLine.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.CommandLine.UnitTests.dll
+  Microsoft.CodeAnalysis.Workspaces.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.Workspaces.UnitTests.dll
+  Microsoft.CodeAnalysis.Features.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Features.Test.Utilities\Release\net8.0\Microsoft.CodeAnalysis.Features.Test.Utilities.dll
+  Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.UnitTests\Release\net472\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.ResultProvider.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.ResultProvider.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator.ResultProvider.UnitTests.dll
+  Microsoft.CodeAnalysis.Workspaces.MSBuild.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.MSBuild.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.Workspaces.MSBuild.UnitTests.dll
+  Microsoft.CodeAnalysis.ExternalAccess.FSharp.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.FSharp.UnitTests\Release\net472\Microsoft.CodeAnalysis.ExternalAccess.FSharp.UnitTests.dll
+  Microsoft.CodeAnalysis.LanguageServer.Protocol.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.LanguageServer.Protocol.Test.Utilities\Release\net472\Microsoft.CodeAnalysis.LanguageServer.Protocol.Test.Utilities.dll
+  Microsoft.CodeAnalysis.LanguageServer -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.LanguageServer\Release\net10.0\Microsoft.CodeAnalysis.LanguageServer.dll
+  Microsoft.CodeAnalysis.EditorFeatures.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.EditorFeatures.Test.Utilities\Release\net472\Microsoft.CodeAnalysis.EditorFeatures.Test.Utilities.dll
+  Microsoft.CodeAnalysis.CodeStyle.LegacyTestFramework.UnitTestUtilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CodeStyle.LegacyTestFramework.UnitTestUtilities\Release\net472\Microsoft.CodeAnalysis.CodeStyle.LegacyTestFramework.UnitTestUtilities.dll
+  Microsoft.CodeAnalysis.CSharp.Features.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Features.UnitTests\Release\net10.0-windows\Microsoft.CodeAnalysis.CSharp.Features.UnitTests.dll
+  Microsoft.VisualStudio.LanguageServices.DevKit -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.DevKit\Release\net10.0\Microsoft.VisualStudio.LanguageServices.DevKit.dll
+  Microsoft.CodeAnalysis.Features.DiagnosticsTests.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Features.DiagnosticsTests.Utilities\Release\net472\Microsoft.CodeAnalysis.Features.DiagnosticsTests.Utilities.dll
+  Microsoft.CodeAnalysis.EditorFeatures.Test.Utilities2 -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.EditorFeatures.Test.Utilities2\Release\net472\Microsoft.CodeAnalysis.EditorFeatures.Test.Utilities2.dll
+  Microsoft.CodeAnalysis.CSharp.Workspaces.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Workspaces.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.Workspaces.UnitTests.dll
+  Microsoft.CommonLanguageServerProtocol.Framework.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CommonLanguageServerProtocol.Framework.UnitTests\Release\net10.0\Microsoft.CommonLanguageServerProtocol.Framework.UnitTests.dll
+  Microsoft.CodeAnalysis.EditorFeatures.DiagnosticsTests.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.EditorFeatures.DiagnosticsTests.Utilities\Release\net472\Microsoft.CodeAnalysis.EditorFeatures.DiagnosticsTests.Utilities.dll
+  Microsoft.CodeAnalysis.CSharp.EditorFeatures.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.EditorFeatures.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.EditorFeatures.UnitTests.dll
+  Microsoft.CodeAnalysis.VisualBasic.EditorFeatures.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.EditorFeatures.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.EditorFeatures.UnitTests.dll
+  Microsoft.CodeAnalysis.Remote.ServiceHub.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Remote.ServiceHub.UnitTests\Release\net472\Microsoft.CodeAnalysis.Remote.ServiceHub.UnitTests.dll
+  Microsoft.CodeAnalysis.VisualBasic.Workspaces.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Workspaces.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.Workspaces.UnitTests.dll
+  Microsoft.CodeAnalysis.Workspaces.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.UnitTests\Release\net472\Microsoft.CodeAnalysis.Workspaces.UnitTests.dll
+  Microsoft.CodeAnalysis.Workspaces.MSBuild.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Workspaces.MSBuild.UnitTests\Release\net472\Microsoft.CodeAnalysis.Workspaces.MSBuild.UnitTests.dll
+  Microsoft.CodeAnalysis.Features.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Features.UnitTests\Release\net472\Microsoft.CodeAnalysis.Features.UnitTests.dll
+  Microsoft.CommonLanguageServerProtocol.Framework.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CommonLanguageServerProtocol.Framework.UnitTests\Release\net472\Microsoft.CommonLanguageServerProtocol.Framework.UnitTests.dll
+  Microsoft.CodeAnalysis.LanguageServer.Protocol.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.LanguageServer.Protocol.UnitTests\Release\net472\Microsoft.CodeAnalysis.LanguageServer.Protocol.UnitTests.dll
+  Microsoft.VisualStudio.LanguageServices.LiveShare.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.LiveShare.UnitTests\Release\net472\Microsoft.VisualStudio.LanguageServices.LiveShare.UnitTests.dll
+  Microsoft.CodeAnalysis.VisualBasic.Features.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Features.UnitTests\Release\net10.0-windows\Microsoft.CodeAnalysis.VisualBasic.Features.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.ExpressionCompiler.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.ExpressionCompiler.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.ExpressionEvaluator.ExpressionCompiler.UnitTests.dll
+  Roslyn.VisualStudio.Setup -> C:\bench\roslyn\artifacts\bin\Roslyn.VisualStudio.Setup\Release\net472\Roslyn.VisualStudio.Setup.dll
+  Microsoft.VisualStudio.LanguageServices.Test.Utilities2 -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.Test.Utilities2\Release\net472\Microsoft.VisualStudio.LanguageServices.Test.Utilities2.dll
+  Microsoft.CodeAnalysis.ExternalAccess.Razor.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.Razor.UnitTests\Release\net472\Microsoft.CodeAnalysis.ExternalAccess.Razor.UnitTests.dll
+  Microsoft.VisualStudio.Extensibility.Testing.SourceGenerator -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.Extensibility.Testing.SourceGenerator\Release\netstandard2.0\Microsoft.VisualStudio.Extensibility.Testing.SourceGenerator.dll
+  Microsoft.CodeAnalysis.LanguageServer.Protocol.Test.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.LanguageServer.Protocol.Test.Utilities\Release\net8.0\Microsoft.CodeAnalysis.LanguageServer.Protocol.Test.Utilities.dll
+  Microsoft.CodeAnalysis.VisualBasic.Features.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.Features.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.Features.UnitTests.dll
+  Microsoft.CodeAnalysis.VisualBasic.ExpressionCompiler.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.ExpressionCompiler.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.ExpressionEvaluator.ExpressionCompiler.UnitTests.dll
+  IdeBenchmarks -> C:\bench\roslyn\artifacts\bin\IdeBenchmarks\Release\net472\IdeBenchmarks.exe
+  ExpressionEvaluatorPackage -> C:\bench\roslyn\artifacts\bin\ExpressionEvaluatorPackage\Release\net472\ExpressionEvaluatorPackage.dll
+  Microsoft.CodeAnalysis.ExternalAccess.HotReload.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.ExternalAccess.HotReload.UnitTests\Release\net10.0\Microsoft.CodeAnalysis.ExternalAccess.HotReload.UnitTests.dll
+  RoslynDeployment -> C:\bench\roslyn\artifacts\bin\RoslynDeployment\Release\net472\RoslynDeployment.dll
+  Microsoft.CodeAnalysis.VisualBasic.CodeStyle.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.UnitTests\Release\net472\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.UnitTests.dll
+  Microsoft.CodeAnalysis.CSharp.CodeStyle.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.CodeStyle.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.CodeStyle.UnitTests.dll
+  Microsoft.VisualStudio.IntegrationTest.Setup -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.IntegrationTest.Setup\Release\net472\Microsoft.VisualStudio.IntegrationTest.Setup.dll
+  Microsoft.CodeAnalysis.CSharp.Features.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.CSharp.Features.UnitTests\Release\net472\Microsoft.CodeAnalysis.CSharp.Features.UnitTests.dll
+  Microsoft.CodeAnalysis.EditorFeatures.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.EditorFeatures.UnitTests\Release\net472\Microsoft.CodeAnalysis.EditorFeatures.UnitTests.dll
+  Microsoft.CodeAnalysis.EditorFeatures2.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.EditorFeatures2.UnitTests\Release\net472\Microsoft.CodeAnalysis.EditorFeatures2.UnitTests.dll
+  Microsoft.CodeAnalysis.Features.DiagnosticsTests.Utilities -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.Features.DiagnosticsTests.Utilities\Release\net8.0\Microsoft.CodeAnalysis.Features.DiagnosticsTests.Utilities.dll
+  Microsoft.VisualStudio.LanguageServices.CSharp.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.CSharp.UnitTests\Release\net472\Microsoft.VisualStudio.LanguageServices.CSharp.UnitTests.dll
+  Microsoft.VisualStudio.LanguageServices.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.UnitTests\Release\net472\Microsoft.VisualStudio.LanguageServices.UnitTests.dll
+  Microsoft.VisualStudio.Extensibility.Testing.Xunit.IntegrationTests -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.Extensibility.Testing.Xunit.IntegrationTests\Release\net472\Microsoft.VisualStudio.Extensibility.Testing.Xunit.IntegrationTests.dll
+  Microsoft.CodeAnalysis.LanguageServer.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CodeAnalysis.LanguageServer.UnitTests\Release\net10.0-windows\Microsoft.CodeAnalysis.LanguageServer.UnitTests.dll
+  Roslyn.VisualStudio.Next.UnitTests -> C:\bench\roslyn\artifacts\bin\Roslyn.VisualStudio.Next.UnitTests\Release\net472\Roslyn.VisualStudio.Next.UnitTests.dll
+  Microsoft.VisualStudio.LanguageServices.New.IntegrationTests -> C:\bench\roslyn\artifacts\bin\Microsoft.VisualStudio.LanguageServices.New.IntegrationTests\Release\net472\Microsoft.VisualStudio.LanguageServices.New.IntegrationTests.dll
+  Microsoft.CommonLanguageServerProtocol.Framework.UnitTests -> C:\bench\roslyn\artifacts\bin\Microsoft.CommonLanguageServerProtocol.Framework.UnitTests\Release\net8.0\Microsoft.CommonLanguageServerProtocol.Framework.UnitTests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:03:30.66

@@ -1,0 +1,38 @@
+{
+  "scenario_id": "net-dns-resolve",
+  "av_name": "avast",
+  "av_product": "Avast Antivirus",
+  "av_version": "21.4.6162.0",
+  "timestamp_utc": "2026-04-19T18:25:51.4715582Z",
+  "command": "net-dns-resolve",
+  "working_dir": "C:\\bench\\microbench\\net-dns-resolve",
+  "exit_code": 0,
+  "wall_ms": 1147,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 481792,
+  "system_disk_write_bytes": 0,
+  "p50_us": 226.6,
+  "p95_us": 249.5,
+  "p99_us": 271.3,
+  "max_us": 26306.1,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 4360.992111750248,
+    "mean_latency_us": 229.19814,
+    "p50_us": 226.6,
+    "p95_us": 249.5,
+    "p99_us": 271.3,
+    "max_us": 26306.1
+  }
+}
