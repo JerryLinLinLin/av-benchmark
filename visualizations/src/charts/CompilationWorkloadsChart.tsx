@@ -26,15 +26,13 @@ const incrementalColor = '#d18a00'
 const chartConfig = {
   ripgrep: {
     title: 'Ripgrep',
-    cap: 55,
     axisMax: 60,
   },
   roslyn: {
     title: 'Roslyn',
-    cap: 190,
     axisMax: 190,
   },
-} satisfies Record<WorkloadKey, { title: string; cap: number; axisMax: number }>
+} satisfies Record<WorkloadKey, { title: string; axisMax: number }>
 
 export function CompilationWorkloadsChart({ data, onReady }: Props) {
   const [readyCount, setReadyCount] = useState(0)
@@ -99,8 +97,8 @@ function WorkloadChart({
 function buildWorkloadOption(rows: CompilationWorkloadRow[], workload: WorkloadKey): EChartsOption {
   const config = chartConfig[workload]
   const avNames = rows.map((row) => row.avName)
-  const cleanPoints = rows.map((row) => toBarPoint(row[workload].clean, config.cap))
-  const incrementalPoints = rows.map((row) => toBarPoint(row[workload].incremental, config.cap))
+  const cleanPoints = rows.map((row) => toBarPoint(row[workload].clean, config.axisMax))
+  const incrementalPoints = rows.map((row) => toBarPoint(row[workload].incremental, config.axisMax))
 
   return {
     animation: false,
@@ -189,8 +187,14 @@ function buildSeries(name: string, points: BarPoint[], color: string) {
         const dataIndex = (params as { dataIndex?: number }).dataIndex ?? -1
         const point = points[dataIndex]
         return point?.capped && point.actualValue !== undefined
-          ? `${formatNumber(point.actualValue)}%`
+          ? `{capped|${formatNumber(point.actualValue)}%}`
           : ''
+      },
+      rich: {
+        capped: {
+          color: '#c73535',
+          fontWeight: 700,
+        },
       },
     },
     emphasis: {
