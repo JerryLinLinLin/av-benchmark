@@ -1,0 +1,38 @@
+{
+  "scenario_id": "wmi-query",
+  "av_name": "mcafee",
+  "av_product": "McAfee",
+  "av_version": "16.100.0 0",
+  "timestamp_utc": "2026-04-21T00:26:57.0943934Z",
+  "command": "wmi-query",
+  "working_dir": "C:\\bench\\microbench\\wmi-query",
+  "exit_code": 0,
+  "wall_ms": 6483,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 1916928,
+  "system_disk_write_bytes": 413696,
+  "p50_us": 12709.4,
+  "p95_us": 14142.6,
+  "p99_us": 14976,
+  "max_us": 62834.5,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 500,
+    "ops_per_sec": 77.12412527938021,
+    "mean_latency_us": 12847.9872,
+    "p50_us": 12709.4,
+    "p95_us": 14142.6,
+    "p99_us": 14976,
+    "max_us": 62834.5
+  }
+}

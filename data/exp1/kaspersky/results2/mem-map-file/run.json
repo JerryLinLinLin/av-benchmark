@@ -1,0 +1,38 @@
+{
+  "scenario_id": "mem-map-file",
+  "av_name": "kaspersky",
+  "av_product": "Kaspersky",
+  "av_version": "21.0.0.1",
+  "timestamp_utc": "2026-04-21T03:37:56.4832961Z",
+  "command": "mem-map-file",
+  "working_dir": "C:\\bench\\microbench\\mem-map-file",
+  "exit_code": 0,
+  "wall_ms": 4851,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 154112,
+  "system_disk_write_bytes": 103649280,
+  "p50_us": 455.4,
+  "p95_us": 737.6,
+  "p99_us": 1052.6,
+  "max_us": 3206.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 2066.126886885214,
+    "mean_latency_us": 483.72517,
+    "p50_us": 455.4,
+    "p95_us": 737.6,
+    "p99_us": 1052.6,
+    "max_us": 3206.4
+  }
+}

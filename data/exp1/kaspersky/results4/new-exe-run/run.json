@@ -1,0 +1,38 @@
+{
+  "scenario_id": "new-exe-run",
+  "av_name": "kaspersky",
+  "av_product": "Kaspersky",
+  "av_version": "21.0.0.1",
+  "timestamp_utc": "2026-04-21T04:52:40.012664Z",
+  "command": "new-exe-run",
+  "working_dir": "C:\\bench\\microbench\\new-exe-run",
+  "exit_code": 0,
+  "wall_ms": 18431,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 3779072,
+  "system_disk_write_bytes": 16998400,
+  "p50_us": 367158.1,
+  "p95_us": 383302.9,
+  "p99_us": 405314.3,
+  "max_us": 405314.3,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 50,
+    "ops_per_sec": 2.712843899760852,
+    "mean_latency_us": 368365.13399999996,
+    "p50_us": 367158.1,
+    "p95_us": 383302.9,
+    "p99_us": 405314.3,
+    "max_us": 405314.3
+  }
+}

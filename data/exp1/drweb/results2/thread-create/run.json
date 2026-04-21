@@ -1,0 +1,38 @@
+{
+  "scenario_id": "thread-create",
+  "av_name": "drweb",
+  "av_product": "Dr.Web Security Space",
+  "av_version": "1.0.0.04150",
+  "timestamp_utc": "2026-04-20T15:34:56.9245259Z",
+  "command": "thread-create",
+  "working_dir": "C:\\bench\\microbench\\thread-create",
+  "exit_code": 0,
+  "wall_ms": 1200,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 0,
+  "p50_us": 224.5,
+  "p95_us": 295.4,
+  "p99_us": 651,
+  "max_us": 2017.5,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 4165.227580537591,
+    "mean_latency_us": 239.9073,
+    "p50_us": 224.5,
+    "p95_us": 295.4,
+    "p99_us": 651,
+    "max_us": 2017.5
+  }
+}

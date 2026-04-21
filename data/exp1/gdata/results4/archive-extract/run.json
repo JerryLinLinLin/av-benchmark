@@ -1,0 +1,38 @@
+{
+  "scenario_id": "archive-extract",
+  "av_name": "gdata",
+  "av_product": "G DATA INTERNET SECURITY",
+  "av_version": "22.0.0.0",
+  "timestamp_utc": "2026-04-20T03:39:59.3323315Z",
+  "command": "archive-extract",
+  "working_dir": "C:\\bench\\microbench\\archive-extract",
+  "exit_code": 0,
+  "wall_ms": 33928,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 52741632,
+  "system_disk_write_bytes": 292806656,
+  "p50_us": 3223909.2,
+  "p95_us": 4816621,
+  "p99_us": 4816621,
+  "max_us": 4816621,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10,
+    "ops_per_sec": 0.2949373751802908,
+    "mean_latency_us": 3390533.1799999997,
+    "p50_us": 3223909.2,
+    "p95_us": 4816621,
+    "p99_us": 4816621,
+    "max_us": 4816621
+  }
+}

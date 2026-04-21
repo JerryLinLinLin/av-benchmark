@@ -1,0 +1,38 @@
+{
+  "scenario_id": "file-copy-large",
+  "av_name": "kaspersky",
+  "av_product": "Kaspersky",
+  "av_version": "21.0.0.1",
+  "timestamp_utc": "2026-04-21T03:33:16.2327436Z",
+  "command": "file-copy-large",
+  "working_dir": "C:\\bench\\microbench\\file-copy-large",
+  "exit_code": 0,
+  "wall_ms": 831,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 4096,
+  "p50_us": 34939.2,
+  "p95_us": 38376.7,
+  "p99_us": 38376.7,
+  "max_us": 38376.7,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10,
+    "ops_per_sec": 28.28044701205765,
+    "mean_latency_us": 35349.58,
+    "p50_us": 34939.2,
+    "p95_us": 38376.7,
+    "p99_us": 38376.7,
+    "max_us": 38376.7
+  }
+}

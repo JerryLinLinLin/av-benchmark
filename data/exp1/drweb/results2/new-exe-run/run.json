@@ -1,0 +1,38 @@
+{
+  "scenario_id": "new-exe-run",
+  "av_name": "drweb",
+  "av_product": "Dr.Web Security Space",
+  "av_version": "1.0.0.04150",
+  "timestamp_utc": "2026-04-20T15:34:32.3154731Z",
+  "command": "new-exe-run",
+  "working_dir": "C:\\bench\\microbench\\new-exe-run",
+  "exit_code": 0,
+  "wall_ms": 3342,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 10752,
+  "system_disk_write_bytes": 11927552,
+  "p50_us": 65774.4,
+  "p95_us": 72649.6,
+  "p99_us": 73656.8,
+  "max_us": 73656.8,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 50,
+    "ops_per_sec": 14.962307702551117,
+    "mean_latency_us": 66617.774,
+    "p50_us": 65774.4,
+    "p95_us": 72649.6,
+    "p99_us": 73656.8,
+    "max_us": 73656.8
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "scenario_id": "fs-watcher",
+  "av_name": "gdata",
+  "av_product": "G DATA INTERNET SECURITY",
+  "av_version": "22.0.0.0",
+  "timestamp_utc": "2026-04-20T03:29:28.3524356Z",
+  "command": "fs-watcher",
+  "working_dir": "C:\\bench\\microbench\\fs-watcher",
+  "exit_code": 0,
+  "wall_ms": 7155,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 62859776,
+  "system_disk_write_bytes": 37425152,
+  "p50_us": 1339.7,
+  "p95_us": 1839.4,
+  "p99_us": 2272,
+  "max_us": 11883.9,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 711.614759778213,
+    "mean_latency_us": 1403.36256,
+    "p50_us": 1339.7,
+    "p95_us": 1839.4,
+    "p99_us": 2272,
+    "max_us": 11883.9
+  }
+}

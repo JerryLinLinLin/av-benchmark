@@ -1,0 +1,38 @@
+{
+  "scenario_id": "file-enum-large-dir",
+  "av_name": "kaspersky",
+  "av_product": "Kaspersky",
+  "av_version": "21.0.0.1",
+  "timestamp_utc": "2026-04-21T03:33:05.4035472Z",
+  "command": "file-enum-large-dir",
+  "working_dir": "C:\\bench\\microbench\\file-enum-large-dir",
+  "exit_code": 0,
+  "wall_ms": 2791,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 71229440,
+  "p50_us": 2815,
+  "p95_us": 3745.6,
+  "p99_us": 4952,
+  "max_us": 4952,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 50,
+    "ops_per_sec": 341.8445796781602,
+    "mean_latency_us": 2925.178,
+    "p50_us": 2815,
+    "p95_us": 3745.6,
+    "p99_us": 4952,
+    "max_us": 4952
+  }
+}

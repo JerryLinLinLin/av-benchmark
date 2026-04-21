@@ -1,0 +1,24 @@
+{
+  "scenario_id": "ripgrep-clean-build",
+  "av_name": "sophos",
+  "av_product": "Sophos Home",
+  "av_version": "4.0.0",
+  "timestamp_utc": "2026-04-20T20:43:12.8947273Z",
+  "command": "cargo build --release",
+  "working_dir": "C:\\bench\\ripgrep",
+  "exit_code": 0,
+  "wall_ms": 18455,
+  "user_cpu_ms": 165234,
+  "kernel_cpu_ms": 8281,
+  "peak_job_memory_mb": 2228,
+  "system_disk_read_bytes": 390938112,
+  "system_disk_write_bytes": 71032832,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d"
+}

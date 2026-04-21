@@ -1,0 +1,38 @@
+{
+  "scenario_id": "fs-watcher",
+  "av_name": "drweb",
+  "av_product": "Dr.Web Security Space",
+  "av_version": "1.0.0.04150",
+  "timestamp_utc": "2026-04-20T16:03:05.7473727Z",
+  "command": "fs-watcher",
+  "working_dir": "C:\\bench\\microbench\\fs-watcher",
+  "exit_code": 0,
+  "wall_ms": 5447,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 88576,
+  "system_disk_write_bytes": 39587840,
+  "p50_us": 978.2,
+  "p95_us": 1550.5,
+  "p99_us": 2613.2,
+  "max_us": 23550.1,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 941.1933722066275,
+    "mean_latency_us": 1060.8392800000001,
+    "p50_us": 978.2,
+    "p95_us": 1550.5,
+    "p99_us": 2613.2,
+    "max_us": 23550.1
+  }
+}

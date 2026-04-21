@@ -1,0 +1,38 @@
+{
+  "scenario_id": "token-query",
+  "av_name": "gdata",
+  "av_product": "G DATA INTERNET SECURITY",
+  "av_version": "22.0.0.0",
+  "timestamp_utc": "2026-04-20T03:09:53.6350524Z",
+  "command": "token-query",
+  "working_dir": "C:\\bench\\microbench\\token-query",
+  "exit_code": 0,
+  "wall_ms": 52,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 592384,
+  "system_disk_write_bytes": 0,
+  "p50_us": 0.9,
+  "p95_us": 1.3,
+  "p99_us": 1.6,
+  "max_us": 558.1,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 50000,
+    "ops_per_sec": 966011.8394411042,
+    "mean_latency_us": 0.996988,
+    "p50_us": 0.9,
+    "p95_us": 1.3,
+    "p99_us": 1.6,
+    "max_us": 558.1
+  }
+}

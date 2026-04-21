@@ -1,0 +1,38 @@
+{
+  "scenario_id": "archive-extract",
+  "av_name": "mcafee",
+  "av_product": "McAfee",
+  "av_version": "16.100.0 0",
+  "timestamp_utc": "2026-04-20T21:46:02.2646422Z",
+  "command": "archive-extract",
+  "working_dir": "C:\\bench\\microbench\\archive-extract",
+  "exit_code": 0,
+  "wall_ms": 13479,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 30673920,
+  "system_disk_write_bytes": 280403968,
+  "p50_us": 1315636.5,
+  "p95_us": 1464207.3,
+  "p99_us": 1464207.3,
+  "max_us": 1464207.3,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10,
+    "ops_per_sec": 0.7430667488240895,
+    "mean_latency_us": 1345764.71,
+    "p50_us": 1315636.5,
+    "p95_us": 1464207.3,
+    "p99_us": 1464207.3,
+    "max_us": 1464207.3
+  }
+}

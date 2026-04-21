@@ -1,0 +1,38 @@
+{
+  "scenario_id": "ext-sensitivity-ps1",
+  "av_name": "kaspersky",
+  "av_product": "Kaspersky",
+  "av_version": "21.0.0.1",
+  "timestamp_utc": "2026-04-21T04:50:50.0993155Z",
+  "command": "ext-sensitivity-ps1",
+  "working_dir": "C:\\bench\\microbench\\ext-sensitivity-ps1",
+  "exit_code": 0,
+  "wall_ms": 3884,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 70302720,
+  "system_disk_write_bytes": 23449600,
+  "p50_us": 377.1,
+  "p95_us": 438.7,
+  "p99_us": 623,
+  "max_us": 34915.1,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 2574.4683639158293,
+    "mean_latency_us": 387.46126,
+    "p50_us": 377.1,
+    "p95_us": 438.7,
+    "p99_us": 623,
+    "max_us": 34915.1
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "scenario_id": "ext-sensitivity-js",
+  "av_name": "kaspersky",
+  "av_product": "Kaspersky",
+  "av_version": "21.0.0.1",
+  "timestamp_utc": "2026-04-21T05:11:11.2408951Z",
+  "command": "ext-sensitivity-js",
+  "working_dir": "C:\\bench\\microbench\\ext-sensitivity-js",
+  "exit_code": 0,
+  "wall_ms": 3831,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 31232,
+  "system_disk_write_bytes": 56610816,
+  "p50_us": 373.6,
+  "p95_us": 427.8,
+  "p99_us": 595.6,
+  "max_us": 10351.7,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 2610.030944004866,
+    "mean_latency_us": 382.21218999999996,
+    "p50_us": 373.6,
+    "p95_us": 427.8,
+    "p99_us": 595.6,
+    "max_us": 10351.7
+  }
+}

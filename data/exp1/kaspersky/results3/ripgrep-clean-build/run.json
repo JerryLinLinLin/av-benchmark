@@ -1,0 +1,24 @@
+{
+  "scenario_id": "ripgrep-clean-build",
+  "av_name": "kaspersky",
+  "av_product": "Kaspersky",
+  "av_version": "21.0.0.1",
+  "timestamp_utc": "2026-04-21T04:38:57.8582428Z",
+  "command": "cargo build --release",
+  "working_dir": "C:\\bench\\ripgrep",
+  "exit_code": 0,
+  "wall_ms": 17012,
+  "user_cpu_ms": 153328,
+  "kernel_cpu_ms": 6687,
+  "peak_job_memory_mb": 2104,
+  "system_disk_read_bytes": 346249728,
+  "system_disk_write_bytes": 72974336,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d"
+}

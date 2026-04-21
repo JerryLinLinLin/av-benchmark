@@ -1,0 +1,38 @@
+{
+  "scenario_id": "pipe-roundtrip",
+  "av_name": "gdata",
+  "av_product": "G DATA INTERNET SECURITY",
+  "av_version": "22.0.0.0",
+  "timestamp_utc": "2026-04-20T03:28:18.2012396Z",
+  "command": "pipe-roundtrip",
+  "working_dir": "C:\\bench\\microbench\\pipe-roundtrip",
+  "exit_code": 0,
+  "wall_ms": 175,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 1613312,
+  "system_disk_write_bytes": 65536,
+  "p50_us": 60.1,
+  "p95_us": 109.4,
+  "p99_us": 204.7,
+  "max_us": 910.8,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 2000,
+    "ops_per_sec": 14798.492625541163,
+    "mean_latency_us": 67.3977,
+    "p50_us": 60.1,
+    "p95_us": 109.4,
+    "p99_us": 204.7,
+    "max_us": 910.8
+  }
+}

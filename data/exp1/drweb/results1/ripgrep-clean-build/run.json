@@ -1,0 +1,24 @@
+{
+  "scenario_id": "ripgrep-clean-build",
+  "av_name": "drweb",
+  "av_product": "Dr.Web Security Space",
+  "av_version": "1.0.0.04150",
+  "timestamp_utc": "2026-04-20T05:20:13.6583492Z",
+  "command": "cargo build --release",
+  "working_dir": "C:\\bench\\ripgrep",
+  "exit_code": 0,
+  "wall_ms": 18260,
+  "user_cpu_ms": 162546,
+  "kernel_cpu_ms": 6781,
+  "peak_job_memory_mb": 1755,
+  "system_disk_read_bytes": 385913856,
+  "system_disk_write_bytes": 85905408,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d"
+}

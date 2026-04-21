@@ -1,0 +1,38 @@
+{
+  "scenario_id": "com-create-instance",
+  "av_name": "sophos",
+  "av_product": "Sophos Home",
+  "av_version": "4.0.0",
+  "timestamp_utc": "2026-04-20T19:11:42.9945491Z",
+  "command": "com-create-instance",
+  "working_dir": "C:\\bench\\microbench\\com-create-instance",
+  "exit_code": 0,
+  "wall_ms": 2537,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 135168,
+  "system_disk_write_bytes": 8192,
+  "p50_us": 459.8,
+  "p95_us": 790,
+  "p99_us": 1075.9,
+  "max_us": 28553,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 1970.9563809614285,
+    "mean_latency_us": 507.21064,
+    "p50_us": 459.8,
+    "p95_us": 790,
+    "p99_us": 1075.9,
+    "max_us": 28553
+  }
+}

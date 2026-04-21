@@ -1,0 +1,38 @@
+{
+  "scenario_id": "file-create-delete",
+  "av_name": "gdata",
+  "av_product": "G DATA INTERNET SECURITY",
+  "av_version": "22.0.0.0",
+  "timestamp_utc": "2026-04-20T02:20:45.0021287Z",
+  "command": "file-create-delete",
+  "working_dir": "C:\\bench\\microbench\\file-create-delete",
+  "exit_code": 0,
+  "wall_ms": 4166,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 1510400,
+  "system_disk_write_bytes": 27529216,
+  "p50_us": 733.9,
+  "p95_us": 1181.8,
+  "p99_us": 1682.7,
+  "max_us": 18910.6,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 100,
+    "total_operations": 5000,
+    "ops_per_sec": 1200.8523842359689,
+    "mean_latency_us": 828.6843200000001,
+    "p50_us": 733.9,
+    "p95_us": 1181.8,
+    "p99_us": 1682.7,
+    "max_us": 18910.6
+  }
+}

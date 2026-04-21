@@ -1,0 +1,38 @@
+{
+  "scenario_id": "junction-create",
+  "av_name": "emsisoft",
+  "av_product": "Emsisoft Anti-Malware Home",
+  "av_version": "2021.03.0.5617",
+  "timestamp_utc": "2026-04-21T18:36:27.9043611Z",
+  "command": "junction-create",
+  "working_dir": "C:\\bench\\microbench\\junction-create",
+  "exit_code": 0,
+  "wall_ms": 1259,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 32768,
+  "system_disk_write_bytes": 0,
+  "p50_us": 581,
+  "p95_us": 894,
+  "p99_us": 1127.2,
+  "max_us": 10540.1,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 2000,
+    "ops_per_sec": 1588.2479814162282,
+    "mean_latency_us": 628.16515,
+    "p50_us": 581,
+    "p95_us": 894,
+    "p99_us": 1127.2,
+    "max_us": 10540.1
+  }
+}

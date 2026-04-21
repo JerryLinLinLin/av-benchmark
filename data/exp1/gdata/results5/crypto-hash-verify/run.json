@@ -1,0 +1,38 @@
+{
+  "scenario_id": "crypto-hash-verify",
+  "av_name": "gdata",
+  "av_product": "G DATA INTERNET SECURITY",
+  "av_version": "22.0.0.0",
+  "timestamp_utc": "2026-04-20T04:02:16.0060909Z",
+  "command": "crypto-hash-verify",
+  "working_dir": "C:\\bench\\microbench\\crypto-hash-verify",
+  "exit_code": 0,
+  "wall_ms": 245,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 0,
+  "p50_us": 40.5,
+  "p95_us": 42,
+  "p99_us": 57.7,
+  "max_us": 507.1,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 24150.249327174053,
+    "mean_latency_us": 41.381640000000004,
+    "p50_us": 40.5,
+    "p95_us": 42,
+    "p99_us": 57.7,
+    "max_us": 507.1
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "scenario_id": "roslyn-incremental-build",
+  "av_name": "mcafee",
+  "av_product": "McAfee",
+  "av_version": "16.100.0 0",
+  "timestamp_utc": "2026-04-20T21:42:49.1320381Z",
+  "command": "dotnet build \u0022C:\\bench\\roslyn\\Roslyn.slnx\u0022 -c Release /m /nr:false /p:RepositoryUrl=https://github.com/dotnet/roslyn /p:RepositoryCommit=358fc4c237c3ec174e66c5d6e430ba176bf793cf /p:RepositoryBranch=main",
+  "working_dir": "C:\\bench\\roslyn",
+  "exit_code": 0,
+  "wall_ms": 60289,
+  "user_cpu_ms": 744828,
+  "kernel_cpu_ms": 138781,
+  "peak_job_memory_mb": 5182,
+  "system_disk_read_bytes": 146697216,
+  "system_disk_write_bytes": 1247502336,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d"
+}

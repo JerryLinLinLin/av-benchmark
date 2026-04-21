@@ -1,0 +1,38 @@
+{
+  "scenario_id": "ext-sensitivity-js",
+  "av_name": "emsisoft",
+  "av_product": "Emsisoft Anti-Malware Home",
+  "av_version": "2021.03.0.5617",
+  "timestamp_utc": "2026-04-21T19:21:30.6375102Z",
+  "command": "ext-sensitivity-js",
+  "working_dir": "C:\\bench\\microbench\\ext-sensitivity-js",
+  "exit_code": 0,
+  "wall_ms": 7726,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 47616,
+  "system_disk_write_bytes": 58994688,
+  "p50_us": 747.5,
+  "p95_us": 844.8,
+  "p99_us": 1234.8,
+  "max_us": 32904.5,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 1294.291596804042,
+    "mean_latency_us": 771.13108,
+    "p50_us": 747.5,
+    "p95_us": 844.8,
+    "p99_us": 1234.8,
+    "max_us": 32904.5
+  }
+}

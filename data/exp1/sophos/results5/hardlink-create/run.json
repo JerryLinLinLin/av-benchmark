@@ -1,0 +1,38 @@
+{
+  "scenario_id": "hardlink-create",
+  "av_name": "sophos",
+  "av_product": "Sophos Home",
+  "av_version": "4.0.0",
+  "timestamp_utc": "2026-04-20T20:35:41.5837202Z",
+  "command": "hardlink-create",
+  "working_dir": "C:\\bench\\microbench\\hardlink-create",
+  "exit_code": 0,
+  "wall_ms": 3194,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 4964352,
+  "p50_us": 618.9,
+  "p95_us": 766.9,
+  "p99_us": 1217.7,
+  "max_us": 4273.1,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 1567.1882436308217,
+    "mean_latency_us": 636.65184,
+    "p50_us": 618.9,
+    "p95_us": 766.9,
+    "p99_us": 1217.7,
+    "max_us": 4273.1
+  }
+}

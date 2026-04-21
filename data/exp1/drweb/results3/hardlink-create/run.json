@@ -1,0 +1,38 @@
+{
+  "scenario_id": "hardlink-create",
+  "av_name": "drweb",
+  "av_product": "Dr.Web Security Space",
+  "av_version": "1.0.0.04150",
+  "timestamp_utc": "2026-04-20T15:54:57.722383Z",
+  "command": "hardlink-create",
+  "working_dir": "C:\\bench\\microbench\\hardlink-create",
+  "exit_code": 0,
+  "wall_ms": 1978,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 15687680,
+  "p50_us": 382.1,
+  "p95_us": 497.9,
+  "p99_us": 765.5,
+  "max_us": 1122.5,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 2529.417249077635,
+    "mean_latency_us": 393.8073,
+    "p50_us": 382.1,
+    "p95_us": 497.9,
+    "p99_us": 765.5,
+    "max_us": 1122.5
+  }
+}

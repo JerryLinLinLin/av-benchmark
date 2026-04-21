@@ -1,0 +1,38 @@
+{
+  "scenario_id": "net-dns-resolve",
+  "av_name": "emsisoft",
+  "av_product": "Emsisoft Anti-Malware Home",
+  "av_version": "2021.03.0.5617",
+  "timestamp_utc": "2026-04-21T19:24:36.6706175Z",
+  "command": "net-dns-resolve",
+  "working_dir": "C:\\bench\\microbench\\net-dns-resolve",
+  "exit_code": 0,
+  "wall_ms": 1623,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 317952,
+  "system_disk_write_bytes": 0,
+  "p50_us": 314,
+  "p95_us": 345.6,
+  "p99_us": 372.8,
+  "max_us": 39140,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 3080.5494048963856,
+    "mean_latency_us": 324.49566,
+    "p50_us": 314,
+    "p95_us": 345.6,
+    "p99_us": 372.8,
+    "max_us": 39140
+  }
+}

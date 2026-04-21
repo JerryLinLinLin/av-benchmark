@@ -1,0 +1,51 @@
+{
+  "created_utc": "2026-04-15T22:01:31.1557773Z",
+  "bench_directory": "C:\\bench",
+  "runner_version": "0.1.0",
+  "repos": [
+    {
+      "name": "ripgrep",
+      "url": "https://github.com/BurntSushi/ripgrep",
+      "sha": "af60c2de9d85e7f3d81c78601669468cf02dabab",
+      "source_kind": "github-latest-release-archive",
+      "source_reference": "15.1.0",
+      "archive_url": "https://api.github.com/repos/BurntSushi/ripgrep/zipball/af60c2de9d85e7f3d81c78601669468cf02dabab",
+      "local_path": "C:\\bench\\ripgrep"
+    },
+    {
+      "name": "roslyn",
+      "url": "https://github.com/dotnet/roslyn",
+      "sha": "358fc4c237c3ec174e66c5d6e430ba176bf793cf",
+      "source_kind": "github-default-branch-archive",
+      "source_reference": "main",
+      "archive_url": "https://api.github.com/repos/dotnet/roslyn/zipball/358fc4c237c3ec174e66c5d6e430ba176bf793cf",
+      "local_path": "C:\\bench\\roslyn"
+    }
+  ],
+  "workloads": [
+    {
+      "name": "ripgrep",
+      "repo_name": "ripgrep",
+      "working_directory": "C:\\bench\\ripgrep",
+      "incremental_touch_path": "C:\\bench\\ripgrep\\crates\\searcher\\src\\lib.rs"
+    },
+    {
+      "name": "roslyn",
+      "repo_name": "roslyn",
+      "working_directory": "C:\\bench\\roslyn",
+      "incremental_touch_path": "C:\\bench\\roslyn\\src\\Compilers\\Core\\Portable\\DiagnosticAnalyzer\\AnalyzerManager.cs"
+    }
+  ],
+  "microbench_support": {
+    "version": "m3-support-v2",
+    "support_root": "C:\\bench\\microbench-support",
+    "run_root": "C:\\bench\\microbench",
+    "archive_zip_path": "C:\\bench\\microbench-support\\archive\\bench_archive.zip",
+    "unsigned_exe_path": "C:\\bench\\microbench-support\\procbench\\out\\noop.exe"
+  },
+  "tools": {
+    "rustc": "rustc 1.85.0 (4d91de4e4 2025-02-17)",
+    "visual_studio": "18.5.11709.299",
+    "dotnet_sdks": "10.0.105, 8.0.303"
+  }
+}

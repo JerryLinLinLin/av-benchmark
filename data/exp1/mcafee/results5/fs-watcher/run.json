@@ -1,0 +1,38 @@
+{
+  "scenario_id": "fs-watcher",
+  "av_name": "mcafee",
+  "av_product": "McAfee",
+  "av_version": "16.100.0 0",
+  "timestamp_utc": "2026-04-21T01:12:39.4976384Z",
+  "command": "fs-watcher",
+  "working_dir": "C:\\bench\\microbench\\fs-watcher",
+  "exit_code": 0,
+  "wall_ms": 2374,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 121344,
+  "system_disk_write_bytes": 19501056,
+  "p50_us": 446.8,
+  "p95_us": 526.6,
+  "p99_us": 663,
+  "max_us": 25747.5,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 2231.289886816928,
+    "mean_latency_us": 447.0303,
+    "p50_us": 446.8,
+    "p95_us": 526.6,
+    "p99_us": 663,
+    "max_us": 25747.5
+  }
+}

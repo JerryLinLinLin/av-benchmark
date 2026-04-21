@@ -1,0 +1,24 @@
+{
+  "scenario_id": "roslyn-incremental-build",
+  "av_name": "emsisoft",
+  "av_product": "Emsisoft Anti-Malware Home",
+  "av_version": "2021.03.0.5617",
+  "timestamp_utc": "2026-04-21T19:49:45.3950081Z",
+  "command": "dotnet build \u0022C:\\bench\\roslyn\\Roslyn.slnx\u0022 -c Release /m /nr:false /p:RepositoryUrl=https://github.com/dotnet/roslyn /p:RepositoryCommit=358fc4c237c3ec174e66c5d6e430ba176bf793cf /p:RepositoryBranch=main",
+  "working_dir": "C:\\bench\\roslyn",
+  "exit_code": 0,
+  "wall_ms": 74249,
+  "user_cpu_ms": 738703,
+  "kernel_cpu_ms": 160828,
+  "peak_job_memory_mb": 4777,
+  "system_disk_read_bytes": 128830976,
+  "system_disk_write_bytes": 1293922304,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d"
+}

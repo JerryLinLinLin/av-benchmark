@@ -1,0 +1,38 @@
+{
+  "scenario_id": "crypto-hash-verify",
+  "av_name": "mcafee",
+  "av_product": "McAfee",
+  "av_version": "16.100.0 0",
+  "timestamp_utc": "2026-04-20T21:35:23.3407173Z",
+  "command": "crypto-hash-verify",
+  "working_dir": "C:\\bench\\microbench\\crypto-hash-verify",
+  "exit_code": 0,
+  "wall_ms": 238,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 0,
+  "p50_us": 39,
+  "p95_us": 40.5,
+  "p99_us": 54.2,
+  "max_us": 192.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 25196.329801815747,
+    "mean_latency_us": 39.66492,
+    "p50_us": 39,
+    "p95_us": 40.5,
+    "p99_us": 54.2,
+    "max_us": 192.4
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "scenario_id": "ext-sensitivity-exe",
+  "av_name": "drweb",
+  "av_product": "Dr.Web Security Space",
+  "av_version": "1.0.0.04150",
+  "timestamp_utc": "2026-04-20T04:39:35.9583102Z",
+  "command": "ext-sensitivity-exe",
+  "working_dir": "C:\\bench\\microbench\\ext-sensitivity-exe",
+  "exit_code": 0,
+  "wall_ms": 14738,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 154594816,
+  "system_disk_write_bytes": 70934528,
+  "p50_us": 1337.1,
+  "p95_us": 2112,
+  "p99_us": 2471.7,
+  "max_us": 21130.8,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 678.5622151506087,
+    "mean_latency_us": 1471.39003,
+    "p50_us": 1337.1,
+    "p95_us": 2112,
+    "p99_us": 2471.7,
+    "max_us": 21130.8
+  }
+}

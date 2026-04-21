@@ -1,0 +1,38 @@
+{
+  "scenario_id": "thread-create",
+  "av_name": "gdata",
+  "av_product": "G DATA INTERNET SECURITY",
+  "av_version": "22.0.0.0",
+  "timestamp_utc": "2026-04-20T03:08:32.9634662Z",
+  "command": "thread-create",
+  "working_dir": "C:\\bench\\microbench\\thread-create",
+  "exit_code": 0,
+  "wall_ms": 1321,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 32768,
+  "system_disk_write_bytes": 8192,
+  "p50_us": 239.9,
+  "p95_us": 386.8,
+  "p99_us": 747.7,
+  "max_us": 2845.2,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 5000,
+    "ops_per_sec": 3784.477918403931,
+    "mean_latency_us": 264.06066,
+    "p50_us": 239.9,
+    "p95_us": 386.8,
+    "p99_us": 747.7,
+    "max_us": 2845.2
+  }
+}

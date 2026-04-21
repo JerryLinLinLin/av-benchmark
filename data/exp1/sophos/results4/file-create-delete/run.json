@@ -1,0 +1,38 @@
+{
+  "scenario_id": "file-create-delete",
+  "av_name": "sophos",
+  "av_product": "Sophos Home",
+  "av_version": "4.0.0",
+  "timestamp_utc": "2026-04-20T20:09:53.5540035Z",
+  "command": "file-create-delete",
+  "working_dir": "C:\\bench\\microbench\\file-create-delete",
+  "exit_code": 0,
+  "wall_ms": 4319,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 106496,
+  "system_disk_write_bytes": 26488832,
+  "p50_us": 809.9,
+  "p95_us": 1032.9,
+  "p99_us": 1664.9,
+  "max_us": 18749,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 100,
+    "total_operations": 5000,
+    "ops_per_sec": 1158.5619734147565,
+    "mean_latency_us": 859.51894,
+    "p50_us": 809.9,
+    "p95_us": 1032.9,
+    "p99_us": 1664.9,
+    "max_us": 18749
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "scenario_id": "ripgrep-clean-build",
+  "av_name": "mcafee",
+  "av_product": "McAfee",
+  "av_version": "16.100.0 0",
+  "timestamp_utc": "2026-04-20T21:54:25.5950329Z",
+  "command": "cargo build --release",
+  "working_dir": "C:\\bench\\ripgrep",
+  "exit_code": 0,
+  "wall_ms": 29555,
+  "user_cpu_ms": 151734,
+  "kernel_cpu_ms": 6421,
+  "peak_job_memory_mb": 2108,
+  "system_disk_read_bytes": 385398272,
+  "system_disk_write_bytes": 108110336,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d"
+}

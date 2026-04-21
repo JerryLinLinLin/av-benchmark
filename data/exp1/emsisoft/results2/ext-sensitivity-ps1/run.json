@@ -1,0 +1,38 @@
+{
+  "scenario_id": "ext-sensitivity-ps1",
+  "av_name": "emsisoft",
+  "av_product": "Emsisoft Anti-Malware Home",
+  "av_version": "2021.03.0.5617",
+  "timestamp_utc": "2026-04-21T18:21:24.0990509Z",
+  "command": "ext-sensitivity-ps1",
+  "working_dir": "C:\\bench\\microbench\\ext-sensitivity-ps1",
+  "exit_code": 0,
+  "wall_ms": 7730,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 84992,
+  "system_disk_write_bytes": 54484992,
+  "p50_us": 744.9,
+  "p95_us": 841.5,
+  "p99_us": 1218.6,
+  "max_us": 33574.1,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 1293.7098636217636,
+    "mean_latency_us": 771.65748,
+    "p50_us": 744.9,
+    "p95_us": 841.5,
+    "p99_us": 1218.6,
+    "max_us": 33574.1
+  }
+}

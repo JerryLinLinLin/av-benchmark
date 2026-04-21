@@ -1,0 +1,38 @@
+{
+  "scenario_id": "ext-sensitivity-exe",
+  "av_name": "mcafee",
+  "av_product": "McAfee",
+  "av_version": "16.100.0 0",
+  "timestamp_utc": "2026-04-20T21:47:33.3468336Z",
+  "command": "ext-sensitivity-exe",
+  "working_dir": "C:\\bench\\microbench\\ext-sensitivity-exe",
+  "exit_code": 0,
+  "wall_ms": 3280,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 0,
+  "system_disk_write_bytes": 51806208,
+  "p50_us": 318.2,
+  "p95_us": 357.2,
+  "p99_us": 514.7,
+  "max_us": 51302.4,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 10000,
+    "ops_per_sec": 3049.5630540312736,
+    "mean_latency_us": 326.57874,
+    "p50_us": 318.2,
+    "p95_us": 357.2,
+    "p99_us": 514.7,
+    "max_us": 51302.4
+  }
+}

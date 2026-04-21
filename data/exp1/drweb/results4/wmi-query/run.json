@@ -1,0 +1,38 @@
+{
+  "scenario_id": "wmi-query",
+  "av_name": "drweb",
+  "av_product": "Dr.Web Security Space",
+  "av_version": "1.0.0.04150",
+  "timestamp_utc": "2026-04-20T17:07:20.9499724Z",
+  "command": "wmi-query",
+  "working_dir": "C:\\bench\\microbench\\wmi-query",
+  "exit_code": 0,
+  "wall_ms": 16116,
+  "user_cpu_ms": 0,
+  "kernel_cpu_ms": 0,
+  "peak_job_memory_mb": 0,
+  "system_disk_read_bytes": 4346880,
+  "system_disk_write_bytes": 360448,
+  "p50_us": 31811.7,
+  "p95_us": 33967.6,
+  "p99_us": 35440.3,
+  "max_us": 102493.3,
+  "machine": {
+    "os": "Microsoft Windows NT 10.0.22621.0",
+    "cpu": "24 vCPU",
+    "ram_gb": 15,
+    "storage": "unknown"
+  },
+  "runner_version": "0.1.0",
+  "suite_manifest_sha": "d0eb810ebaca84b5491b4c304599ce2b51b2a6d5c8f48ca9e73bbc039e51836d",
+  "microbench": {
+    "batch_size": 1,
+    "total_operations": 500,
+    "ops_per_sec": 31.024837628720036,
+    "mean_latency_us": 32107.7932,
+    "p50_us": 31811.7,
+    "p95_us": 33967.6,
+    "p99_us": 35440.3,
+    "max_us": 102493.3
+  }
+}
