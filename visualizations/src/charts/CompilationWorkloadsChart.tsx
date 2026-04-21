@@ -22,6 +22,7 @@ type BarPoint = {
 
 const cleanColor = '#0f9f8f'
 const incrementalColor = '#d18a00'
+const overflowRatio = 0.04
 
 const chartConfig = {
   ripgrep: {
@@ -97,9 +98,11 @@ function WorkloadChart({
 function buildWorkloadOption(rows: CompilationWorkloadRow[], workload: WorkloadKey): EChartsOption {
   const config = chartConfig[workload]
   const avNames = rows.map((row) => row.avName)
-  const cleanPoints = rows.map((row) => toBarPoint(row[workload].clean, config.axisMax))
-  const incrementalPoints = rows.map((row) => toBarPoint(row[workload].incremental, config.axisMax))
-
+  const chartMax = config.axisMax * (1 + overflowRatio)
+  const cleanPoints = rows.map((row) => toBarPoint(row[workload].clean, config.axisMax, chartMax))
+  const incrementalPoints = rows.map((row) =>
+    toBarPoint(row[workload].incremental, config.axisMax, chartMax),
+  )
   return {
     animation: false,
     backgroundColor: '#ffffff',
@@ -121,6 +124,7 @@ function buildWorkloadOption(rows: CompilationWorkloadRow[], workload: WorkloadK
       textStyle: {
         color: '#303841',
       },
+      data: ['Clean build', 'Incremental build'],
     },
     grid: {
       left: 76,
@@ -149,17 +153,31 @@ function buildWorkloadOption(rows: CompilationWorkloadRow[], workload: WorkloadK
     yAxis: {
       type: 'value',
       min: 0,
-      max: config.axisMax,
+      max: chartMax,
       splitNumber: workload === 'ripgrep' ? 7 : 5,
       name: 'Impact (%)',
       nameLocation: 'middle',
       nameGap: 48,
       axisLabel: {
         color: '#46515d',
-        formatter: '{value}%',
+        formatter: (value: number) => (value <= config.axisMax ? `${value}%` : ''),
       },
       splitLine: {
-        lineStyle: { color: '#e8edf2' },
+        show: true,
+        showMaxLine: false,
+        lineStyle: {
+          color:
+            workload === 'ripgrep'
+              ? [
+                  '#e8edf2',
+                  '#e8edf2',
+                  '#e8edf2',
+                  '#e8edf2',
+                  '#e8edf2',
+                  'rgba(232, 237, 242, 0)',
+                ]
+              : '#e8edf2',
+        },
       },
       axisLine: { show: false },
     },
@@ -200,17 +218,10 @@ function buildSeries(name: string, points: BarPoint[], color: string) {
     emphasis: {
       focus: 'series' as const,
     },
-    markLine: {
-      silent: true,
-      symbol: 'none',
-      lineStyle: { color: '#9aa4af', type: 'dashed' as const, width: 1 },
-      label: { show: false },
-      data: [{ yAxis: 0 }],
-    },
   }
 }
 
-function toBarPoint(metric: BuildMetric | null, cap: number): BarPoint {
+function toBarPoint(metric: BuildMetric | null, cap: number, overflowValue: number): BarPoint {
   if (!metric) {
     return { value: null }
   }
@@ -218,7 +229,7 @@ function toBarPoint(metric: BuildMetric | null, cap: number): BarPoint {
   const capped = metric.value > cap
   const displayValue = Math.max(0, metric.value)
   return {
-    value: capped ? cap : displayValue,
+    value: capped ? overflowValue : displayValue,
     actualValue: metric.value,
     capped,
     status: metric.status,
