@@ -20,9 +20,33 @@ type BarPoint = {
   status?: string
 }
 
+type ManualAxisBreak = {
+  max: number
+  ticks: number[]
+  tickLabels: Map<number, number>
+}
+
 const cleanColor = '#0f9f8f'
 const incrementalColor = '#d18a00'
 const overflowRatio = 0.04
+
+const ripgrepBrokenAxis: ManualAxisBreak = {
+  max: 126,
+  ticks: [0, 10, 20, 30, 40, 50, 60, 68, 92, 102, 126],
+  tickLabels: new Map([
+    [0, 0],
+    [10, 10],
+    [20, 20],
+    [30, 30],
+    [40, 40],
+    [50, 50],
+    [60, 60],
+    [68, 200],
+    [92, 300],
+    [102, 700],
+    [126, 800],
+  ]),
+}
 
 const chartConfig = {
   ripgrep: {
@@ -53,8 +77,8 @@ export function CompilationWorkloadsChart({ data, onReady }: Props) {
         <div>
           <h1>Compilation Workload First-Run Impact</h1>
           <p>
-            Impact vs baseline OS. Noisy/anomaly runs are included; capped bars
-            show their actual value as a label.
+            Impact vs baseline OS. Negative values are shown as 0%; ripgrep uses
+            a broken y-axis for high outliers.
           </p>
         </div>
         <div className="legend" aria-hidden="true">
@@ -98,10 +122,13 @@ function WorkloadChart({
 function buildWorkloadOption(rows: CompilationWorkloadRow[], workload: WorkloadKey): EChartsOption {
   const config = chartConfig[workload]
   const avNames = rows.map((row) => row.avName)
-  const chartMax = config.axisMax * (1 + overflowRatio)
-  const cleanPoints = rows.map((row) => toBarPoint(row[workload].clean, config.axisMax, chartMax))
+  const brokenAxis = workload === 'ripgrep' ? ripgrepBrokenAxis : undefined
+  const chartMax = brokenAxis?.max ?? config.axisMax * (1 + overflowRatio)
+  const cleanPoints = rows.map((row) =>
+    toBarPoint(row[workload].clean, brokenAxis, config.axisMax, chartMax),
+  )
   const incrementalPoints = rows.map((row) =>
-    toBarPoint(row[workload].incremental, config.axisMax, chartMax),
+    toBarPoint(row[workload].incremental, brokenAxis, config.axisMax, chartMax),
   )
   return {
     animation: false,
@@ -160,7 +187,11 @@ function buildWorkloadOption(rows: CompilationWorkloadRow[], workload: WorkloadK
       nameGap: 48,
       axisLabel: {
         color: '#46515d',
-        formatter: (value: number) => (value <= config.axisMax ? `${value}%` : ''),
+        customValues: brokenAxis?.ticks,
+        formatter: (value: number) => formatAxisLabel(value, brokenAxis, config.axisMax),
+      },
+      axisTick: {
+        customValues: brokenAxis?.ticks,
       },
       splitLine: {
         show: true,
@@ -221,19 +252,45 @@ function buildSeries(name: string, points: BarPoint[], color: string) {
   }
 }
 
-function toBarPoint(metric: BuildMetric | null, cap: number, overflowValue: number): BarPoint {
+function toBarPoint(
+  metric: BuildMetric | null,
+  brokenAxis: ManualAxisBreak | undefined,
+  cap: number,
+  overflowValue: number,
+): BarPoint {
   if (!metric) {
     return { value: null }
   }
 
-  const capped = metric.value > cap
   const displayValue = Math.max(0, metric.value)
+  const capped = !brokenAxis && metric.value > cap
   return {
-    value: capped ? overflowValue : displayValue,
+    value: brokenAxis ? transformRipgrepValue(displayValue) : capped ? overflowValue : displayValue,
     actualValue: metric.value,
     capped,
     status: metric.status,
   }
+}
+
+function transformRipgrepValue(value: number) {
+  if (value <= 60) {
+    return value
+  }
+
+  if (value <= 300) {
+    return 68 + ((Math.max(value, 200) - 200) / 100) * 24
+  }
+
+  return 102 + ((Math.min(value, 800) - 700) / 100) * 24
+}
+
+function formatAxisLabel(value: number, brokenAxis: ManualAxisBreak | undefined, cap: number) {
+  if (!brokenAxis) {
+    return value <= cap ? `${value}%` : ''
+  }
+
+  const label = brokenAxis.tickLabels.get(value)
+  return label === undefined ? '' : `${label}%`
 }
 
 function formatNumber(value: number) {
