@@ -1,0 +1,74 @@
+import { mkdir } from 'node:fs/promises'
+import path from 'node:path'
+import { spawn, spawnSync } from 'node:child_process'
+import { chromium } from 'playwright'
+
+const experiment = getArgumentValue('--exp') ?? 'exp1'
+const root = path.resolve(import.meta.dirname, '..')
+const outputDir = path.join(root, 'exports', experiment)
+const outputs = [
+  {
+    workload: 'ripgrep',
+    path: path.join(outputDir, 'ripgrep-first-run-impact.png'),
+  },
+  {
+    workload: 'roslyn',
+    path: path.join(outputDir, 'roslyn-first-run-impact.png'),
+  },
+]
+const port = 5178
+const url = `http://127.0.0.1:${port}/?exp=${encodeURIComponent(experiment)}`
+
+await mkdir(outputDir, { recursive: true })
+
+const serverCommand = process.platform === 'win32' ? 'cmd.exe' : 'pnpm'
+const serverArgs =
+  process.platform === 'win32'
+    ? ['/d', '/s', '/c', 'pnpm', 'exec', 'vite', '--host', '127.0.0.1', '--port', String(port)]
+    : ['exec', 'vite', '--host', '127.0.0.1', '--port', String(port)]
+const server = spawn(serverCommand, serverArgs, {
+  cwd: root,
+  stdio: 'pipe',
+})
+
+try {
+  await waitForServer(url)
+
+  const browser = await chromium.launch()
+  const page = await browser.newPage({ viewport: { width: 1700, height: 1200 }, deviceScaleFactor: 1 })
+  await page.goto(url)
+  await page.locator('[data-chart-ready="true"]').waitFor({ timeout: 15_000 })
+  for (const output of outputs) {
+    await page
+      .locator(`[data-workload="${output.workload}"]`)
+      .screenshot({ path: output.path })
+    console.log(`Wrote ${path.relative(process.cwd(), output.path)}`)
+  }
+  await browser.close()
+} finally {
+  if (server.pid && process.platform === 'win32') {
+    spawnSync('taskkill', ['/pid', String(server.pid), '/T', '/F'])
+  } else {
+    server.kill()
+  }
+}
+
+async function waitForServer(targetUrl: string) {
+  const deadline = Date.now() + 20_000
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(targetUrl)
+      if (response.ok) {
+        return
+      }
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 250))
+    }
+  }
+  throw new Error(`Timed out waiting for ${targetUrl}`)
+}
+
+function getArgumentValue(name: string) {
+  const index = process.argv.indexOf(name)
+  return index >= 0 ? process.argv[index + 1] : undefined
+}
