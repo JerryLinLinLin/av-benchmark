@@ -15,49 +15,94 @@ type Props = {
 type WorkloadKey = 'ripgrep' | 'roslyn'
 type BarPoint = {
   value: number | null
-  actualValue?: number
-  capped?: boolean
   status?: string
+}
+
+type SortedWorkloadRow = {
+  avName: string
+  clean: number
+  incremental: number
+  total: number
 }
 
 type ManualAxisBreak = {
   max: number
   ticks: number[]
   tickLabels: Map<number, number>
+  transform: (value: number) => number
 }
 
 const cleanColor = '#0f9f8f'
 const incrementalColor = '#d18a00'
-const overflowRatio = 0.04
 
 const ripgrepBrokenAxis: ManualAxisBreak = {
-  max: 126,
-  ticks: [0, 10, 20, 30, 40, 50, 60, 68, 92, 102, 126],
+  max: 138,
+  ticks: [
+    0,
+    15.3,
+    30.7,
+    46,
+    61.3,
+    76.7,
+    92,
+    104,
+    116,
+    124,
+    136,
+  ],
   tickLabels: new Map([
     [0, 0],
-    [10, 10],
-    [20, 20],
-    [30, 30],
-    [40, 40],
-    [50, 50],
-    [60, 60],
-    [68, 200],
-    [92, 300],
-    [102, 700],
-    [126, 800],
+    [15.3, 10],
+    [30.7, 20],
+    [46, 30],
+    [61.3, 40],
+    [76.7, 50],
+    [92, 60],
+    [104, 200],
+    [116, 300],
+    [124, 700],
+    [136, 800],
   ]),
+  transform: transformRipgrepValue,
+}
+
+const roslynBrokenAxis: ManualAxisBreak = {
+  max: 130,
+  ticks: [0, 11.5, 23, 34.5, 46, 57.5, 69, 80.5, 92, 104, 114, 124],
+  tickLabels: new Map([
+    [0, 0],
+    [11.5, 10],
+    [23, 20],
+    [34.5, 30],
+    [46, 40],
+    [57.5, 50],
+    [69, 60],
+    [80.5, 70],
+    [92, 80],
+    [104, 200],
+    [114, 250],
+    [124, 300],
+  ]),
+  transform: transformRoslynValue,
 }
 
 const chartConfig = {
   ripgrep: {
-    title: 'Ripgrep',
+    title: 'Ripgrep Build: Cloud-Cold Impact',
+    subtitle: 'Clean + incremental build impact, sorted from lowest to highest',
+    footnote: 'Cloud-cold means first cloud/reputation exposure; VM reset removes local cache between runs. Broken y-axis emphasizes 0-60%. Negative values are shown as 0%.',
     axisMax: 60,
   },
   roslyn: {
-    title: 'Roslyn',
-    axisMax: 190,
+    title: 'Roslyn Build: Cloud-Cold Impact',
+    subtitle: 'Clean + incremental build impact, sorted from lowest to highest',
+    footnote: 'Cloud-cold means first cloud/reputation exposure; VM reset removes local cache between runs. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
+    axisMax: 80,
   },
-} satisfies Record<WorkloadKey, { title: string; axisMax: number }>
+} satisfies Record<
+  WorkloadKey,
+  { title: string; subtitle: string; footnote: string; axisMax: number }
+>
 
 export function CompilationWorkloadsChart({ data, onReady }: Props) {
   const [readyCount, setReadyCount] = useState(0)
@@ -75,10 +120,10 @@ export function CompilationWorkloadsChart({ data, onReady }: Props) {
     <div className="figure">
       <header className="figure-header">
         <div>
-          <h1>Compilation Workload First-Run Impact</h1>
+          <h1>Compilation Workload Cloud-Cold Impact</h1>
           <p>
-            Impact vs baseline OS. Negative values are shown as 0%; ripgrep uses
-            a broken y-axis for high outliers.
+            Impact vs baseline OS before cloud reputation/cache has warmed for
+            the workload. Negative values are shown as 0%.
           </p>
         </div>
         <div className="legend" aria-hidden="true">
@@ -121,45 +166,60 @@ function WorkloadChart({
 
 function buildWorkloadOption(rows: CompilationWorkloadRow[], workload: WorkloadKey): EChartsOption {
   const config = chartConfig[workload]
-  const avNames = rows.map((row) => row.avName)
-  const brokenAxis = workload === 'ripgrep' ? ripgrepBrokenAxis : undefined
-  const chartMax = brokenAxis?.max ?? config.axisMax * (1 + overflowRatio)
-  const cleanPoints = rows.map((row) =>
-    toBarPoint(row[workload].clean, brokenAxis, config.axisMax, chartMax),
-  )
-  const incrementalPoints = rows.map((row) =>
-    toBarPoint(row[workload].incremental, brokenAxis, config.axisMax, chartMax),
-  )
+  const sortedRows = getSortedWorkloadRows(rows, workload)
+  const avNames = sortedRows.map((row) => row.avName)
+  const brokenAxis = workload === 'ripgrep' ? ripgrepBrokenAxis : roslynBrokenAxis
+  const chartMax = brokenAxis?.max ?? config.axisMax
+  const { cleanPoints, incrementalPoints } = getStackedPoints(sortedRows, brokenAxis)
   return {
     animation: false,
     backgroundColor: '#ffffff',
     title: {
       text: config.title,
-      left: 64,
-      top: 4,
+      subtext: config.subtitle,
+      left: 72,
+      top: 0,
       textStyle: {
-        color: '#25313d',
-        fontSize: 17,
-        fontWeight: 650,
+        color: '#17202a',
+        fontSize: 20,
+        fontWeight: 700,
+      },
+      subtextStyle: {
+        color: '#596573',
+        fontSize: 13,
       },
     },
     legend: {
-      top: 8,
-      right: 26,
+      top: 12,
+      right: 28,
       itemWidth: 14,
       itemHeight: 10,
+      itemGap: 16,
       textStyle: {
-        color: '#303841',
+        color: '#35404b',
+        fontSize: 13,
       },
       data: ['Clean build', 'Incremental build'],
     },
     grid: {
-      left: 76,
+      left: 102,
       right: 34,
-      top: 64,
-      bottom: 112,
+      top: 76,
+      bottom: 122,
       containLabel: false,
     },
+    graphic: [
+      {
+        type: 'text',
+        left: 76,
+        bottom: 8,
+        style: {
+          text: config.footnote,
+          fill: '#677380',
+          font: '11px system-ui, Segoe UI, Roboto, sans-serif',
+        },
+      },
+    ],
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
@@ -170,6 +230,14 @@ function buildWorkloadOption(rows: CompilationWorkloadRow[], workload: WorkloadK
       data: avNames,
       axisTick: { alignWithLabel: true },
       axisLine: { lineStyle: { color: '#c8d0d8' } },
+      name: 'Antivirus product',
+      nameLocation: 'middle',
+      nameGap: 72,
+      nameTextStyle: {
+        color: '#596573',
+        fontSize: 12,
+        fontWeight: 600,
+      },
       axisLabel: {
         color: '#3b4652',
         interval: 0,
@@ -182,11 +250,17 @@ function buildWorkloadOption(rows: CompilationWorkloadRow[], workload: WorkloadK
       min: 0,
       max: chartMax,
       splitNumber: workload === 'ripgrep' ? 7 : 5,
-      name: 'Impact (%)',
+      name: 'Cloud-cold impact (%)',
       nameLocation: 'middle',
-      nameGap: 48,
+      nameGap: 62,
+      nameTextStyle: {
+        color: '#596573',
+        fontSize: 12,
+        fontWeight: 600,
+      },
       axisLabel: {
         color: '#46515d',
+        fontSize: 12,
         customValues: brokenAxis?.ticks,
         formatter: (value: number) => formatAxisLabel(value, brokenAxis, config.axisMax),
       },
@@ -196,19 +270,7 @@ function buildWorkloadOption(rows: CompilationWorkloadRow[], workload: WorkloadK
       splitLine: {
         show: true,
         showMaxLine: false,
-        lineStyle: {
-          color:
-            workload === 'ripgrep'
-              ? [
-                  '#e8edf2',
-                  '#e8edf2',
-                  '#e8edf2',
-                  '#e8edf2',
-                  '#e8edf2',
-                  'rgba(232, 237, 242, 0)',
-                ]
-              : '#e8edf2',
-        },
+        lineStyle: { color: '#e8edf2' },
       },
       axisLine: { show: false },
     },
@@ -223,65 +285,69 @@ function buildSeries(name: string, points: BarPoint[], color: string) {
   return {
     name,
     type: 'bar' as const,
+    stack: 'total-impact',
     barMaxWidth: 24,
-    barGap: '22%',
     data: points.map((point) => point.value),
     itemStyle: { color },
-    label: {
-      show: true,
-      position: 'top' as const,
-      color: '#394450',
-      fontSize: 11,
-      formatter: (params: unknown) => {
-        const dataIndex = (params as { dataIndex?: number }).dataIndex ?? -1
-        const point = points[dataIndex]
-        return point?.capped && point.actualValue !== undefined
-          ? `{capped|${formatNumber(point.actualValue)}%}`
-          : ''
-      },
-      rich: {
-        capped: {
-          color: '#c73535',
-          fontWeight: 700,
-        },
-      },
-    },
     emphasis: {
       focus: 'series' as const,
     },
   }
 }
 
-function toBarPoint(
-  metric: BuildMetric | null,
-  brokenAxis: ManualAxisBreak | undefined,
-  cap: number,
-  overflowValue: number,
-): BarPoint {
-  if (!metric) {
-    return { value: null }
+function getSortedWorkloadRows(rows: CompilationWorkloadRow[], workload: WorkloadKey) {
+  return rows
+    .map((row): SortedWorkloadRow => {
+      const clean = metricValue(row[workload].clean)
+      const incremental = metricValue(row[workload].incremental)
+      return {
+        avName: row.avName,
+        clean,
+        incremental,
+        total: clean + incremental,
+      }
+    })
+    .sort((left, right) => left.total - right.total)
+}
+
+function getStackedPoints(rows: SortedWorkloadRow[], brokenAxis: ManualAxisBreak | undefined) {
+  if (!brokenAxis) {
+    return {
+      cleanPoints: rows.map((row) => ({ value: row.clean })),
+      incrementalPoints: rows.map((row) => ({ value: row.incremental })),
+    }
   }
 
-  const displayValue = Math.max(0, metric.value)
-  const capped = !brokenAxis && metric.value > cap
   return {
-    value: brokenAxis ? transformRipgrepValue(displayValue) : capped ? overflowValue : displayValue,
-    actualValue: metric.value,
-    capped,
-    status: metric.status,
+    cleanPoints: rows.map((row) => ({ value: brokenAxis.transform(row.clean) })),
+    incrementalPoints: rows.map((row) => ({
+      value: brokenAxis.transform(row.total) - brokenAxis.transform(row.clean),
+    })),
   }
+}
+
+function metricValue(metric: BuildMetric | null) {
+  return metric ? Math.max(0, metric.value) : 0
 }
 
 function transformRipgrepValue(value: number) {
   if (value <= 60) {
-    return value
+    return (value / 60) * 92
   }
 
   if (value <= 300) {
-    return 68 + ((Math.max(value, 200) - 200) / 100) * 24
+    return 104 + ((Math.max(value, 200) - 200) / 100) * 12
   }
 
-  return 102 + ((Math.min(value, 800) - 700) / 100) * 24
+  return 124 + ((Math.min(value, 800) - 700) / 100) * 12
+}
+
+function transformRoslynValue(value: number) {
+  if (value <= 80) {
+    return (value / 80) * 92
+  }
+
+  return 104 + ((Math.min(Math.max(value, 200), 320) - 200) / 120) * 24
 }
 
 function formatAxisLabel(value: number, brokenAxis: ManualAxisBreak | undefined, cap: number) {
@@ -291,8 +357,4 @@ function formatAxisLabel(value: number, brokenAxis: ManualAxisBreak | undefined,
 
   const label = brokenAxis.tickLabels.get(value)
   return label === undefined ? '' : `${label}%`
-}
-
-function formatNumber(value: number) {
-  return Number.isFinite(value) ? value.toFixed(1) : '-'
 }
