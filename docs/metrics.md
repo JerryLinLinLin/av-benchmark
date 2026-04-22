@@ -172,7 +172,7 @@ Because these are system-wide, they include background OS activity (indexer, upd
 
 `avbench-compare` groups results by `av_name` and `scenario_id` and computes one comparison row per group.
 
-Important implementation detail: first-run values are computed from the earliest successful run, ordered by `timestamp_utc`. Steady-state aggregates such as `mean_wall_ms`, `median_wall_ms`, `cv_pct`, disk averages, CPU averages, and latency medians are computed from the remaining successful runs after that first successful run is removed. `sessions` still counts all runs seen for that scenario group, while `steady_state_samples` tells you how many runs contributed to the steady-state aggregate.
+Important implementation detail: first-run values are computed from the earliest successful run, ordered by `timestamp_utc`. Steady-state aggregates such as `mean_wall_ms`, `median_wall_ms`, `cv_pct`, disk averages, CPU averages, and latency medians are computed from the remaining successful runs after that first successful run is removed. `all_runs_mean_wall_ms` is different: it averages every successful run, including the first successful run, so cold/cloud-cache effects remain visible. `sessions` still counts all runs seen for that scenario group, while `steady_state_samples` tells you how many runs contributed to the steady-state aggregate.
 
 The main derived columns in `compare.csv` are:
 
@@ -182,6 +182,8 @@ The main derived columns in `compare.csv` are:
 | `baseline_sessions` | Number of discovered baseline runs for the same scenario |
 | `steady_state_samples` | Number of successful AV runs remaining after excluding the first successful run |
 | `baseline_steady_state_samples` | Number of successful baseline runs remaining after excluding the first successful baseline run |
+| `all_runs_mean_wall_ms` | Mean wall time across all successful AV runs, including the first successful run |
+| `baseline_all_runs_mean_wall_ms` | Mean wall time across all successful baseline runs, including the first successful baseline run |
 | `mean_wall_ms` | Mean wall time across steady-state samples |
 | `median_wall_ms` | Median wall time across steady-state samples |
 | `first_run_wall_ms` | Earliest successful wall time for that AV/scenario pair, ordered by `timestamp_utc` |
@@ -200,7 +202,7 @@ The main derived columns in `compare.csv` are:
 `summary.md` shows a narrower table focused on the columns that are meaningful for every scenario:
 
 ```
-| Scenario | Median Wall (ms) | First-Run Wall (ms) | Slowdown | First-Run Slowdown | p95 Slowdown | Disk Read Δ (MB) | Disk Write Δ (MB) | CV % | Baseline CV % | Status |
+| Scenario | Median Wall (ms) | First-Run Wall (ms) | All-Runs Mean Wall (ms) | Slowdown | First-Run Slowdown | p95 Slowdown | Disk Read Delta (MB) | Disk Write Delta (MB) | CV % | Baseline CV % | Status |
 ```
 
 Kernel CPU shift and peak memory are omitted from the summary table because they are zero for all 27 microbenchmarks (which run in-process without Job Object accounting). When a compilation scenario has a significant kernel CPU shift, it appears as a footnote callout below the table. The full data remains in `compare.csv` for detailed analysis.

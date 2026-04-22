@@ -76,6 +76,7 @@ public static class CompareEngine
                 var p95Samples = steadyStateRuns.Where(static run => run.P95Us.HasValue).Select(static run => run.P95Us!.Value).ToArray();
                 var p99Samples = steadyStateRuns.Where(static run => run.P99Us.HasValue).Select(static run => run.P99Us!.Value).ToArray();
 
+                var allRunsMeanWall = AverageOrZero(successfulRuns.Select(static run => (double)run.WallMs).ToArray());
                 var meanWall = AverageOrZero(wallSamples);
                 var medianWall = TryMedian(wallSamples) ?? 0.0;
                 var meanCpu = AverageOrZero(cpuSamples);
@@ -91,6 +92,7 @@ public static class CompareEngine
                 var medianP99Us = TryMedian(p99Samples);
 
                 var baselineMeanWall = AverageOrZero(baselineSteadyStateRuns.Select(static run => (double)run.WallMs).ToArray());
+                var baselineAllRunsMeanWall = AverageOrZero(baselineSuccessfulRuns.Select(static run => (double)run.WallMs).ToArray());
                 var baselineMedianWall = baselineSteadyStateRuns.Count > 0
                     ? Median(baselineSteadyStateRuns.Select(static run => (double)run.WallMs).ToArray())
                     : 0.0;
@@ -150,6 +152,8 @@ public static class CompareEngine
                     BaselineSessions = allBaselineScenarioRuns?.Count ?? 0,
                     SteadyStateSamples = steadyStateRuns.Count,
                     BaselineSteadyStateSamples = baselineSteadyStateRuns.Count,
+                    AllRunsMeanWallMs = Math.Round(allRunsMeanWall, 1),
+                    BaselineAllRunsMeanWallMs = Math.Round(baselineAllRunsMeanWall, 1),
                     MeanWallMs = Math.Round(meanWall, 1),
                     MedianWallMs = Math.Round(medianWall, 1),
                     BaselineMedianWallMs = Math.Round(baselineMedianWall, 1),
@@ -264,6 +268,10 @@ public sealed class ComparisonRow
     public int BaselineSteadyStateSamples { get; init; }
 
     public double MeanWallMs { get; init; }
+
+    public double AllRunsMeanWallMs { get; init; }
+
+    public double BaselineAllRunsMeanWallMs { get; init; }
 
     public double MedianWallMs { get; init; }
 

@@ -59,8 +59,8 @@ public static class SummaryRenderer
             var first = group.First();
             builder.AppendLine($"## {group.Key} ({first.AvProduct} v{first.AvVersion}) vs {first.BaselineName}");
             builder.AppendLine();
-            builder.AppendLine("| Scenario | Median Wall (ms) | First-Run Wall (ms) | Slowdown | First-Run Slowdown | p95 Slowdown | Disk Read Delta (MB) | Disk Write Delta (MB) | CV % | Baseline CV % | Status |");
-            builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|");
+            builder.AppendLine("| Scenario | Median Wall (ms) | First-Run Wall (ms) | All-Runs Mean Wall (ms) | Slowdown | First-Run Slowdown | p95 Slowdown | Disk Read Delta (MB) | Disk Write Delta (MB) | CV % | Baseline CV % | Status |");
+            builder.AppendLine("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|");
 
             foreach (var row in OrderRows(group))
             {
@@ -69,10 +69,11 @@ public static class SummaryRenderer
 
                 builder.AppendLine(string.Format(
                     CultureInfo.InvariantCulture,
-                    "| {0} | {1:F1} | {2} | {3} | {4} | {5} | {6} | {7} | {8:F1}% | {9:F1}% | {10} |",
+                    "| {0} | {1:F1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} | {9:F1}% | {10:F1}% | {11} |",
                     row.ScenarioId,
                     row.MedianWallMs,
                     FormatWall(row.FirstRunWallMs),
+                    FormatWall(row.AllRunsMeanWallMs),
                     FormatPercent(row.SlowdownPct),
                     FormatPercent(row.FirstRunSlowdownPct),
                     FormatNullablePercent(row.P95SlowdownPct),
