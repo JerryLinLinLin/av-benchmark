@@ -1,37 +1,68 @@
 {
   "experiment": "exp1",
   "source": "data/exp1/compare.csv",
-  "metric": "first_run_slowdown_pct",
-  "generatedAt": "2026-04-21T21:21:00.423Z",
+  "metrics": [
+    "cloudCold",
+    "average"
+  ],
+  "generatedAt": "2026-04-22T18:22:41.823Z",
   "rows": [
     {
       "avName": "360ts",
       "avProduct": "360 Total Security",
       "ripgrep": {
         "clean": {
-          "value": 21.7,
-          "wallMs": 18244,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 21.7,
+            "wallMs": 18244,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 21.82732987227909,
+            "wallMs": 18256.8,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 8.6,
-          "wallMs": 6394,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 8.6,
+            "wallMs": 6394,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 8.141181229773462,
+            "wallMs": 6415.8,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": -0.3,
-          "wallMs": 205471,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": -0.3,
+            "wallMs": 205471,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 2.588593074544066,
+            "wallMs": 214816,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": -1.1,
-          "wallMs": 58586,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": -1.1,
+            "wallMs": 58586,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 0.7226364113152206,
+            "wallMs": 60687,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -41,29 +72,57 @@
       "avProduct": "Avast Antivirus",
       "ripgrep": {
         "clean": {
-          "value": 25.7,
-          "wallMs": 18843,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 25.7,
+            "wallMs": 18843,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 26.78001841743518,
+            "wallMs": 18999,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 4,
-          "wallMs": 6124,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 4,
+            "wallMs": 6124,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 1.9417475728155307,
+            "wallMs": 6048,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 5.1,
-          "wallMs": 216716,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 5.1,
+            "wallMs": 216716,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 2.404157489460133,
+            "wallMs": 214429.8,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 13.4,
-          "wallMs": 67194,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 13.4,
+            "wallMs": 67194,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 10.361882506024745,
+            "wallMs": 66494.8,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -73,29 +132,57 @@
       "avProduct": "Avira Security",
       "ripgrep": {
         "clean": {
-          "value": 756.7,
-          "wallMs": 128448,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 756.7,
+            "wallMs": 128448,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 861.3313937193877,
+            "wallMs": 144063.2,
+            "baselineWallMs": 14985.8
+          },
           "status": "noisy"
         },
         "incremental": {
-          "value": 2.7,
-          "wallMs": 6045,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 2.7,
+            "wallMs": 6045,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 2.5923678532901864,
+            "wallMs": 6086.6,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 132.7,
-          "wallMs": 479777,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 132.7,
+            "wallMs": 479777,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 33.415983907971324,
+            "wallMs": 279367.2,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 175,
-          "wallMs": 162989,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 175,
+            "wallMs": 162989,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 37.13096415696846,
+            "wallMs": 82623.6,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -105,29 +192,57 @@
       "avProduct": "Bitdefender Antivirus",
       "ripgrep": {
         "clean": {
-          "value": 17.7,
-          "wallMs": 17639,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 17.7,
+            "wallMs": 17639,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 17.451187123810545,
+            "wallMs": 17601,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 11.1,
-          "wallMs": 6537,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 11.1,
+            "wallMs": 6537,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 9.597491909385107,
+            "wallMs": 6502.2,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 13.3,
-          "wallMs": 233499,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 13.3,
+            "wallMs": 233499,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 17.41870411794708,
+            "wallMs": 245869.6,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 11.2,
-          "wallMs": 65869,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 11.2,
+            "wallMs": 65869,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 7.024211805163688,
+            "wallMs": 64483.8,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -137,29 +252,57 @@
       "avProduct": "Dr.Web Security Space",
       "ripgrep": {
         "clean": {
-          "value": 21.8,
-          "wallMs": 18260,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 21.8,
+            "wallMs": 18260,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 16.02984158336559,
+            "wallMs": 17388,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 3.5,
-          "wallMs": 6092,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 3.5,
+            "wallMs": 6092,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 3.448624595469246,
+            "wallMs": 6137.4,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 59.7,
-          "wallMs": 329191,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 59.7,
+            "wallMs": 329191,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 43.54953017159865,
+            "wallMs": 300586.4,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 16.5,
-          "wallMs": 69060,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 16.5,
+            "wallMs": 69060,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 19.54504112753853,
+            "wallMs": 72027.8,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -169,29 +312,57 @@
       "avProduct": "Emsisoft Anti-Malware Home",
       "ripgrep": {
         "clean": {
-          "value": 14.2,
-          "wallMs": 17117,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 14.2,
+            "wallMs": 17117,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 14.545769995595826,
+            "wallMs": 17165.6,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 6.3,
-          "wallMs": 6259,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 6.3,
+            "wallMs": 6259,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 4.86785329018339,
+            "wallMs": 6221.6,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 16.1,
-          "wallMs": 239425,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 16.1,
+            "wallMs": 239425,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 12.909440312976962,
+            "wallMs": 236427.4,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 24.1,
-          "wallMs": 73520,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 24.1,
+            "wallMs": 73520,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 22.60089358622842,
+            "wallMs": 73869,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -201,29 +372,57 @@
       "avProduct": "ESET Security",
       "ripgrep": {
         "clean": {
-          "value": 17.1,
-          "wallMs": 17563,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 17.1,
+            "wallMs": 17563,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 17.32039664215459,
+            "wallMs": 17581.4,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 0.9,
-          "wallMs": 5941,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 0.9,
+            "wallMs": 5941,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 0.12473031283710281,
+            "wallMs": 5940.2,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 27.6,
-          "wallMs": 263064,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 27.6,
+            "wallMs": 263064,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 22.19626391385492,
+            "wallMs": 255873.6,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 2.9,
-          "wallMs": 60978,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 2.9,
+            "wallMs": 60978,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 5.429897297333181,
+            "wallMs": 63523.2,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -233,29 +432,57 @@
       "avProduct": "G DATA INTERNET SECURITY",
       "ripgrep": {
         "clean": {
-          "value": 27,
-          "wallMs": 19045,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 27,
+            "wallMs": 19045,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 28.96341870303889,
+            "wallMs": 19326.2,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 15.8,
-          "wallMs": 6817,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 15.8,
+            "wallMs": 6817,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 14.60018878101402,
+            "wallMs": 6799,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 15.8,
-          "wallMs": 238645,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 15.8,
+            "wallMs": 238645,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 14.498298913635239,
+            "wallMs": 239754.4,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 20.5,
-          "wallMs": 71399,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 20.5,
+            "wallMs": 71399,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 16.557236654296332,
+            "wallMs": 70227.6,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -265,29 +492,57 @@
       "avProduct": "Huorong Internet Security",
       "ripgrep": {
         "clean": {
-          "value": 12.7,
-          "wallMs": 16897,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 12.7,
+            "wallMs": 16897,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 11.880580282667601,
+            "wallMs": 16766.2,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 2.4,
-          "wallMs": 6027,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 2.4,
+            "wallMs": 6027,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 2.4575242718446635,
+            "wallMs": 6078.6,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 2.6,
-          "wallMs": 211433,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 2.6,
+            "wallMs": 211433,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 3.9181339053924695,
+            "wallMs": 217600,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 9.5,
-          "wallMs": 64900,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 9.5,
+            "wallMs": 64900,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 6.085813488770428,
+            "wallMs": 63918.4,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -297,29 +552,57 @@
       "avProduct": "Kaspersky",
       "ripgrep": {
         "clean": {
-          "value": 13.7,
-          "wallMs": 17053,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 13.7,
+            "wallMs": 17053,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 15.601436026104713,
+            "wallMs": 17323.8,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 3.7,
-          "wallMs": 6103,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 3.7,
+            "wallMs": 6103,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 3.8936084142394822,
+            "wallMs": 6163.8,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 33.2,
-          "wallMs": 274613,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 33.2,
+            "wallMs": 274613,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 21.621275709709277,
+            "wallMs": 254669.6,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 19.7,
-          "wallMs": 70954,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 19.7,
+            "wallMs": 70954,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 11.027093056449965,
+            "wallMs": 66895.6,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -329,29 +612,57 @@
       "avProduct": "Malwarebytes",
       "ripgrep": {
         "clean": {
-          "value": 14.1,
-          "wallMs": 17105,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 14.1,
+            "wallMs": 17105,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 11.530915933750618,
+            "wallMs": 16713.8,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 3.3,
-          "wallMs": 6083,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 3.3,
+            "wallMs": 6083,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 2.0057982740021574,
+            "wallMs": 6051.8,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 8.6,
-          "wallMs": 223921,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 8.6,
+            "wallMs": 223921,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 8.218510799653853,
+            "wallMs": 226604.8,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 3.8,
-          "wallMs": 61500,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 3.8,
+            "wallMs": 61500,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 3.3695370745341275,
+            "wallMs": 62281.8,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -361,29 +672,57 @@
       "avProduct": "McAfee",
       "ripgrep": {
         "clean": {
-          "value": 261.6,
-          "wallMs": 54218,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 261.6,
+            "wallMs": 54218,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 179.3898223651724,
+            "wallMs": 41868.8,
+            "baselineWallMs": 14985.8
+          },
           "status": "noisy"
         },
         "incremental": {
-          "value": 1.6,
-          "wallMs": 5979,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 1.6,
+            "wallMs": 5979,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 1.823759439050698,
+            "wallMs": 6041,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 4.1,
-          "wallMs": 214531,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 4.1,
+            "wallMs": 214531,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 3.7917702186674354,
+            "wallMs": 217335.4,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 1.7,
-          "wallMs": 60289,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 1.7,
+            "wallMs": 60289,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 0.22505626406601412,
+            "wallMs": 60387.2,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -393,29 +732,57 @@
       "avProduct": "Windows Defender",
       "ripgrep": {
         "clean": {
-          "value": 22.1,
-          "wallMs": 18306,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 22.1,
+            "wallMs": 18306,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 22.298442525590907,
+            "wallMs": 18327.4,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 3.7,
-          "wallMs": 6105,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 3.7,
+            "wallMs": 6105,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 3.6003236245954597,
+            "wallMs": 6146.4,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 26.5,
-          "wallMs": 260770,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 26.5,
+            "wallMs": 260770,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 24.153038554773833,
+            "wallMs": 259971,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 17.4,
-          "wallMs": 69593,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 17.4,
+            "wallMs": 69593,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 15.60290515106654,
+            "wallMs": 69652.6,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -425,29 +792,57 @@
       "avProduct": "Sophos Home",
       "ripgrep": {
         "clean": {
-          "value": 23.2,
-          "wallMs": 18468,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 23.2,
+            "wallMs": 18468,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 22.90301485406185,
+            "wallMs": 18418,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 13,
-          "wallMs": 6651,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 13,
+            "wallMs": 6651,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 10.996494066882411,
+            "wallMs": 6585.2,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 144.3,
-          "wallMs": 503495,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 144.3,
+            "wallMs": 503495,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 134.1728288464514,
+            "wallMs": 490347.6,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 80.8,
-          "wallMs": 107123,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 80.8,
+            "wallMs": 107123,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 80.83370400122153,
+            "wallMs": 108955.2,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -457,29 +852,57 @@
       "avProduct": "腾讯电脑管家系统防护",
       "ripgrep": {
         "clean": {
-          "value": 36.1,
-          "wallMs": 20400,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 36.1,
+            "wallMs": 20400,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 36.701410668766435,
+            "wallMs": 20485.8,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 2.1,
-          "wallMs": 6011,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 2.1,
+            "wallMs": 6011,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": 1.4495685005393741,
+            "wallMs": 6018.8,
+            "baselineWallMs": 5932.8
+          },
           "status": "ok"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 5.1,
-          "wallMs": 216567,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 5.1,
+            "wallMs": 216567,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 3.9230050679192905,
+            "wallMs": 217610.2,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": -3,
-          "wallMs": 57462,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": -3,
+            "wallMs": 57462,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 0.1510333335546276,
+            "wallMs": 60342.6,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }
@@ -489,29 +912,57 @@
       "avProduct": "Trend Micro Maximum Security",
       "ripgrep": {
         "clean": {
-          "value": 31.1,
-          "wallMs": 19651,
-          "baselineWallMs": 14934,
+          "cloudCold": {
+            "value": 31.1,
+            "wallMs": 19651,
+            "baselineWallMs": 14934
+          },
+          "average": {
+            "value": 24.156201203806273,
+            "wallMs": 18605.8,
+            "baselineWallMs": 14985.8
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 2.7,
-          "wallMs": 6044,
-          "baselineWallMs": 6078,
+          "cloudCold": {
+            "value": 2.7,
+            "wallMs": 6044,
+            "baselineWallMs": 6078
+          },
+          "average": {
+            "value": -0.8090614886731391,
+            "wallMs": 5884.8,
+            "baselineWallMs": 5932.8
+          },
           "status": "anomaly"
         }
       },
       "roslyn": {
         "clean": {
-          "value": 23.3,
-          "wallMs": 254204,
-          "baselineWallMs": 216530,
+          "cloudCold": {
+            "value": 23.3,
+            "wallMs": 254204,
+            "baselineWallMs": 216530
+          },
+          "average": {
+            "value": 19.15885529590879,
+            "wallMs": 249513.4,
+            "baselineWallMs": 209395.6
+          },
           "status": "ok"
         },
         "incremental": {
-          "value": 16.9,
-          "wallMs": 69286,
-          "baselineWallMs": 63913,
+          "cloudCold": {
+            "value": 16.9,
+            "wallMs": 69286,
+            "baselineWallMs": 63913
+          },
+          "average": {
+            "value": 14.760437897084893,
+            "wallMs": 69145,
+            "baselineWallMs": 60251.6
+          },
           "status": "ok"
         }
       }

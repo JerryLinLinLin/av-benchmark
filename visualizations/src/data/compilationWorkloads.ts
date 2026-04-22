@@ -1,7 +1,12 @@
-export type BuildMetric = {
+export type ImpactMetric = {
   value: number
   wallMs: number
   baselineWallMs: number
+}
+
+export type BuildMetric = {
+  cloudCold: ImpactMetric
+  average: ImpactMetric
   status: string
 }
 
@@ -21,7 +26,7 @@ export type CompilationWorkloadRow = {
 export type CompilationWorkloadData = {
   experiment: string
   source: string
-  metric: 'first_run_slowdown_pct'
+  metrics: Array<'cloudCold' | 'average'>
   generatedAt: string
   rows: CompilationWorkloadRow[]
 }

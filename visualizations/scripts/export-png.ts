@@ -8,12 +8,20 @@ const root = path.resolve(import.meta.dirname, '..')
 const outputDir = path.join(root, 'exports', experiment)
 const outputs = [
   {
-    workload: 'ripgrep',
+    chartId: 'ripgrep-cloud-cold',
     path: path.join(outputDir, 'ripgrep-build-cloud-cold-impact.png'),
   },
   {
-    workload: 'roslyn',
+    chartId: 'roslyn-cloud-cold',
     path: path.join(outputDir, 'roslyn-build-cloud-cold-impact.png'),
+  },
+  {
+    chartId: 'ripgrep-average',
+    path: path.join(outputDir, 'ripgrep-build-average-impact.png'),
+  },
+  {
+    chartId: 'roslyn-average',
+    path: path.join(outputDir, 'roslyn-build-average-impact.png'),
   },
 ]
 const port = 5178
@@ -37,12 +45,15 @@ try {
   const browser = await chromium.launch()
   const page = await browser.newPage({ viewport: { width: 1700, height: 1200 }, deviceScaleFactor: 1 })
   await page.goto(url)
-  await page.locator('[data-workload="ripgrep"] svg.recharts-surface').waitFor({ timeout: 15_000 })
-  await page.locator('[data-workload="roslyn"] svg.recharts-surface').waitFor({ timeout: 15_000 })
+  for (const output of outputs) {
+    await page
+      .locator(`[data-chart-id="${output.chartId}"] svg.recharts-surface`)
+      .waitFor({ timeout: 15_000 })
+  }
   await page.waitForTimeout(300)
   for (const output of outputs) {
     await page
-      .locator(`[data-workload="${output.workload}"]`)
+      .locator(`[data-chart-id="${output.chartId}"]`)
       .screenshot({ path: output.path })
     console.log(`Wrote ${path.relative(process.cwd(), output.path)}`)
   }

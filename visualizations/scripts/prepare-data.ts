@@ -9,13 +9,20 @@ type CompareRow = {
   first_run_wall_ms: string
   baseline_first_run_wall_ms: string
   first_run_slowdown_pct: string
+  all_runs_mean_wall_ms: string
+  baseline_all_runs_mean_wall_ms: string
   status: string
 }
 
-type WorkloadMetric = {
+type ImpactMetric = {
   value: number
   wallMs: number
   baselineWallMs: number
+}
+
+type WorkloadMetric = {
+  cloudCold: ImpactMetric
+  average: ImpactMetric
   status: string
 }
 
@@ -61,6 +68,8 @@ for (const record of records) {
   }
 
   const [workload, buildType] = mapping
+  const averageWallMs = Number(record.all_runs_mean_wall_ms)
+  const averageBaselineWallMs = Number(record.baseline_all_runs_mean_wall_ms)
   const row =
     rowsByAv.get(record.av_name) ??
     ({
@@ -71,9 +80,16 @@ for (const record of records) {
     } satisfies ChartRow)
 
   row[workload][buildType] = {
-    value: Number(record.first_run_slowdown_pct),
-    wallMs: Number(record.first_run_wall_ms),
-    baselineWallMs: Number(record.baseline_first_run_wall_ms),
+    cloudCold: {
+      value: Number(record.first_run_slowdown_pct),
+      wallMs: Number(record.first_run_wall_ms),
+      baselineWallMs: Number(record.baseline_first_run_wall_ms),
+    },
+    average: {
+      value: ((averageWallMs - averageBaselineWallMs) / averageBaselineWallMs) * 100,
+      wallMs: averageWallMs,
+      baselineWallMs: averageBaselineWallMs,
+    },
     status: record.status,
   }
 
@@ -83,7 +99,7 @@ for (const record of records) {
 const payload = {
   experiment,
   source: path.relative(repoRoot, inputPath).replaceAll('\\', '/'),
-  metric: 'first_run_slowdown_pct',
+  metrics: ['cloudCold', 'average'],
   generatedAt: new Date().toISOString(),
   rows: [...rowsByAv.values()],
 }
