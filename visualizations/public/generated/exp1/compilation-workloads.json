@@ -1,0 +1,520 @@
+{
+  "experiment": "exp1",
+  "source": "data/exp1/compare.csv",
+  "metric": "first_run_slowdown_pct",
+  "generatedAt": "2026-04-21T21:21:00.423Z",
+  "rows": [
+    {
+      "avName": "360ts",
+      "avProduct": "360 Total Security",
+      "ripgrep": {
+        "clean": {
+          "value": 21.7,
+          "wallMs": 18244,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 8.6,
+          "wallMs": 6394,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": -0.3,
+          "wallMs": 205471,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": -1.1,
+          "wallMs": 58586,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "avast",
+      "avProduct": "Avast Antivirus",
+      "ripgrep": {
+        "clean": {
+          "value": 25.7,
+          "wallMs": 18843,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 4,
+          "wallMs": 6124,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 5.1,
+          "wallMs": 216716,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 13.4,
+          "wallMs": 67194,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "avira",
+      "avProduct": "Avira Security",
+      "ripgrep": {
+        "clean": {
+          "value": 756.7,
+          "wallMs": 128448,
+          "baselineWallMs": 14934,
+          "status": "noisy"
+        },
+        "incremental": {
+          "value": 2.7,
+          "wallMs": 6045,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 132.7,
+          "wallMs": 479777,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 175,
+          "wallMs": 162989,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "bitdefender",
+      "avProduct": "Bitdefender Antivirus",
+      "ripgrep": {
+        "clean": {
+          "value": 17.7,
+          "wallMs": 17639,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 11.1,
+          "wallMs": 6537,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 13.3,
+          "wallMs": 233499,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 11.2,
+          "wallMs": 65869,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "drweb",
+      "avProduct": "Dr.Web Security Space",
+      "ripgrep": {
+        "clean": {
+          "value": 21.8,
+          "wallMs": 18260,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 3.5,
+          "wallMs": 6092,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 59.7,
+          "wallMs": 329191,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 16.5,
+          "wallMs": 69060,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "emsisoft",
+      "avProduct": "Emsisoft Anti-Malware Home",
+      "ripgrep": {
+        "clean": {
+          "value": 14.2,
+          "wallMs": 17117,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 6.3,
+          "wallMs": 6259,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 16.1,
+          "wallMs": 239425,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 24.1,
+          "wallMs": 73520,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "eset",
+      "avProduct": "ESET Security",
+      "ripgrep": {
+        "clean": {
+          "value": 17.1,
+          "wallMs": 17563,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 0.9,
+          "wallMs": 5941,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 27.6,
+          "wallMs": 263064,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 2.9,
+          "wallMs": 60978,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "gdata",
+      "avProduct": "G DATA INTERNET SECURITY",
+      "ripgrep": {
+        "clean": {
+          "value": 27,
+          "wallMs": 19045,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 15.8,
+          "wallMs": 6817,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 15.8,
+          "wallMs": 238645,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 20.5,
+          "wallMs": 71399,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "huorong",
+      "avProduct": "Huorong Internet Security",
+      "ripgrep": {
+        "clean": {
+          "value": 12.7,
+          "wallMs": 16897,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 2.4,
+          "wallMs": 6027,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 2.6,
+          "wallMs": 211433,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 9.5,
+          "wallMs": 64900,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "kaspersky",
+      "avProduct": "Kaspersky",
+      "ripgrep": {
+        "clean": {
+          "value": 13.7,
+          "wallMs": 17053,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 3.7,
+          "wallMs": 6103,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 33.2,
+          "wallMs": 274613,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 19.7,
+          "wallMs": 70954,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "malwarebytes",
+      "avProduct": "Malwarebytes",
+      "ripgrep": {
+        "clean": {
+          "value": 14.1,
+          "wallMs": 17105,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 3.3,
+          "wallMs": 6083,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 8.6,
+          "wallMs": 223921,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 3.8,
+          "wallMs": 61500,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "mcafee",
+      "avProduct": "McAfee",
+      "ripgrep": {
+        "clean": {
+          "value": 261.6,
+          "wallMs": 54218,
+          "baselineWallMs": 14934,
+          "status": "noisy"
+        },
+        "incremental": {
+          "value": 1.6,
+          "wallMs": 5979,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 4.1,
+          "wallMs": 214531,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 1.7,
+          "wallMs": 60289,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "ms-defender",
+      "avProduct": "Windows Defender",
+      "ripgrep": {
+        "clean": {
+          "value": 22.1,
+          "wallMs": 18306,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 3.7,
+          "wallMs": 6105,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 26.5,
+          "wallMs": 260770,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 17.4,
+          "wallMs": 69593,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "sophos",
+      "avProduct": "Sophos Home",
+      "ripgrep": {
+        "clean": {
+          "value": 23.2,
+          "wallMs": 18468,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 13,
+          "wallMs": 6651,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 144.3,
+          "wallMs": 503495,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 80.8,
+          "wallMs": 107123,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "tencent-pcmgr",
+      "avProduct": "腾讯电脑管家系统防护",
+      "ripgrep": {
+        "clean": {
+          "value": 36.1,
+          "wallMs": 20400,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 2.1,
+          "wallMs": 6011,
+          "baselineWallMs": 6078,
+          "status": "ok"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 5.1,
+          "wallMs": 216567,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": -3,
+          "wallMs": 57462,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    },
+    {
+      "avName": "trendmicro",
+      "avProduct": "Trend Micro Maximum Security",
+      "ripgrep": {
+        "clean": {
+          "value": 31.1,
+          "wallMs": 19651,
+          "baselineWallMs": 14934,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 2.7,
+          "wallMs": 6044,
+          "baselineWallMs": 6078,
+          "status": "anomaly"
+        }
+      },
+      "roslyn": {
+        "clean": {
+          "value": 23.3,
+          "wallMs": 254204,
+          "baselineWallMs": 216530,
+          "status": "ok"
+        },
+        "incremental": {
+          "value": 16.9,
+          "wallMs": 69286,
+          "baselineWallMs": 63913,
+          "status": "ok"
+        }
+      }
+    }
+  ]
+}
