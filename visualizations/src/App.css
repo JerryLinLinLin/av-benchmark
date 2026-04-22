@@ -108,8 +108,16 @@
   font-weight: 700;
 }
 
-.impact-label {
+.impact-label.ripgrep {
   fill: var(--chart-1);
+}
+
+.impact-label.roslyn {
+  fill: var(--chart-3);
+}
+
+.impact-label.combined {
+  fill: var(--chart-5);
 }
 
 .outlier-label {
@@ -166,10 +174,24 @@
   background: var(--chart-2);
 }
 
+[data-chart-id^='roslyn'] .chart-tooltip-row i.clean {
+  background: var(--chart-3);
+}
+
+[data-chart-id^='roslyn'] .chart-tooltip-row i.incremental {
+  background: var(--chart-4);
+}
+
 .chart-tooltip-total {
   border-top: 1px solid var(--border);
   margin-top: 7px;
   padding-top: 7px;
+}
+
+.chart-tooltip-total.combined {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .chart-export-shell + .chart-export-shell {

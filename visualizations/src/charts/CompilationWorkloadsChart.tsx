@@ -67,6 +67,22 @@ type WorkloadChartConfig = {
   id: string
   metric: MetricKey
   workload: WorkloadKey
+  seriesConfig: ChartConfig
+  normalLabelClassName: string
+  title: string
+  subtitle: string
+  yAxisLabel: string
+  footnote: string
+  axisMax: number
+  brokenAxis: ManualAxisBreak
+}
+
+type CombinedChartConfig = {
+  id: string
+  seriesConfig: ChartConfig
+  normalLabelClassName: string
+  valueDivisor: number
+  tooltipLabel: string
   title: string
   subtitle: string
   yAxisLabel: string
@@ -89,7 +105,7 @@ type ImpactTooltipProps = {
   payload?: Array<{ payload?: ChartDatum }>
 }
 
-const seriesConfig = {
+const ripgrepSeriesConfig = {
   cleanPlot: {
     label: 'Clean build',
     color: 'var(--chart-1)',
@@ -97,6 +113,24 @@ const seriesConfig = {
   incrementalPlot: {
     label: 'Incremental build',
     color: 'var(--chart-2)',
+  },
+} satisfies ChartConfig
+
+const roslynSeriesConfig = {
+  cleanPlot: {
+    label: 'Clean build',
+    color: 'var(--chart-3)',
+  },
+  incrementalPlot: {
+    label: 'Incremental build',
+    color: 'var(--chart-4)',
+  },
+} satisfies ChartConfig
+
+const combinedSeriesConfig = {
+  totalPlot: {
+    label: 'Combined average impact',
+    color: 'var(--chart-5)',
   },
 } satisfies ChartConfig
 
@@ -178,11 +212,54 @@ const averageRoslynAxis: ManualAxisBreak = {
   transform: transformAverageRoslynValue,
 }
 
+const combinedAverageAxis: ManualAxisBreak = {
+  max: 130,
+  ticks: [0, 11.5, 23, 34.5, 46, 57.5, 69, 80.5, 92, 104, 116, 124],
+  tickLabels: new Map([
+    [0, 0],
+    [11.5, 10],
+    [23, 20],
+    [34.5, 30],
+    [46, 40],
+    [57.5, 50],
+    [69, 60],
+    [80.5, 70],
+    [92, 80],
+    [104, 200],
+    [116, 220],
+    [124, 240],
+  ]),
+  transform: transformCombinedAverageValue,
+}
+
+const combinedAverageSumAxis: ManualAxisBreak = {
+  max: 138,
+  ticks: [0, 11.5, 23, 34.5, 46, 57.5, 69, 80.5, 92, 104, 116, 124, 136],
+  tickLabels: new Map([
+    [0, 0],
+    [11.5, 10],
+    [23, 20],
+    [34.5, 30],
+    [46, 40],
+    [57.5, 50],
+    [69, 60],
+    [80.5, 70],
+    [92, 80],
+    [104, 180],
+    [116, 250],
+    [124, 900],
+    [136, 950],
+  ]),
+  transform: transformCombinedAverageSumValue,
+}
+
 const chartConfigs = [
   {
     id: 'ripgrep-cloud-cold',
     metric: 'cloudCold',
     workload: 'ripgrep',
+    seriesConfig: ripgrepSeriesConfig,
+    normalLabelClassName: 'impact-label ripgrep',
     title: 'Ripgrep Build: Cloud-Cold Impact',
     subtitle: 'Clean + incremental build impact before cloud reputation/cache warms',
     yAxisLabel: 'Cloud-cold impact (%)',
@@ -195,6 +272,8 @@ const chartConfigs = [
     id: 'roslyn-cloud-cold',
     metric: 'cloudCold',
     workload: 'roslyn',
+    seriesConfig: roslynSeriesConfig,
+    normalLabelClassName: 'impact-label roslyn',
     title: 'Roslyn Build: Cloud-Cold Impact',
     subtitle: 'Clean + incremental build impact before cloud reputation/cache warms',
     yAxisLabel: 'Cloud-cold impact (%)',
@@ -207,6 +286,8 @@ const chartConfigs = [
     id: 'ripgrep-average',
     metric: 'average',
     workload: 'ripgrep',
+    seriesConfig: ripgrepSeriesConfig,
+    normalLabelClassName: 'impact-label ripgrep',
     title: 'Ripgrep Build: Average Impact',
     subtitle: 'Clean + incremental build impact using mean wall time across all runs',
     yAxisLabel: 'Average impact (%)',
@@ -219,6 +300,8 @@ const chartConfigs = [
     id: 'roslyn-average',
     metric: 'average',
     workload: 'roslyn',
+    seriesConfig: roslynSeriesConfig,
+    normalLabelClassName: 'impact-label roslyn',
     title: 'Roslyn Build: Average Impact',
     subtitle: 'Clean + incremental build impact using mean wall time across all runs',
     yAxisLabel: 'Average impact (%)',
@@ -229,12 +312,42 @@ const chartConfigs = [
   },
 ] satisfies WorkloadChartConfig[]
 
+const combinedAverageConfig = {
+  id: 'compilation-average-combined',
+  seriesConfig: combinedSeriesConfig,
+  normalLabelClassName: 'impact-label combined',
+  valueDivisor: 4,
+  tooltipLabel: 'Average compile impact',
+  title: 'Compilation Builds: Average Impact',
+  subtitle: 'Mean impact across Ripgrep and Roslyn clean + incremental builds',
+  yAxisLabel: 'Average compile impact (%)',
+  footnote:
+    'Average compile impact is the mean slowdown across Ripgrep and Roslyn clean + incremental builds. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
+  axisMax: 80,
+  brokenAxis: combinedAverageAxis,
+} satisfies CombinedChartConfig
+
+const combinedAverageSumConfig = {
+  id: 'compilation-average-total',
+  seriesConfig: combinedSeriesConfig,
+  normalLabelClassName: 'impact-label combined',
+  valueDivisor: 1,
+  tooltipLabel: 'Total compile impact score',
+  title: 'Compilation Builds: Total Average Impact',
+  subtitle: 'Summed impact across Ripgrep and Roslyn clean + incremental builds',
+  yAxisLabel: 'Total average impact (%)',
+  footnote:
+    'Total average impact sums average slowdown across Ripgrep and Roslyn clean + incremental builds. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
+  axisMax: 80,
+  brokenAxis: combinedAverageSumAxis,
+} satisfies CombinedChartConfig
+
 export function CompilationWorkloadsChart({ data, onReady }: Props) {
   const [readyCount, setReadyCount] = useState(0)
   const handleChartReady = useCallback(() => {
     setReadyCount((current) => {
       const next = current + 1
-      if (next === chartConfigs.length) {
+      if (next === chartConfigs.length + 2) {
         onReady?.()
       }
       return next
@@ -261,6 +374,16 @@ export function CompilationWorkloadsChart({ data, onReady }: Props) {
           onReady={handleChartReady}
         />
       ))}
+      <CombinedAverageChart
+        config={combinedAverageConfig}
+        data={data.rows}
+        onReady={handleChartReady}
+      />
+      <CombinedAverageChart
+        config={combinedAverageSumConfig}
+        data={data.rows}
+        onReady={handleChartReady}
+      />
       <span hidden>{readyCount}</span>
     </div>
   )
@@ -290,7 +413,7 @@ function WorkloadChart({
           <CardDescription>{config.subtitle}</CardDescription>
         </CardHeader>
         <CardContent className="chart-card-content">
-          <ChartContainer className="impact-chart" config={seriesConfig}>
+          <ChartContainer className="impact-chart" config={config.seriesConfig}>
             <ComposedChart
               accessibilityLayer
               data={chartData}
@@ -355,7 +478,102 @@ function WorkloadChart({
                 maxBarSize={40}
               />
               <Scatter dataKey="totalPlot" legendType="none" fill="transparent">
-                <LabelList dataKey="totalActual" content={renderImpactLabel} />
+                <LabelList
+                  dataKey="totalActual"
+                  content={(props) => renderImpactLabel(props, config)}
+                />
+              </Scatter>
+            </ComposedChart>
+          </ChartContainer>
+        </CardContent>
+        <CardFooter className="chart-card-footer">{config.footnote}</CardFooter>
+      </Card>
+    </section>
+  )
+}
+
+function CombinedAverageChart({
+  config,
+  data,
+  onReady,
+}: {
+  config: CombinedChartConfig
+  data: CompilationWorkloadRow[]
+  onReady: () => void
+}) {
+  const chartData = useMemo(() => buildCombinedAverageChartData(data, config), [data, config])
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(onReady)
+    return () => window.cancelAnimationFrame(frame)
+  }, [onReady])
+
+  return (
+    <section className="chart-export-shell" data-chart-id={config.id}>
+      <Card className="chart-card">
+        <CardHeader className="chart-card-header">
+          <CardTitle className="chart-card-title">{config.title}</CardTitle>
+          <CardDescription>{config.subtitle}</CardDescription>
+        </CardHeader>
+        <CardContent className="chart-card-content">
+          <ChartContainer className="impact-chart" config={config.seriesConfig}>
+            <ComposedChart
+              accessibilityLayer
+              data={chartData}
+              margin={{ top: 12, right: 18, bottom: 66, left: 28 }}
+            >
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis
+                dataKey="avName"
+                interval={0}
+                angle={-36}
+                textAnchor="end"
+                height={82}
+                tickLine={false}
+                axisLine={false}
+                tickMargin={12}
+              >
+                <Label
+                  value="Antivirus product"
+                  position="insideBottom"
+                  offset={-54}
+                  className="axis-label"
+                />
+              </XAxis>
+              <YAxis
+                domain={[0, config.brokenAxis.max]}
+                ticks={config.brokenAxis.ticks}
+                tickFormatter={(value) =>
+                  formatAxisLabel(Number(value), config.brokenAxis)
+                }
+                tickLine={false}
+                axisLine={false}
+                width={74}
+              >
+                <Label
+                  value={config.yAxisLabel}
+                  angle={-90}
+                  position="insideLeft"
+                  offset={-14}
+                  className="axis-label"
+                />
+              </YAxis>
+              <ChartTooltip
+                cursor={false}
+                content={<CombinedImpactTooltip labelText={config.tooltipLabel} />}
+              />
+              <Bar
+                dataKey="totalPlot"
+                name="totalPlot"
+                fill="var(--color-totalPlot)"
+                radius={[4, 4, 4, 4]}
+                maxBarSize={40}
+              />
+              <Scatter dataKey="totalPlot" legendType="none" fill="transparent">
+                <LabelList
+                  dataKey="totalActual"
+                  content={(props) => renderImpactLabel(props, config)}
+                />
               </Scatter>
             </ComposedChart>
           </ChartContainer>
@@ -382,6 +600,31 @@ function buildChartData(rows: CompilationWorkloadRow[], config: WorkloadChartCon
       totalPlot,
     }
   })
+}
+
+function buildCombinedAverageChartData(rows: CompilationWorkloadRow[], config: CombinedChartConfig) {
+  return rows
+    .map((row): ChartDatum => {
+      const total =
+        (metricValue(row.ripgrep.clean, 'average') +
+          metricValue(row.ripgrep.incremental, 'average') +
+          metricValue(row.roslyn.clean, 'average') +
+          metricValue(row.roslyn.incremental, 'average')) /
+        config.valueDivisor
+      const totalPlot = config.brokenAxis.transform(total)
+
+      return {
+        avName: row.avName,
+        cleanActual: total,
+        incrementalActual: 0,
+        totalActual: total,
+        normalAxisMax: config.axisMax,
+        cleanPlot: totalPlot,
+        incrementalPlot: 0,
+        totalPlot,
+      }
+    })
+    .sort((left, right) => left.totalActual - right.totalActual)
 }
 
 function getSortedWorkloadRows(rows: CompilationWorkloadRow[], config: WorkloadChartConfig) {
@@ -426,6 +669,32 @@ function ImpactTooltip({ active, label, payload }: ImpactTooltipProps) {
   )
 }
 
+function CombinedImpactTooltip({
+  active,
+  label,
+  labelText,
+  payload,
+}: ImpactTooltipProps & { labelText: string }) {
+  if (!active || !payload?.length) {
+    return null
+  }
+
+  const row = payload[0]?.payload
+  if (!row) {
+    return null
+  }
+
+  return (
+    <div className="chart-tooltip">
+      <div className="chart-tooltip-title">{label}</div>
+      <div className="chart-tooltip-total combined">
+        <span>{labelText}</span>
+        <strong>{formatPercent(row.totalActual)}</strong>
+      </div>
+    </div>
+  )
+}
+
 function TooltipRow({
   className,
   label,
@@ -446,7 +715,7 @@ function TooltipRow({
   )
 }
 
-function renderImpactLabel(props: unknown) {
+function renderImpactLabel(props: unknown, config: WorkloadChartConfig | CombinedChartConfig) {
   const { x, y, width, value, payload } = props as LabelContentProps
   const actualValue = payload?.totalActual ?? Number(value)
   if (!Number.isFinite(actualValue)) {
@@ -468,7 +737,7 @@ function renderImpactLabel(props: unknown) {
       className={
         actualValue > (payload?.normalAxisMax ?? 80)
           ? 'outlier-label'
-          : 'impact-label'
+          : config.normalLabelClassName
       }
     >
       {formatPercent(actualValue)}
@@ -518,6 +787,26 @@ function transformAverageRoslynValue(value: number) {
   }
 
   return 104 + ((Math.min(Math.max(value, 200), 240) - 200) / 40) * 24
+}
+
+function transformCombinedAverageValue(value: number) {
+  if (value <= 80) {
+    return (value / 80) * 92
+  }
+
+  return 104 + ((Math.min(Math.max(value, 200), 240) - 200) / 40) * 24
+}
+
+function transformCombinedAverageSumValue(value: number) {
+  if (value <= 80) {
+    return (value / 80) * 92
+  }
+
+  if (value <= 250) {
+    return 104 + ((Math.max(value, 180) - 180) / 70) * 12
+  }
+
+  return 124 + ((Math.min(value, 950) - 900) / 50) * 12
 }
 
 function formatAxisLabel(value: number, brokenAxis: ManualAxisBreak) {

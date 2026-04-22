@@ -23,6 +23,14 @@ const outputs = [
     chartId: 'roslyn-average',
     path: path.join(outputDir, 'roslyn-build-average-impact.png'),
   },
+  {
+    chartId: 'compilation-average-combined',
+    path: path.join(outputDir, 'compilation-builds-average-impact.png'),
+  },
+  {
+    chartId: 'compilation-average-total',
+    path: path.join(outputDir, 'compilation-builds-total-average-impact.png'),
+  },
 ]
 const port = 5178
 const url = `http://127.0.0.1:${port}/?exp=${encodeURIComponent(experiment)}`
