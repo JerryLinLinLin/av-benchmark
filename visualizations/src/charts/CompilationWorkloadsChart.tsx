@@ -1,6 +1,29 @@
-import { useCallback, useState } from 'react'
-import ReactECharts from 'echarts-for-react'
-import type { EChartsOption } from 'echarts'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Label,
+  LabelList,
+  Scatter,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  type ChartConfig,
+} from '@/components/ui/chart'
 import type {
   BuildMetric,
   CompilationWorkloadData,
@@ -13,16 +36,23 @@ type Props = {
 }
 
 type WorkloadKey = 'ripgrep' | 'roslyn'
-type BarPoint = {
-  value: number | null
-  status?: string
-}
 
 type SortedWorkloadRow = {
   avName: string
   clean: number
   incremental: number
   total: number
+}
+
+type ChartDatum = {
+  avName: string
+  cleanActual: number
+  incrementalActual: number
+  totalActual: number
+  normalAxisMax: number
+  cleanPlot: number
+  incrementalPlot: number
+  totalPlot: number
 }
 
 type ManualAxisBreak = {
@@ -32,8 +62,30 @@ type ManualAxisBreak = {
   transform: (value: number) => number
 }
 
-const cleanColor = '#0f9f8f'
-const incrementalColor = '#d18a00'
+type LabelContentProps = {
+  x?: number | string
+  y?: number | string
+  width?: number | string
+  value?: number | string
+  payload?: ChartDatum
+}
+
+type ImpactTooltipProps = {
+  active?: boolean
+  label?: string
+  payload?: Array<{ payload?: ChartDatum }>
+}
+
+const seriesConfig = {
+  cleanPlot: {
+    label: 'Clean build',
+    color: 'var(--chart-1)',
+  },
+  incrementalPlot: {
+    label: 'Incremental build',
+    color: 'var(--chart-2)',
+  },
+} satisfies ChartConfig
 
 const ripgrepBrokenAxis: ManualAxisBreak = {
   max: 138,
@@ -86,22 +138,32 @@ const roslynBrokenAxis: ManualAxisBreak = {
   transform: transformRoslynValue,
 }
 
-const chartConfig = {
+const workloadConfig = {
   ripgrep: {
     title: 'Ripgrep Build: Cloud-Cold Impact',
     subtitle: 'Clean + incremental build impact, sorted from lowest to highest',
-    footnote: 'Cloud-cold means first cloud/reputation exposure; VM reset removes local cache between runs. Broken y-axis emphasizes 0-60%. Negative values are shown as 0%.',
+    footnote:
+      'Cloud-cold means first cloud/reputation exposure; VM reset removes local cache between runs. Broken y-axis emphasizes 0-60%. Negative values are shown as 0%.',
     axisMax: 60,
+    brokenAxis: ripgrepBrokenAxis,
   },
   roslyn: {
     title: 'Roslyn Build: Cloud-Cold Impact',
     subtitle: 'Clean + incremental build impact, sorted from lowest to highest',
-    footnote: 'Cloud-cold means first cloud/reputation exposure; VM reset removes local cache between runs. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
+    footnote:
+      'Cloud-cold means first cloud/reputation exposure; VM reset removes local cache between runs. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
     axisMax: 80,
+    brokenAxis: roslynBrokenAxis,
   },
 } satisfies Record<
   WorkloadKey,
-  { title: string; subtitle: string; footnote: string; axisMax: number }
+  {
+    title: string
+    subtitle: string
+    footnote: string
+    axisMax: number
+    brokenAxis: ManualAxisBreak
+  }
 >
 
 export function CompilationWorkloadsChart({ data, onReady }: Props) {
@@ -126,10 +188,6 @@ export function CompilationWorkloadsChart({ data, onReady }: Props) {
             the workload. Negative values are shown as 0%.
           </p>
         </div>
-        <div className="legend" aria-hidden="true">
-          <span><i className="swatch clean" />Clean build</span>
-          <span><i className="swatch incremental" />Incremental build</span>
-        </div>
       </header>
 
       <WorkloadChart data={data.rows} workload="ripgrep" onReady={handleChartReady} />
@@ -148,151 +206,124 @@ function WorkloadChart({
   workload: WorkloadKey
   onReady: () => void
 }) {
-  const option = buildWorkloadOption(data, workload)
+  const config = workloadConfig[workload]
+  const chartData = useMemo(() => buildChartData(data, workload), [data, workload])
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(onReady)
+    return () => window.cancelAnimationFrame(frame)
+  }, [onReady])
 
   return (
-    <section className="chart-card" data-workload={workload}>
-      <ReactECharts
-        option={option}
-        notMerge
-        lazyUpdate
-        onChartReady={onReady}
-        style={{ height: '490px', width: '100%' }}
-        opts={{ renderer: 'canvas' }}
-      />
+    <section className="chart-export-shell" data-workload={workload}>
+      <Card className="chart-card">
+        <CardHeader className="chart-card-header">
+          <CardTitle className="chart-card-title">{config.title}</CardTitle>
+          <CardDescription>{config.subtitle}</CardDescription>
+        </CardHeader>
+        <CardContent className="chart-card-content">
+          <ChartContainer className="impact-chart" config={seriesConfig}>
+            <ComposedChart
+              accessibilityLayer
+              data={chartData}
+              margin={{ top: 12, right: 18, bottom: 66, left: 28 }}
+            >
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis
+                dataKey="avName"
+                interval={0}
+                angle={-36}
+                textAnchor="end"
+                height={82}
+                tickLine={false}
+                axisLine={false}
+                tickMargin={12}
+              >
+                <Label
+                  value="Antivirus product"
+                  position="insideBottom"
+                  offset={-54}
+                  className="axis-label"
+                />
+              </XAxis>
+              <YAxis
+                domain={[0, config.brokenAxis.max]}
+                ticks={config.brokenAxis.ticks}
+                tickFormatter={(value) =>
+                  formatAxisLabel(Number(value), config.brokenAxis)
+                }
+                tickLine={false}
+                axisLine={false}
+                width={74}
+              >
+                <Label
+                  value="Cloud-cold impact (%)"
+                  angle={-90}
+                  position="insideLeft"
+                  offset={-14}
+                  className="axis-label"
+                />
+              </YAxis>
+              <ChartTooltip
+                cursor={false}
+                content={<ImpactTooltip />}
+              />
+              <ChartLegend
+                verticalAlign="top"
+                align="left"
+                content={<ChartLegendContent className="chart-legend" />}
+              />
+              <Bar
+                dataKey="cleanPlot"
+                name="cleanPlot"
+                stackId="impact"
+                fill="var(--color-cleanPlot)"
+                radius={[0, 0, 4, 4]}
+                maxBarSize={40}
+              />
+              <Bar
+                dataKey="incrementalPlot"
+                name="incrementalPlot"
+                stackId="impact"
+                fill="var(--color-incrementalPlot)"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={40}
+              >
+              </Bar>
+              <Scatter
+                dataKey="totalPlot"
+                legendType="none"
+                fill="transparent"
+              >
+                <LabelList dataKey="totalActual" content={renderImpactLabel} />
+              </Scatter>
+            </ComposedChart>
+          </ChartContainer>
+        </CardContent>
+        <CardFooter className="chart-card-footer">{config.footnote}</CardFooter>
+      </Card>
     </section>
   )
 }
 
-function buildWorkloadOption(rows: CompilationWorkloadRow[], workload: WorkloadKey): EChartsOption {
-  const config = chartConfig[workload]
-  const sortedRows = getSortedWorkloadRows(rows, workload)
-  const avNames = sortedRows.map((row) => row.avName)
-  const brokenAxis = workload === 'ripgrep' ? ripgrepBrokenAxis : roslynBrokenAxis
-  const chartMax = brokenAxis?.max ?? config.axisMax
-  const { cleanPoints, incrementalPoints } = getStackedPoints(sortedRows, brokenAxis)
-  return {
-    animation: false,
-    backgroundColor: '#ffffff',
-    title: {
-      text: config.title,
-      subtext: config.subtitle,
-      left: 72,
-      top: 0,
-      textStyle: {
-        color: '#17202a',
-        fontSize: 20,
-        fontWeight: 700,
-      },
-      subtextStyle: {
-        color: '#596573',
-        fontSize: 13,
-      },
-    },
-    legend: {
-      top: 12,
-      right: 28,
-      itemWidth: 14,
-      itemHeight: 10,
-      itemGap: 16,
-      textStyle: {
-        color: '#35404b',
-        fontSize: 13,
-      },
-      data: ['Clean build', 'Incremental build'],
-    },
-    grid: {
-      left: 102,
-      right: 34,
-      top: 76,
-      bottom: 122,
-      containLabel: false,
-    },
-    graphic: [
-      {
-        type: 'text',
-        left: 76,
-        bottom: 8,
-        style: {
-          text: config.footnote,
-          fill: '#677380',
-          font: '11px system-ui, Segoe UI, Roboto, sans-serif',
-        },
-      },
-    ],
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      extraCssText: 'box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);',
-    },
-    xAxis: {
-      type: 'category',
-      data: avNames,
-      axisTick: { alignWithLabel: true },
-      axisLine: { lineStyle: { color: '#c8d0d8' } },
-      name: 'Antivirus product',
-      nameLocation: 'middle',
-      nameGap: 72,
-      nameTextStyle: {
-        color: '#596573',
-        fontSize: 12,
-        fontWeight: 600,
-      },
-      axisLabel: {
-        color: '#3b4652',
-        interval: 0,
-        rotate: 36,
-        fontSize: 13,
-      },
-    },
-    yAxis: {
-      type: 'value',
-      min: 0,
-      max: chartMax,
-      splitNumber: workload === 'ripgrep' ? 7 : 5,
-      name: 'Cloud-cold impact (%)',
-      nameLocation: 'middle',
-      nameGap: 62,
-      nameTextStyle: {
-        color: '#596573',
-        fontSize: 12,
-        fontWeight: 600,
-      },
-      axisLabel: {
-        color: '#46515d',
-        fontSize: 12,
-        customValues: brokenAxis?.ticks,
-        formatter: (value: number) => formatAxisLabel(value, brokenAxis, config.axisMax),
-      },
-      axisTick: {
-        customValues: brokenAxis?.ticks,
-      },
-      splitLine: {
-        show: true,
-        showMaxLine: false,
-        lineStyle: { color: '#e8edf2' },
-      },
-      axisLine: { show: false },
-    },
-    series: [
-      buildSeries('Clean build', cleanPoints, cleanColor),
-      buildSeries('Incremental build', incrementalPoints, incrementalColor),
-    ],
-  }
-}
+function buildChartData(rows: CompilationWorkloadRow[], workload: WorkloadKey) {
+  const { brokenAxis } = workloadConfig[workload]
 
-function buildSeries(name: string, points: BarPoint[], color: string) {
-  return {
-    name,
-    type: 'bar' as const,
-    stack: 'total-impact',
-    barMaxWidth: 24,
-    data: points.map((point) => point.value),
-    itemStyle: { color },
-    emphasis: {
-      focus: 'series' as const,
-    },
-  }
+  return getSortedWorkloadRows(rows, workload).map((row): ChartDatum => {
+    const cleanPlot = brokenAxis.transform(row.clean)
+    const totalPlot = brokenAxis.transform(row.total)
+
+    return {
+      avName: row.avName,
+      cleanActual: row.clean,
+      incrementalActual: row.incremental,
+      totalActual: row.total,
+      normalAxisMax: workloadConfig[workload].axisMax,
+      cleanPlot,
+      incrementalPlot: totalPlot - cleanPlot,
+      totalPlot,
+    }
+  })
 }
 
 function getSortedWorkloadRows(rows: CompilationWorkloadRow[], workload: WorkloadKey) {
@@ -310,20 +341,81 @@ function getSortedWorkloadRows(rows: CompilationWorkloadRow[], workload: Workloa
     .sort((left, right) => left.total - right.total)
 }
 
-function getStackedPoints(rows: SortedWorkloadRow[], brokenAxis: ManualAxisBreak | undefined) {
-  if (!brokenAxis) {
-    return {
-      cleanPoints: rows.map((row) => ({ value: row.clean })),
-      incrementalPoints: rows.map((row) => ({ value: row.incremental })),
-    }
+function ImpactTooltip({ active, label, payload }: ImpactTooltipProps) {
+  if (!active || !payload?.length) {
+    return null
   }
 
-  return {
-    cleanPoints: rows.map((row) => ({ value: brokenAxis.transform(row.clean) })),
-    incrementalPoints: rows.map((row) => ({
-      value: brokenAxis.transform(row.total) - brokenAxis.transform(row.clean),
-    })),
+  const row = payload[0]?.payload
+  if (!row) {
+    return null
   }
+
+  return (
+    <div className="chart-tooltip">
+      <div className="chart-tooltip-title">{label}</div>
+      <TooltipRow
+        className="clean"
+        label="Clean build"
+        value={row.cleanActual}
+      />
+      <TooltipRow
+        className="incremental"
+        label="Incremental build"
+        value={row.incrementalActual}
+      />
+      <div className="chart-tooltip-total">
+        <span>Total impact</span>
+        <strong>{formatPercent(row.totalActual)}</strong>
+      </div>
+    </div>
+  )
+}
+
+function TooltipRow({
+  className,
+  label,
+  value,
+}: {
+  className: string
+  label: string
+  value: number
+}) {
+  return (
+    <div className="chart-tooltip-row">
+      <span>
+        <i className={className} />
+        {label}
+      </span>
+      <strong>{formatPercent(value)}</strong>
+    </div>
+  )
+}
+
+function renderImpactLabel(props: unknown) {
+  const { x, y, width, value, payload } = props as LabelContentProps
+  const actualValue = payload?.totalActual ?? Number(value)
+  if (!Number.isFinite(actualValue)) {
+    return null
+  }
+
+  const xValue = Number(x)
+  const yValue = Number(y)
+  const widthValue = Number(width)
+  if (![xValue, yValue, widthValue].every(Number.isFinite)) {
+    return null
+  }
+
+  return (
+    <text
+      x={xValue + widthValue / 2}
+      y={Math.max(14, yValue - 8)}
+      textAnchor="middle"
+      className={actualValue > (payload?.normalAxisMax ?? 80) ? 'outlier-label' : 'impact-label'}
+    >
+      {formatPercent(actualValue)}
+    </text>
+  )
 }
 
 function metricValue(metric: BuildMetric | null) {
@@ -350,11 +442,11 @@ function transformRoslynValue(value: number) {
   return 104 + ((Math.min(Math.max(value, 200), 320) - 200) / 120) * 24
 }
 
-function formatAxisLabel(value: number, brokenAxis: ManualAxisBreak | undefined, cap: number) {
-  if (!brokenAxis) {
-    return value <= cap ? `${value}%` : ''
-  }
-
+function formatAxisLabel(value: number, brokenAxis: ManualAxisBreak) {
   const label = brokenAxis.tickLabels.get(value)
   return label === undefined ? '' : `${label}%`
+}
+
+function formatPercent(value: number) {
+  return `${value.toFixed(1)}%`
 }

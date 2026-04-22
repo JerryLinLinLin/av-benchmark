@@ -9,11 +9,11 @@ const outputDir = path.join(root, 'exports', experiment)
 const outputs = [
   {
     workload: 'ripgrep',
-    path: path.join(outputDir, 'ripgrep-first-run-impact.png'),
+    path: path.join(outputDir, 'ripgrep-build-cloud-cold-impact.png'),
   },
   {
     workload: 'roslyn',
-    path: path.join(outputDir, 'roslyn-first-run-impact.png'),
+    path: path.join(outputDir, 'roslyn-build-cloud-cold-impact.png'),
   },
 ]
 const port = 5178
@@ -37,8 +37,8 @@ try {
   const browser = await chromium.launch()
   const page = await browser.newPage({ viewport: { width: 1700, height: 1200 }, deviceScaleFactor: 1 })
   await page.goto(url)
-  await page.locator('[data-workload="ripgrep"] canvas').waitFor({ timeout: 15_000 })
-  await page.locator('[data-workload="roslyn"] canvas').waitFor({ timeout: 15_000 })
+  await page.locator('[data-workload="ripgrep"] svg.recharts-surface').waitFor({ timeout: 15_000 })
+  await page.locator('[data-workload="roslyn"] svg.recharts-surface').waitFor({ timeout: 15_000 })
   await page.waitForTimeout(300)
   for (const output of outputs) {
     await page
