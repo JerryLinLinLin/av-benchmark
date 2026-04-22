@@ -157,7 +157,7 @@ function WorkloadChart({
         notMerge
         lazyUpdate
         onChartReady={onReady}
-        style={{ height: '430px', width: '100%' }}
+        style={{ height: '490px', width: '100%' }}
         opts={{ renderer: 'canvas' }}
       />
     </section>

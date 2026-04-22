@@ -74,6 +74,7 @@
 
 .chart-card {
   background: #ffffff;
+  padding: 22px 0 26px;
 }
 
 .chart-card + .chart-card {
