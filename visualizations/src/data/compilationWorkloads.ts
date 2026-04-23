@@ -23,12 +23,28 @@ export type CompilationWorkloadRow = {
   }
 }
 
+export type MicrobenchScenarioRow = {
+  avName: string
+  avProduct: string
+  average: ImpactMetric
+  status: string
+}
+
+export type MicrobenchScenarioData = {
+  id: string
+  title: string
+  rows: MicrobenchScenarioRow[]
+}
+
 export type CompilationWorkloadData = {
   experiment: string
   source: string
   metrics: Array<'cloudCold' | 'average'>
   generatedAt: string
   rows: CompilationWorkloadRow[]
+  microbench: {
+    fileCreateDelete: MicrobenchScenarioData
+  }
 }
 
 export async function loadCompilationWorkloadData(experiment: string) {

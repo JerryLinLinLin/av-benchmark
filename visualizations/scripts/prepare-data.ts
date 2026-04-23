@@ -39,6 +39,13 @@ type ChartRow = {
   }
 }
 
+type MicrobenchScenarioRow = {
+  avName: string
+  avProduct: string
+  average: ImpactMetric
+  status: string
+}
+
 const scenarioMap = {
   'ripgrep-clean-build': ['ripgrep', 'clean'],
   'ripgrep-incremental-build': ['ripgrep', 'incremental'],
@@ -60,16 +67,31 @@ const records = parse(csv, {
 }) as CompareRow[]
 
 const rowsByAv = new Map<string, ChartRow>()
+const fileCreateDeleteRows: MicrobenchScenarioRow[] = []
 
 for (const record of records) {
+  const averageWallMs = Number(record.all_runs_mean_wall_ms)
+  const averageBaselineWallMs = Number(record.baseline_all_runs_mean_wall_ms)
+
+  if (record.scenario_id === 'file-create-delete') {
+    fileCreateDeleteRows.push({
+      avName: record.av_name,
+      avProduct: record.av_product,
+      average: {
+        value: ((averageWallMs - averageBaselineWallMs) / averageBaselineWallMs) * 100,
+        wallMs: averageWallMs,
+        baselineWallMs: averageBaselineWallMs,
+      },
+      status: record.status,
+    })
+  }
+
   const mapping = scenarioMap[record.scenario_id as keyof typeof scenarioMap]
   if (!mapping) {
     continue
   }
 
   const [workload, buildType] = mapping
-  const averageWallMs = Number(record.all_runs_mean_wall_ms)
-  const averageBaselineWallMs = Number(record.baseline_all_runs_mean_wall_ms)
   const row =
     rowsByAv.get(record.av_name) ??
     ({
@@ -102,6 +124,13 @@ const payload = {
   metrics: ['cloudCold', 'average'],
   generatedAt: new Date().toISOString(),
   rows: [...rowsByAv.values()],
+  microbench: {
+    fileCreateDelete: {
+      id: 'file-create-delete',
+      title: 'File Create/Delete',
+      rows: fileCreateDeleteRows,
+    },
+  },
 }
 
 await mkdir(outputDir, { recursive: true })

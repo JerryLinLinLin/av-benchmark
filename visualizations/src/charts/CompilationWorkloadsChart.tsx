@@ -261,7 +261,7 @@ const chartConfigs = [
     seriesConfig: ripgrepSeriesConfig,
     normalLabelClassName: 'impact-label ripgrep',
     title: 'Ripgrep Build: Cloud-Cold Impact',
-    subtitle: 'Clean + incremental build impact before cloud reputation/cache warms',
+    subtitle: 'Clean + incremental build impact before cloud reputation/cache warms. Lower is better.',
     yAxisLabel: 'Cloud-cold impact (%)',
     footnote:
       'Cloud-cold means first cloud/reputation exposure; VM reset removes local cache between runs. Broken y-axis emphasizes 0-60%. Negative values are shown as 0%.',
@@ -275,7 +275,7 @@ const chartConfigs = [
     seriesConfig: roslynSeriesConfig,
     normalLabelClassName: 'impact-label roslyn',
     title: 'Roslyn Build: Cloud-Cold Impact',
-    subtitle: 'Clean + incremental build impact before cloud reputation/cache warms',
+    subtitle: 'Clean + incremental build impact before cloud reputation/cache warms. Lower is better.',
     yAxisLabel: 'Cloud-cold impact (%)',
     footnote:
       'Cloud-cold means first cloud/reputation exposure; VM reset removes local cache between runs. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
@@ -289,7 +289,7 @@ const chartConfigs = [
     seriesConfig: ripgrepSeriesConfig,
     normalLabelClassName: 'impact-label ripgrep',
     title: 'Ripgrep Build: Average Impact',
-    subtitle: 'Clean + incremental build impact using mean wall time across all runs',
+    subtitle: 'Clean + incremental build impact using mean wall time across all runs. Lower is better.',
     yAxisLabel: 'Average impact (%)',
     footnote:
       'Impact is computed from all-runs mean wall time versus baseline OS. Broken y-axis emphasizes 0-60%. Negative values are shown as 0%.',
@@ -303,7 +303,7 @@ const chartConfigs = [
     seriesConfig: roslynSeriesConfig,
     normalLabelClassName: 'impact-label roslyn',
     title: 'Roslyn Build: Average Impact',
-    subtitle: 'Clean + incremental build impact using mean wall time across all runs',
+    subtitle: 'Clean + incremental build impact using mean wall time across all runs. Lower is better.',
     yAxisLabel: 'Average impact (%)',
     footnote:
       'Impact is computed from all-runs mean wall time versus baseline OS. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
@@ -319,7 +319,7 @@ const combinedAverageConfig = {
   valueDivisor: 4,
   tooltipLabel: 'Average compile impact',
   title: 'Compilation Builds: Average Impact',
-  subtitle: 'Mean impact across Ripgrep and Roslyn clean + incremental builds',
+  subtitle: 'Mean impact across Ripgrep and Roslyn clean + incremental builds. Lower is better.',
   yAxisLabel: 'Average compile impact (%)',
   footnote:
     'Average compile impact is the mean slowdown across Ripgrep and Roslyn clean + incremental builds. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
@@ -334,7 +334,7 @@ const combinedAverageSumConfig = {
   valueDivisor: 1,
   tooltipLabel: 'Total compile impact score',
   title: 'Compilation Builds: Total Average Impact',
-  subtitle: 'Summed impact across Ripgrep and Roslyn clean + incremental builds',
+  subtitle: 'Summed impact across Ripgrep and Roslyn clean + incremental builds. Lower is better.',
   yAxisLabel: 'Total average impact (%)',
   footnote:
     'Total average impact sums average slowdown across Ripgrep and Roslyn clean + incremental builds. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
