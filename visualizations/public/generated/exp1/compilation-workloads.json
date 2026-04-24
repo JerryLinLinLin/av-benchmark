@@ -5,7 +5,7 @@
     "cloudCold",
     "average"
   ],
-  "generatedAt": "2026-04-22T18:22:41.823Z",
+  "generatedAt": "2026-04-24T21:08:39.635Z",
   "rows": [
     {
       "avName": "360ts",
@@ -967,5 +967,4017 @@
         }
       }
     }
-  ]
+  ],
+  "microbench": {
+    "fileCreateDelete": {
+      "id": "file-create-delete",
+      "title": "File Create/Delete",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 123.68527781533052,
+            "wallMs": 3309.2,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 23.888062728133015,
+            "wallMs": 1832.8,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 73.70555630661079,
+            "wallMs": 2569.8,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 323.9962146816277,
+            "wallMs": 6272.6,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 207.584155738813,
+            "wallMs": 4550.4,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 164.05299445721238,
+            "wallMs": 3906.4,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 96.52561849398404,
+            "wallMs": 2907.4,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 191.19913478437203,
+            "wallMs": 4308,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 62.25496823036366,
+            "wallMs": 2400.4,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 53.210761119372705,
+            "wallMs": 2266.6,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 253.90022982290117,
+            "wallMs": 5235.6,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 6.4891172096796,
+            "wallMs": 1575.4,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 52.075165607678784,
+            "wallMs": 2249.8,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 194.48425037177236,
+            "wallMs": 4356.6,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 68.24388265513045,
+            "wallMs": 2489,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 750.9530890901717,
+            "wallMs": 12589,
+            "baselineWallMs": 1479.4
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "archiveExtract": {
+      "id": "archive-extract",
+      "title": "Archive Extract",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 79.07974801894456,
+            "wallMs": 23367.4,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 13.492635225234896,
+            "wallMs": 14809.2,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 23.841638183406648,
+            "wallMs": 16159.6,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 463.9256318685529,
+            "wallMs": 73584.4,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 22.23686832303849,
+            "wallMs": 15950.2,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 116.38949772389373,
+            "wallMs": 28235.8,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 23.556550127983073,
+            "wallMs": 16122.4,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 155.28409177996107,
+            "wallMs": 33311,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 42.63599160063148,
+            "wallMs": 18612,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 15.883696335239032,
+            "wallMs": 15121.2,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 211.54529987891425,
+            "wallMs": 40652.3,
+            "baselineWallMs": 13048.6
+          },
+          "status": "failed"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 3.0853884707938044,
+            "wallMs": 13451.2,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 54.53611881734438,
+            "wallMs": 20164.8,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 137.42163910304552,
+            "wallMs": 30980.2,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 42.03056266572659,
+            "wallMs": 18533,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 428.206857440645,
+            "wallMs": 68923.6,
+            "baselineWallMs": 13048.6
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "fileEnumLargeDir": {
+      "id": "file-enum-large-dir",
+      "title": "File Enum Large Dir",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 84.13493653974615,
+            "wallMs": 4410.4,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 18.921175684702753,
+            "wallMs": 2848.4,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 62.10754843019374,
+            "wallMs": 3882.8,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 745.5744822979293,
+            "wallMs": 20253.2,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 37.658650634602544,
+            "wallMs": 3297.2,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 131.9472277889112,
+            "wallMs": 5555.6,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 43.127922511690045,
+            "wallMs": 3428.2,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 185.73814295257182,
+            "wallMs": 6844,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 153.54041416165666,
+            "wallMs": 6072.8,
+            "baselineWallMs": 2395.2
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 15.389111556446242,
+            "wallMs": 2763.8,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 283.183032732131,
+            "wallMs": 9178,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 2.688710754843023,
+            "wallMs": 2459.6,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 119.38877755511024,
+            "wallMs": 5254.8,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 299.11489645958585,
+            "wallMs": 9559.6,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 54.64261857047429,
+            "wallMs": 3704,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 649.37374749499,
+            "wallMs": 17949,
+            "baselineWallMs": 2395.2
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "hardlinkCreate": {
+      "id": "hardlink-create",
+      "title": "Hardlink Create",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 156.31037212984955,
+            "wallMs": 3237.2,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 37.24465558194775,
+            "wallMs": 1733.4,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 44.22802850356294,
+            "wallMs": 1821.6,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 249.1211401425178,
+            "wallMs": 4409.4,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 53.396674584323044,
+            "wallMs": 1937.4,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 180.72842438638162,
+            "wallMs": 3545.6,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 42.549485352335715,
+            "wallMs": 1800.4,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 216.1520190023753,
+            "wallMs": 3993,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 130.37212984956452,
+            "wallMs": 2909.6,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 182.35946159936657,
+            "wallMs": 3566.2,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 105.63737133808391,
+            "wallMs": 2597.2,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 18.89152810768012,
+            "wallMs": 1501.6,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 45.98574821852731,
+            "wallMs": 1843.8,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 152.95328582739512,
+            "wallMs": 3194.8,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 81.39350752177356,
+            "wallMs": 2291,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 504.9247822644497,
+            "wallMs": 7640.2,
+            "baselineWallMs": 1263
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "junctionCreate": {
+      "id": "junction-create",
+      "title": "Junction Create",
+      "rows": [
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 66.59953004363882,
+            "wallMs": 992.6,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 56.0255119167506,
+            "wallMs": 929.6,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 166.66666666666669,
+            "wallMs": 1588.8,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 12.722390063779804,
+            "wallMs": 671.6,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 113.66230278616986,
+            "wallMs": 1273,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 18.261161463578397,
+            "wallMs": 704.6,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 119.50318898959382,
+            "wallMs": 1307.8,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 41.322591473648885,
+            "wallMs": 842,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 68.88217522658613,
+            "wallMs": 1006.2,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 84.08862034239678,
+            "wallMs": 1096.8,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 1.8126888217522774,
+            "wallMs": 606.6,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 21.584424303457542,
+            "wallMs": 724.4,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 60.825780463242715,
+            "wallMs": 958.2,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 46.2235649546828,
+            "wallMs": 871.2,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 241.289023162135,
+            "wallMs": 2033.4,
+            "baselineWallMs": 595.8
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "processCreateWait": {
+      "id": "process-create-wait",
+      "title": "Process Create Wait",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 222.63882864962684,
+            "wallMs": 43145.2,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 87.93503133272512,
+            "wallMs": 25131.8,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 38.17357881040337,
+            "wallMs": 18477.4,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 136.22033112483734,
+            "wallMs": 31588.8,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 50.28191974634699,
+            "wallMs": 20096.6,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 92.83460209682485,
+            "wallMs": 25787,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 46.87495326264152,
+            "wallMs": 19641,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 37.5110300166011,
+            "wallMs": 18388.8,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 36.57030046513019,
+            "wallMs": 18263,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 106.83188011306702,
+            "wallMs": 27658.8,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 67.78786473834556,
+            "wallMs": 22437.6,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 63.52392204956404,
+            "wallMs": 21867.4,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 19.09127619161569,
+            "wallMs": 15925.6,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 108.83149125824447,
+            "wallMs": 27926.2,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 55.42078578586063,
+            "wallMs": 20783.8,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 86.25697321388512,
+            "wallMs": 24907.4,
+            "baselineWallMs": 13372.6
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "dllLoadUnique": {
+      "id": "dll-load-unique",
+      "title": "DLL Load Unique",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 31.446336712780298,
+            "wallMs": 10527.8,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 6.162912650451974,
+            "wallMs": 8502.8,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 453.68576137441954,
+            "wallMs": 44345.8,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 97.00094890875495,
+            "wallMs": 15778.2,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 4301.513259751286,
+            "wallMs": 352526,
+            "baselineWallMs": 8009.2
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 503.69075563102444,
+            "wallMs": 48350.8,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 30.162812765319885,
+            "wallMs": 10425,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 481.78344903361136,
+            "wallMs": 46596.2,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 246.52399740298657,
+            "wallMs": 27753.8,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 609.4840932927134,
+            "wallMs": 56824,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 1556.1204614693104,
+            "wallMs": 132642,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 501.4982769814713,
+            "wallMs": 48175.2,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 598.0797083354144,
+            "wallMs": 55910.6,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 732.2878689507069,
+            "wallMs": 66659.6,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 27.13879039105029,
+            "wallMs": 10182.8,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 469.1779453628327,
+            "wallMs": 45586.6,
+            "baselineWallMs": 8009.2
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "fileWriteContent": {
+      "id": "file-write-content",
+      "title": "File Write Content",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 108.88754167929675,
+            "wallMs": 6891.2,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 28.263110033343423,
+            "wallMs": 4231.4,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 57.9266444377084,
+            "wallMs": 5210,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 471.8823886026069,
+            "wallMs": 18866.4,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 26066.94149742346,
+            "wallMs": 863247.4,
+            "baselineWallMs": 3299
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 148.42073355562292,
+            "wallMs": 8195.4,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 2744.837829645347,
+            "wallMs": 93851.2,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 973.379812064262,
+            "wallMs": 35410.8,
+            "baselineWallMs": 3299
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 31552.573507123372,
+            "wallMs": 1044218.4,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 48.43285844195211,
+            "wallMs": 4896.8,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 495.27129433161565,
+            "wallMs": 19638,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 1.0366777811457961,
+            "wallMs": 3333.2,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 42.4856016974841,
+            "wallMs": 4700.6,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 248.19036071536829,
+            "wallMs": 11486.8,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 62.15822976659595,
+            "wallMs": 5349.6,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 2602.0672931191266,
+            "wallMs": 89141.2,
+            "baselineWallMs": 3299
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "newExeRun": {
+      "id": "new-exe-run",
+      "title": "New EXE Run",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 389.5055288963071,
+            "wallMs": 9384.8,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 220.33173377842687,
+            "wallMs": 6141.4,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 6631.7755059461715,
+            "wallMs": 129061.6,
+            "baselineWallMs": 1917.2
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 634.1331107865636,
+            "wallMs": 14074.8,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 423.66993532234505,
+            "wallMs": 10039.8,
+            "baselineWallMs": 1917.2
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 193.07323179636973,
+            "wallMs": 5618.8,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 173.60734404339664,
+            "wallMs": 5245.6,
+            "baselineWallMs": 1917.2
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 108.36636761944504,
+            "wallMs": 3994.8,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 34.72772793657416,
+            "wallMs": 2583,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 871.1767160442312,
+            "wallMs": 18619.4,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 684.2582933444606,
+            "wallMs": 15035.8,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 2780.3776340496556,
+            "wallMs": 55222.6,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 173.2943876486543,
+            "wallMs": 5239.6,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 410.53619862299183,
+            "wallMs": 9788,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 2430.7010223242232,
+            "wallMs": 48518.6,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 1313.3215105361985,
+            "wallMs": 27096.2,
+            "baselineWallMs": 1917.2
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "newExeRunMotw": {
+      "id": "new-exe-run-motw",
+      "title": "New EXE Run MOTW",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 386.3250517598343,
+            "wallMs": 9395.8,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 67.21532091097308,
+            "wallMs": 3230.6,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 245.17598343685302,
+            "wallMs": 6668.8,
+            "baselineWallMs": 1932
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 489.60662525879917,
+            "wallMs": 11391.2,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 420.8488612836438,
+            "wallMs": 10062.8,
+            "baselineWallMs": 1932
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 191.65631469979297,
+            "wallMs": 5634.8,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 58.93374741200827,
+            "wallMs": 3070.6,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 99.68944099378882,
+            "wallMs": 3858,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 31.89440993788819,
+            "wallMs": 2548.2,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 168.86128364389234,
+            "wallMs": 5194.4,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 162.36024844720498,
+            "wallMs": 5068.8,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 2381.5424430641824,
+            "wallMs": 47943.4,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 3342.4223602484476,
+            "wallMs": 66507.6,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 265.0310559006211,
+            "wallMs": 7052.4,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 2463.6749482401656,
+            "wallMs": 49530.2,
+            "baselineWallMs": 1932
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "threadCreate": {
+      "id": "thread-create",
+      "title": "Thread Create",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 3.739588645249023,
+            "wallMs": 1220.6,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 26.194118646948844,
+            "wallMs": 1484.8,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 23.236443991160982,
+            "wallMs": 1450,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 10.419853816080243,
+            "wallMs": 1299.2,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 3.127655957844653,
+            "wallMs": 1213.4,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 9.280979092299852,
+            "wallMs": 1285.8,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 6.5782763895971526,
+            "wallMs": 1254,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 11.422743498215205,
+            "wallMs": 1311,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 0.4419513853476157,
+            "wallMs": 1181.8,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 148.580656127826,
+            "wallMs": 2924.8,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 53.96906340302567,
+            "wallMs": 1811.6,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 3.671596124426317,
+            "wallMs": 1219.8,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 6.119326874043856,
+            "wallMs": 1248.6,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 22.369539350671435,
+            "wallMs": 1439.8,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 3.7905830358660664,
+            "wallMs": 1221.2,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 59.81642019377871,
+            "wallMs": 1880.4,
+            "baselineWallMs": 1176.6
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "memAllocProtect": {
+      "id": "mem-alloc-protect",
+      "title": "Memory Allocate/Protect",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": -5.100830367734279,
+            "wallMs": 160,
+            "baselineWallMs": 168.6
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 13.879003558718864,
+            "wallMs": 192,
+            "baselineWallMs": 168.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": -3.914590747330957,
+            "wallMs": 162,
+            "baselineWallMs": 168.6
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 0,
+            "wallMs": 168.6,
+            "baselineWallMs": 168.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": -3.321470937129297,
+            "wallMs": 163,
+            "baselineWallMs": 168.6
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 33.09608540925268,
+            "wallMs": 224.4,
+            "baselineWallMs": 168.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 2.01660735468565,
+            "wallMs": 172,
+            "baselineWallMs": 168.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": -4.744958481613286,
+            "wallMs": 160.6,
+            "baselineWallMs": 168.6
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": -4.389086595492293,
+            "wallMs": 161.2,
+            "baselineWallMs": 168.6
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": -3.558718861209965,
+            "wallMs": 162.6,
+            "baselineWallMs": 168.6
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": -2.7283511269276364,
+            "wallMs": 164,
+            "baselineWallMs": 168.6
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": -7.354685646500597,
+            "wallMs": 156.2,
+            "baselineWallMs": 168.6
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 17.081850533807835,
+            "wallMs": 197.4,
+            "baselineWallMs": 168.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 51.245551601423486,
+            "wallMs": 255,
+            "baselineWallMs": 168.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": -2.7283511269276364,
+            "wallMs": 164,
+            "baselineWallMs": 168.6
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 132.3843416370107,
+            "wallMs": 391.8,
+            "baselineWallMs": 168.6
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "memMapFile": {
+      "id": "mem-map-file",
+      "title": "Memory Map File",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 54.042028519352414,
+            "wallMs": 5747,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 15.138844215717812,
+            "wallMs": 4295.6,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 197.5018762731854,
+            "wallMs": 11099.2,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 230.9585075587005,
+            "wallMs": 12347.4,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 14.897609091883782,
+            "wallMs": 4286.6,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 58.287766698831334,
+            "wallMs": 5905.4,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 51.94596333226118,
+            "wallMs": 5668.8,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 89.33740752653586,
+            "wallMs": 7063.8,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 10.823415889353495,
+            "wallMs": 4134.6,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 34.12136807119116,
+            "wallMs": 5003.8,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 115.76605553768628,
+            "wallMs": 8049.8,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 5.478717701297299,
+            "wallMs": 3935.2,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 137.41288731639324,
+            "wallMs": 8857.4,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 116.59161573925164,
+            "wallMs": 8080.6,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 42.40913477002251,
+            "wallMs": 5313,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 268.24809692291194,
+            "wallMs": 13738.6,
+            "baselineWallMs": 3730.8
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "netConnectLoopback": {
+      "id": "net-connect-loopback",
+      "title": "Loopback Connect",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 22.98331015299025,
+            "wallMs": 707.4,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 113.49095966620304,
+            "wallMs": 1228,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 56.154381084840054,
+            "wallMs": 898.2,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 156.11961057023643,
+            "wallMs": 1473.2,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 28.720445062586915,
+            "wallMs": 740.4,
+            "baselineWallMs": 575.2
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 167.17663421418635,
+            "wallMs": 1536.8,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 171.80111265646732,
+            "wallMs": 1563.4,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 9.909596662030596,
+            "wallMs": 632.2,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 12.760778859527116,
+            "wallMs": 648.6,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 49.86091794158553,
+            "wallMs": 862,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 28.929068150208614,
+            "wallMs": 741.6,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 11.578581363004156,
+            "wallMs": 641.8,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 3.6856745479832984,
+            "wallMs": 596.4,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 100,
+            "wallMs": 1150.4,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 37.7260083449235,
+            "wallMs": 792.2,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 18.77607788595271,
+            "wallMs": 683.2,
+            "baselineWallMs": 575.2
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "netDnsResolve": {
+      "id": "net-dns-resolve",
+      "title": "DNS Resolve",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 24.32714375130398,
+            "wallMs": 1191.8,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 21.26017108282913,
+            "wallMs": 1162.4,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 572.0634258293344,
+            "wallMs": 6442.4,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 28.499895681201743,
+            "wallMs": 1231.8,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 14.980179428332988,
+            "wallMs": 1102.2,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 71.31233048195284,
+            "wallMs": 1642.2,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 5.674942624660961,
+            "wallMs": 1013,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": -1.377008136866268,
+            "wallMs": 945.4,
+            "baselineWallMs": 958.6
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 16.14854996870437,
+            "wallMs": 1113.4,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 15.543500938869173,
+            "wallMs": 1107.6,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 48.00751095347381,
+            "wallMs": 1418.8,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 5.174212393073234,
+            "wallMs": 1008.2,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 9.826830794909236,
+            "wallMs": 1052.8,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 46.129772585019815,
+            "wallMs": 1400.8,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 29.835176298769028,
+            "wallMs": 1244.6,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 11.70456916336323,
+            "wallMs": 1070.8,
+            "baselineWallMs": 958.6
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "registryCrud": {
+      "id": "registry-crud",
+      "title": "Registry CRUD",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 104.81874447391691,
+            "wallMs": 926.6,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 288.7267904509284,
+            "wallMs": 1758.6,
+            "baselineWallMs": 452.4
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 1137.4889478337755,
+            "wallMs": 5598.4,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 1067.241379310345,
+            "wallMs": 5280.6,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 56.32183908045979,
+            "wallMs": 707.2,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 2689.2130857648103,
+            "wallMs": 12618.4,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 81.38815207780726,
+            "wallMs": 820.6,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 52.47568523430593,
+            "wallMs": 689.8,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 78.73563218390805,
+            "wallMs": 808.6,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 68.2581786030062,
+            "wallMs": 761.2,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 134.04067197170647,
+            "wallMs": 1058.8,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 21.308576480990272,
+            "wallMs": 548.8,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 30.72502210433245,
+            "wallMs": 591.4,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 1313.8373121131742,
+            "wallMs": 6396.2,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 126.96728558797525,
+            "wallMs": 1026.8,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 2137.0910698496905,
+            "wallMs": 10120.6,
+            "baselineWallMs": 452.4
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "pipeRoundtrip": {
+      "id": "pipe-roundtrip",
+      "title": "Pipe Roundtrip",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": -6.047819971870601,
+            "wallMs": 133.6,
+            "baselineWallMs": 142.2
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 10.40787623066105,
+            "wallMs": 157,
+            "baselineWallMs": 142.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 3.0942334739803137,
+            "wallMs": 146.6,
+            "baselineWallMs": 142.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 23.06610407876232,
+            "wallMs": 175,
+            "baselineWallMs": 142.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 99.57805907172998,
+            "wallMs": 283.8,
+            "baselineWallMs": 142.2
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 28.69198312236288,
+            "wallMs": 183,
+            "baselineWallMs": 142.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 13.502109704641363,
+            "wallMs": 161.4,
+            "baselineWallMs": 142.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 18.28410689170183,
+            "wallMs": 168.2,
+            "baselineWallMs": 142.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 10.970464135021114,
+            "wallMs": 157.8,
+            "baselineWallMs": 142.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 4.64135021097048,
+            "wallMs": 148.8,
+            "baselineWallMs": 142.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 9.282700421940941,
+            "wallMs": 155.4,
+            "baselineWallMs": 142.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 8.860759493670903,
+            "wallMs": 154.8,
+            "baselineWallMs": 142.2
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 1.2658227848101347,
+            "wallMs": 144,
+            "baselineWallMs": 142.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 27.426160337552748,
+            "wallMs": 181.2,
+            "baselineWallMs": 142.2
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": -8.720112517580857,
+            "wallMs": 129.8,
+            "baselineWallMs": 142.2
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 8.438818565400846,
+            "wallMs": 154.2,
+            "baselineWallMs": 142.2
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "cryptoHashVerify": {
+      "id": "crypto-hash-verify",
+      "title": "Crypto Hash Verify",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 5.279999999999995,
+            "wallMs": 263.2,
+            "baselineWallMs": 250
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 3.5999999999999996,
+            "wallMs": 259,
+            "baselineWallMs": 250
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 0.32000000000000456,
+            "wallMs": 250.8,
+            "baselineWallMs": 250
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 8.159999999999991,
+            "wallMs": 270.4,
+            "baselineWallMs": 250
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 2.4,
+            "wallMs": 256,
+            "baselineWallMs": 250
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 6.8799999999999955,
+            "wallMs": 267.2,
+            "baselineWallMs": 250
+          },
+          "status": "noisy"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 0.07999999999999545,
+            "wallMs": 250.2,
+            "baselineWallMs": 250
+          },
+          "status": "anomaly"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": -3.0399999999999974,
+            "wallMs": 242.4,
+            "baselineWallMs": 250
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 5.440000000000009,
+            "wallMs": 263.6,
+            "baselineWallMs": 250
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 3.5200000000000045,
+            "wallMs": 258.8,
+            "baselineWallMs": 250
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 0.47999999999999543,
+            "wallMs": 251.2,
+            "baselineWallMs": 250
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 5.759999999999991,
+            "wallMs": 264.4,
+            "baselineWallMs": 250
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 3.5999999999999996,
+            "wallMs": 259,
+            "baselineWallMs": 250
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": -0.16000000000000228,
+            "wallMs": 249.6,
+            "baselineWallMs": 250
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 1.0399999999999976,
+            "wallMs": 252.6,
+            "baselineWallMs": 250
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 2.8799999999999955,
+            "wallMs": 257.2,
+            "baselineWallMs": 250
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "comCreateInstance": {
+      "id": "com-create-instance",
+      "title": "COM Create Instance",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 219.17293233082708,
+            "wallMs": 1528.2,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 42.69005847953217,
+            "wallMs": 683.2,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 53.216374269005854,
+            "wallMs": 733.6,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 240.85213032581456,
+            "wallMs": 1632,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 56.55806182121972,
+            "wallMs": 749.6,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 162.40601503759402,
+            "wallMs": 1256.4,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 33.41687552213867,
+            "wallMs": 638.8,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 301.0442773600668,
+            "wallMs": 1920.2,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 87.59398496240603,
+            "wallMs": 898.2,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 13.86800334168756,
+            "wallMs": 545.2,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 82.20551378446115,
+            "wallMs": 872.4,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 16.04010025062657,
+            "wallMs": 555.6,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 14.954051796157053,
+            "wallMs": 550.4,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 430.61821219715955,
+            "wallMs": 2540.6,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 36.2155388471178,
+            "wallMs": 652.2,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 294.86215538847114,
+            "wallMs": 1890.6,
+            "baselineWallMs": 478.8
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "fsWatcher": {
+      "id": "fs-watcher",
+      "title": "File System Watcher",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "average": {
+            "value": 127.18964893231994,
+            "wallMs": 5021.8,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "average": {
+            "value": 24.375678610206283,
+            "wallMs": 2749.2,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "average": {
+            "value": 85.32392327180598,
+            "wallMs": 4096.4,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "average": {
+            "value": 778.7278320665943,
+            "wallMs": 19423.4,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "average": {
+            "value": 154.37024972855593,
+            "wallMs": 5622.6,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "average": {
+            "value": 154.343105320304,
+            "wallMs": 5622,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "average": {
+            "value": 122.89178429243574,
+            "wallMs": 4926.8,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "average": {
+            "value": 274.719507781397,
+            "wallMs": 8282.8,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "average": {
+            "value": 74.76474846181685,
+            "wallMs": 3863,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "average": {
+            "value": 23.045602605863195,
+            "wallMs": 2719.8,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "average": {
+            "value": 192.6167209554832,
+            "wallMs": 6468,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "average": {
+            "value": 7.120883098081798,
+            "wallMs": 2367.8,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "average": {
+            "value": 58.90336590662323,
+            "wallMs": 3512.4,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "average": {
+            "value": 236.34636264929426,
+            "wallMs": 7434.6,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "average": {
+            "value": 66.61237785016286,
+            "wallMs": 3682.8,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "average": {
+            "value": 817.4990951863915,
+            "wallMs": 20280.4,
+            "baselineWallMs": 2210.4
+          },
+          "status": "ok"
+        }
+      ]
+    },
+    "extensionSensitivity": {
+      "id": "extension-sensitivity",
+      "title": "Extension Sensitivity",
+      "rows": [
+        {
+          "avName": "360ts",
+          "avProduct": "360 Total Security",
+          "exe": {
+            "avName": "360ts",
+            "avProduct": "360 Total Security",
+            "average": {
+              "value": 118.8415401948439,
+              "wallMs": 6604.2,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "360ts",
+            "avProduct": "360 Total Security",
+            "average": {
+              "value": 117.14740401830119,
+              "wallMs": 6549.6,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "360ts",
+            "avProduct": "360 Total Security",
+            "average": {
+              "value": 118.73147599288679,
+              "wallMs": 6642,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "360ts",
+            "avProduct": "360 Total Security",
+            "average": {
+              "value": 154.86797016730495,
+              "wallMs": 7586.4,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "avast",
+          "avProduct": "Avast Antivirus",
+          "exe": {
+            "avName": "avast",
+            "avProduct": "Avast Antivirus",
+            "average": {
+              "value": 35.01557425939425,
+              "wallMs": 4074.5,
+              "baselineWallMs": 3017.8
+            },
+            "status": "failed"
+          },
+          "dll": {
+            "avName": "avast",
+            "avProduct": "Avast Antivirus",
+            "average": {
+              "value": 27.087063192096018,
+              "wallMs": 3833.2,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "avast",
+            "avProduct": "Avast Antivirus",
+            "average": {
+              "value": 18.145294078904037,
+              "wallMs": 3587.6,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "avast",
+            "avProduct": "Avast Antivirus",
+            "average": {
+              "value": 26.849425519048587,
+              "wallMs": 3775.8,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "avira",
+          "avProduct": "Avira Security",
+          "exe": {
+            "avName": "avira",
+            "avProduct": "Avira Security",
+            "average": {
+              "value": 65.26608787858703,
+              "wallMs": 4987.4,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "avira",
+            "avProduct": "Avira Security",
+            "average": {
+              "value": 66.83243816723031,
+              "wallMs": 5032,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "avira",
+            "avProduct": "Avira Security",
+            "average": {
+              "value": 65.18474609760916,
+              "wallMs": 5016,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "avira",
+            "avProduct": "Avira Security",
+            "average": {
+              "value": 70.59060673251362,
+              "wallMs": 5077.8,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "bitdefender",
+          "avProduct": "Bitdefender Antivirus",
+          "exe": {
+            "avName": "bitdefender",
+            "avProduct": "Bitdefender Antivirus",
+            "average": {
+              "value": 602.7834846576976,
+              "wallMs": 21208.6,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "bitdefender",
+            "avProduct": "Bitdefender Antivirus",
+            "average": {
+              "value": 641.0582852595982,
+              "wallMs": 22351.8,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "bitdefender",
+            "avProduct": "Bitdefender Antivirus",
+            "average": {
+              "value": 1182.0983995257855,
+              "wallMs": 38932.2,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "bitdefender",
+            "avProduct": "Bitdefender Antivirus",
+            "average": {
+              "value": 4071.0071894107373,
+              "wallMs": 124154.2,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "drweb",
+          "avProduct": "Dr.Web Security Space",
+          "exe": {
+            "avName": "drweb",
+            "avProduct": "Dr.Web Security Space",
+            "average": {
+              "value": 398.6413943932666,
+              "wallMs": 15048,
+              "baselineWallMs": 3017.8
+            },
+            "status": "noisy"
+          },
+          "dll": {
+            "avName": "drweb",
+            "avProduct": "Dr.Web Security Space",
+            "average": {
+              "value": 389.21822160334193,
+              "wallMs": 14755.8,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "drweb",
+            "avProduct": "Dr.Web Security Space",
+            "average": {
+              "value": 386.84054534676943,
+              "wallMs": 14783.4,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "drweb",
+            "avProduct": "Dr.Web Security Space",
+            "average": {
+              "value": 465.3295706510784,
+              "wallMs": 16827.6,
+              "baselineWallMs": 2976.6
+            },
+            "status": "noisy"
+          }
+        },
+        {
+          "avName": "emsisoft",
+          "avProduct": "Emsisoft Anti-Malware Home",
+          "exe": {
+            "avName": "emsisoft",
+            "avProduct": "Emsisoft Anti-Malware Home",
+            "average": {
+              "value": 157.5319769368414,
+              "wallMs": 7771.8,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "emsisoft",
+            "avProduct": "Emsisoft Anti-Malware Home",
+            "average": {
+              "value": 158.17916583780917,
+              "wallMs": 7787.2,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "emsisoft",
+            "avProduct": "Emsisoft Anti-Malware Home",
+            "average": {
+              "value": 153.86945926365013,
+              "wallMs": 7709,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "emsisoft",
+            "avProduct": "Emsisoft Anti-Malware Home",
+            "average": {
+              "value": 158.01921655580193,
+              "wallMs": 7680.2,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "eset",
+          "avProduct": "ESET Security",
+          "exe": {
+            "avName": "eset",
+            "avProduct": "ESET Security",
+            "average": {
+              "value": 106.10378421366558,
+              "wallMs": 6219.8,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "eset",
+            "avProduct": "ESET Security",
+            "average": {
+              "value": 102.69212916915326,
+              "wallMs": 6113.6,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "eset",
+            "avProduct": "ESET Security",
+            "average": {
+              "value": 156.09563327405652,
+              "wallMs": 7776.6,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "eset",
+            "avProduct": "ESET Security",
+            "average": {
+              "value": 158.7784720822415,
+              "wallMs": 7702.8,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "gdata",
+          "avProduct": "G DATA INTERNET SECURITY",
+          "exe": {
+            "avName": "gdata",
+            "avProduct": "G DATA INTERNET SECURITY",
+            "average": {
+              "value": 177.6260852276493,
+              "wallMs": 8378.2,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "gdata",
+            "avProduct": "G DATA INTERNET SECURITY",
+            "average": {
+              "value": 174.00039785160135,
+              "wallMs": 8264.4,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "gdata",
+            "avProduct": "G DATA INTERNET SECURITY",
+            "average": {
+              "value": 175.93360995850622,
+              "wallMs": 8379,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "gdata",
+            "avProduct": "G DATA INTERNET SECURITY",
+            "average": {
+              "value": 183.30981656924007,
+              "wallMs": 8433,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "huorong",
+          "avProduct": "Huorong Internet Security",
+          "exe": {
+            "avName": "huorong",
+            "avProduct": "Huorong Internet Security",
+            "average": {
+              "value": 232.3546954735237,
+              "wallMs": 10029.8,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "huorong",
+            "avProduct": "Huorong Internet Security",
+            "average": {
+              "value": 263.7822425568596,
+              "wallMs": 10972.4,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "huorong",
+            "avProduct": "Huorong Internet Security",
+            "average": {
+              "value": 57.294342356583016,
+              "wallMs": 4776.4,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "huorong",
+            "avProduct": "Huorong Internet Security",
+            "average": {
+              "value": 61.17718201975409,
+              "wallMs": 4797.6,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "kaspersky",
+          "avProduct": "Kaspersky",
+          "exe": {
+            "avName": "kaspersky",
+            "avProduct": "Kaspersky",
+            "average": {
+              "value": 20.763470077539925,
+              "wallMs": 3644.4,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "kaspersky",
+            "avProduct": "Kaspersky",
+            "average": {
+              "value": 20.80100789072343,
+              "wallMs": 3643.6,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "kaspersky",
+            "avProduct": "Kaspersky",
+            "average": {
+              "value": 26.87215965224264,
+              "wallMs": 3852.6,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "kaspersky",
+            "avProduct": "Kaspersky",
+            "average": {
+              "value": 28.892024457434655,
+              "wallMs": 3836.6,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "malwarebytes",
+          "avProduct": "Malwarebytes",
+          "exe": {
+            "avName": "malwarebytes",
+            "avProduct": "Malwarebytes",
+            "average": {
+              "value": 439.7110477831532,
+              "wallMs": 16287.4,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "malwarebytes",
+            "avProduct": "Malwarebytes",
+            "average": {
+              "value": 432.06020820900466,
+              "wallMs": 16048,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "malwarebytes",
+            "avProduct": "Malwarebytes",
+            "average": {
+              "value": 588.2368438385037,
+              "wallMs": 20899,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "malwarebytes",
+            "avProduct": "Malwarebytes",
+            "average": {
+              "value": 438.05012430289594,
+              "wallMs": 16015.6,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "mcafee",
+          "avProduct": "McAfee",
+          "exe": {
+            "avName": "mcafee",
+            "avProduct": "McAfee",
+            "average": {
+              "value": 4.20173636423884,
+              "wallMs": 3144.6,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "mcafee",
+            "avProduct": "McAfee",
+            "average": {
+              "value": 4.058086333797497,
+              "wallMs": 3138.6,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "mcafee",
+            "avProduct": "McAfee",
+            "average": {
+              "value": 2.6938022788645255,
+              "wallMs": 3118.4,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "mcafee",
+            "avProduct": "McAfee",
+            "average": {
+              "value": 3.8567493112947724,
+              "wallMs": 3091.4,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "ms-defender",
+          "avProduct": "Windows Defender",
+          "exe": {
+            "avName": "ms-defender",
+            "avProduct": "Windows Defender",
+            "average": {
+              "value": 47.50480482470672,
+              "wallMs": 4451.4,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "ms-defender",
+            "avProduct": "Windows Defender",
+            "average": {
+              "value": 45.61368609508654,
+              "wallMs": 4392,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "ms-defender",
+            "avProduct": "Windows Defender",
+            "average": {
+              "value": 43.97022986234605,
+              "wallMs": 4371.8,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "ms-defender",
+            "avProduct": "Windows Defender",
+            "average": {
+              "value": 47.8330981656924,
+              "wallMs": 4400.4,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "sophos",
+          "avProduct": "Sophos Home",
+          "exe": {
+            "avName": "sophos",
+            "avProduct": "Sophos Home",
+            "average": {
+              "value": 238.6506726754589,
+              "wallMs": 10219.8,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "sophos",
+            "avProduct": "Sophos Home",
+            "average": {
+              "value": 236.94715204562033,
+              "wallMs": 10163,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "sophos",
+            "avProduct": "Sophos Home",
+            "average": {
+              "value": 241.803332674702,
+              "wallMs": 10379.2,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "sophos",
+            "avProduct": "Sophos Home",
+            "average": {
+              "value": 250.11758382046628,
+              "wallMs": 10421.6,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "tencent-pcmgr",
+          "avProduct": "腾讯电脑管家系统防护",
+          "exe": {
+            "avName": "tencent-pcmgr",
+            "avProduct": "腾讯电脑管家系统防护",
+            "average": {
+              "value": 69.09669295513287,
+              "wallMs": 5103,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "tencent-pcmgr",
+            "avProduct": "腾讯电脑管家系统防护",
+            "average": {
+              "value": 69.06040713480539,
+              "wallMs": 5099.2,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "tencent-pcmgr",
+            "avProduct": "腾讯电脑管家系统防护",
+            "average": {
+              "value": 67.47678324441812,
+              "wallMs": 5085.6,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "tencent-pcmgr",
+            "avProduct": "腾讯电脑管家系统防护",
+            "average": {
+              "value": 72.72055365181751,
+              "wallMs": 5141.2,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        },
+        {
+          "avName": "trendmicro",
+          "avProduct": "Trend Micro Maximum Security",
+          "exe": {
+            "avName": "trendmicro",
+            "avProduct": "Trend Micro Maximum Security",
+            "average": {
+              "value": 768.6526608787859,
+              "wallMs": 26214.2,
+              "baselineWallMs": 3017.8
+            },
+            "status": "ok"
+          },
+          "dll": {
+            "avName": "trendmicro",
+            "avProduct": "Trend Micro Maximum Security",
+            "average": {
+              "value": 1185.9226841721372,
+              "wallMs": 38786,
+              "baselineWallMs": 3016.2
+            },
+            "status": "ok"
+          },
+          "js": {
+            "avName": "trendmicro",
+            "avProduct": "Trend Micro Maximum Security",
+            "average": {
+              "value": 1935.9349272212341,
+              "wallMs": 61823.2,
+              "baselineWallMs": 3036.6
+            },
+            "status": "ok"
+          },
+          "ps1": {
+            "avName": "trendmicro",
+            "avProduct": "Trend Micro Maximum Security",
+            "average": {
+              "value": 1258.6978431767789,
+              "wallMs": 40443,
+              "baselineWallMs": 2976.6
+            },
+            "status": "ok"
+          }
+        }
+      ]
+    }
+  }
 }

@@ -5,7 +5,6 @@ import {
   ComposedChart,
   Label,
   LabelList,
-  Scatter,
   XAxis,
   YAxis,
 } from 'recharts'
@@ -29,6 +28,7 @@ import type {
   CompilationWorkloadData,
   CompilationWorkloadRow,
 } from '../data/compilationWorkloads'
+import { avLabel, text, useLocale, type Locale } from '../i18n'
 
 type Props = {
   data: CompilationWorkloadData
@@ -54,6 +54,8 @@ type ChartDatum = {
   cleanPlot: number
   incrementalPlot: number
   totalPlot: number
+  cleanLabel: string | null
+  incrementalLabel: string | null
 }
 
 type ManualAxisBreak = {
@@ -69,20 +71,6 @@ type WorkloadChartConfig = {
   workload: WorkloadKey
   seriesConfig: ChartConfig
   normalLabelClassName: string
-  title: string
-  subtitle: string
-  yAxisLabel: string
-  footnote: string
-  axisMax: number
-  brokenAxis: ManualAxisBreak
-}
-
-type CombinedChartConfig = {
-  id: string
-  seriesConfig: ChartConfig
-  normalLabelClassName: string
-  valueDivisor: number
-  tooltipLabel: string
   title: string
   subtitle: string
   yAxisLabel: string
@@ -124,13 +112,6 @@ const roslynSeriesConfig = {
   incrementalPlot: {
     label: 'Incremental build',
     color: 'var(--chart-4)',
-  },
-} satisfies ChartConfig
-
-const combinedSeriesConfig = {
-  totalPlot: {
-    label: 'Combined average impact',
-    color: 'var(--chart-5)',
   },
 } satisfies ChartConfig
 
@@ -212,47 +193,6 @@ const averageRoslynAxis: ManualAxisBreak = {
   transform: transformAverageRoslynValue,
 }
 
-const combinedAverageAxis: ManualAxisBreak = {
-  max: 130,
-  ticks: [0, 11.5, 23, 34.5, 46, 57.5, 69, 80.5, 92, 104, 116, 124],
-  tickLabels: new Map([
-    [0, 0],
-    [11.5, 10],
-    [23, 20],
-    [34.5, 30],
-    [46, 40],
-    [57.5, 50],
-    [69, 60],
-    [80.5, 70],
-    [92, 80],
-    [104, 200],
-    [116, 220],
-    [124, 240],
-  ]),
-  transform: transformCombinedAverageValue,
-}
-
-const combinedAverageSumAxis: ManualAxisBreak = {
-  max: 138,
-  ticks: [0, 11.5, 23, 34.5, 46, 57.5, 69, 80.5, 92, 104, 116, 124, 136],
-  tickLabels: new Map([
-    [0, 0],
-    [11.5, 10],
-    [23, 20],
-    [34.5, 30],
-    [46, 40],
-    [57.5, 50],
-    [69, 60],
-    [80.5, 70],
-    [92, 80],
-    [104, 180],
-    [116, 250],
-    [124, 900],
-    [136, 950],
-  ]),
-  transform: transformCombinedAverageSumValue,
-}
-
 const chartConfigs = [
   {
     id: 'ripgrep-cloud-cold',
@@ -312,78 +252,45 @@ const chartConfigs = [
   },
 ] satisfies WorkloadChartConfig[]
 
-const combinedAverageConfig = {
-  id: 'compilation-average-combined',
-  seriesConfig: combinedSeriesConfig,
-  normalLabelClassName: 'impact-label combined',
-  valueDivisor: 4,
-  tooltipLabel: 'Average compile impact',
-  title: 'Compilation Builds: Average Impact',
-  subtitle: 'Mean impact across Ripgrep and Roslyn clean + incremental builds. Lower is better.',
-  yAxisLabel: 'Average compile impact (%)',
-  footnote:
-    'Average compile impact is the mean slowdown across Ripgrep and Roslyn clean + incremental builds. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
-  axisMax: 80,
-  brokenAxis: combinedAverageAxis,
-} satisfies CombinedChartConfig
-
-const combinedAverageSumConfig = {
-  id: 'compilation-average-total',
-  seriesConfig: combinedSeriesConfig,
-  normalLabelClassName: 'impact-label combined',
-  valueDivisor: 1,
-  tooltipLabel: 'Total compile impact score',
-  title: 'Compilation Builds: Total Average Impact',
-  subtitle: 'Summed impact across Ripgrep and Roslyn clean + incremental builds. Lower is better.',
-  yAxisLabel: 'Total average impact (%)',
-  footnote:
-    'Total average impact sums average slowdown across Ripgrep and Roslyn clean + incremental builds. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
-  axisMax: 80,
-  brokenAxis: combinedAverageSumAxis,
-} satisfies CombinedChartConfig
-
 export function CompilationWorkloadsChart({ data, onReady }: Props) {
+  const locale = useLocale()
+  const localizedConfigs = useMemo(
+    () => chartConfigs.map((config) => localizeWorkloadConfig(config, locale)),
+    [locale],
+  )
   const [readyCount, setReadyCount] = useState(0)
   const handleChartReady = useCallback(() => {
     setReadyCount((current) => {
       const next = current + 1
-      if (next === chartConfigs.length + 2) {
+      if (next === localizedConfigs.length) {
         onReady?.()
       }
       return next
     })
-  }, [onReady])
+  }, [localizedConfigs.length, onReady])
 
   return (
     <div className="figure">
       <header className="figure-header">
         <div>
-          <h1>Compilation Workload Impact</h1>
+          <h1>{locale === 'zh-cn' ? '编译工作负载影响' : 'Compilation Workload Impact'}</h1>
           <p>
-            Cloud-cold and average impact vs baseline OS. Negative values are
-            shown as 0%.
+            {locale === 'zh-cn'
+              ? '云端冷启动与平均影响均相对基线 OS 计算。负值显示为 0%。'
+              : 'Cloud-cold and average impact vs baseline OS. Negative values are shown as 0%.'}
           </p>
         </div>
       </header>
 
-      {chartConfigs.map((config) => (
+      {localizedConfigs.map((config) => (
         <WorkloadChart
           key={config.id}
           config={config}
           data={data.rows}
+          locale={locale}
           onReady={handleChartReady}
         />
       ))}
-      <CombinedAverageChart
-        config={combinedAverageConfig}
-        data={data.rows}
-        onReady={handleChartReady}
-      />
-      <CombinedAverageChart
-        config={combinedAverageSumConfig}
-        data={data.rows}
-        onReady={handleChartReady}
-      />
       <span hidden>{readyCount}</span>
     </div>
   )
@@ -392,13 +299,16 @@ export function CompilationWorkloadsChart({ data, onReady }: Props) {
 function WorkloadChart({
   config,
   data,
+  locale,
   onReady,
 }: {
   config: WorkloadChartConfig
   data: CompilationWorkloadRow[]
+  locale: Locale
   onReady: () => void
 }) {
-  const chartData = useMemo(() => buildChartData(data, config), [data, config])
+  const chartData = useMemo(() => buildChartData(data, config, locale), [data, config, locale])
+  const copy = text(locale)
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(onReady)
@@ -431,7 +341,7 @@ function WorkloadChart({
                 tickMargin={12}
               >
                 <Label
-                  value="Antivirus product"
+                  value={copy.antivirusProduct}
                   position="insideBottom"
                   offset={-54}
                   className="axis-label"
@@ -464,117 +374,27 @@ function WorkloadChart({
               <Bar
                 dataKey="cleanPlot"
                 name="cleanPlot"
-                stackId="impact"
                 fill="var(--color-cleanPlot)"
-                radius={[0, 0, 4, 4]}
+                radius={[4, 4, 4, 4]}
                 maxBarSize={40}
-              />
+              >
+                <LabelList
+                  dataKey="cleanLabel"
+                  content={(props) => renderGroupedImpactLabel(props, config)}
+                />
+              </Bar>
               <Bar
                 dataKey="incrementalPlot"
                 name="incrementalPlot"
-                stackId="impact"
                 fill="var(--color-incrementalPlot)"
-                radius={[4, 4, 0, 0]}
-                maxBarSize={40}
-              />
-              <Scatter dataKey="totalPlot" legendType="none" fill="transparent">
-                <LabelList
-                  dataKey="totalActual"
-                  content={(props) => renderImpactLabel(props, config)}
-                />
-              </Scatter>
-            </ComposedChart>
-          </ChartContainer>
-        </CardContent>
-        <CardFooter className="chart-card-footer">{config.footnote}</CardFooter>
-      </Card>
-    </section>
-  )
-}
-
-function CombinedAverageChart({
-  config,
-  data,
-  onReady,
-}: {
-  config: CombinedChartConfig
-  data: CompilationWorkloadRow[]
-  onReady: () => void
-}) {
-  const chartData = useMemo(() => buildCombinedAverageChartData(data, config), [data, config])
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(onReady)
-    return () => window.cancelAnimationFrame(frame)
-  }, [onReady])
-
-  return (
-    <section className="chart-export-shell" data-chart-id={config.id}>
-      <Card className="chart-card">
-        <CardHeader className="chart-card-header">
-          <CardTitle className="chart-card-title">{config.title}</CardTitle>
-          <CardDescription>{config.subtitle}</CardDescription>
-        </CardHeader>
-        <CardContent className="chart-card-content">
-          <ChartContainer className="impact-chart" config={config.seriesConfig}>
-            <ComposedChart
-              accessibilityLayer
-              data={chartData}
-              margin={{ top: 12, right: 18, bottom: 66, left: 28 }}
-            >
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis
-                dataKey="avName"
-                interval={0}
-                angle={-36}
-                textAnchor="end"
-                height={82}
-                tickLine={false}
-                axisLine={false}
-                tickMargin={12}
-              >
-                <Label
-                  value="Antivirus product"
-                  position="insideBottom"
-                  offset={-54}
-                  className="axis-label"
-                />
-              </XAxis>
-              <YAxis
-                domain={[0, config.brokenAxis.max]}
-                ticks={config.brokenAxis.ticks}
-                tickFormatter={(value) =>
-                  formatAxisLabel(Number(value), config.brokenAxis)
-                }
-                tickLine={false}
-                axisLine={false}
-                width={74}
-              >
-                <Label
-                  value={config.yAxisLabel}
-                  angle={-90}
-                  position="insideLeft"
-                  offset={-14}
-                  className="axis-label"
-                />
-              </YAxis>
-              <ChartTooltip
-                cursor={false}
-                content={<CombinedImpactTooltip labelText={config.tooltipLabel} />}
-              />
-              <Bar
-                dataKey="totalPlot"
-                name="totalPlot"
-                fill="var(--color-totalPlot)"
                 radius={[4, 4, 4, 4]}
                 maxBarSize={40}
-              />
-              <Scatter dataKey="totalPlot" legendType="none" fill="transparent">
+              >
                 <LabelList
-                  dataKey="totalActual"
-                  content={(props) => renderImpactLabel(props, config)}
+                  dataKey="incrementalLabel"
+                  content={(props) => renderGroupedImpactLabel(props, config)}
                 />
-              </Scatter>
+              </Bar>
             </ComposedChart>
           </ChartContainer>
         </CardContent>
@@ -584,47 +404,30 @@ function CombinedAverageChart({
   )
 }
 
-function buildChartData(rows: CompilationWorkloadRow[], config: WorkloadChartConfig) {
+function buildChartData(rows: CompilationWorkloadRow[], config: WorkloadChartConfig, locale: Locale) {
   return getSortedWorkloadRows(rows, config).map((row): ChartDatum => {
     const cleanPlot = config.brokenAxis.transform(row.clean)
-    const totalPlot = config.brokenAxis.transform(row.total)
+    const incrementalPlot = config.brokenAxis.transform(row.incremental)
+    const shouldShowOnlyHigher =
+      row.clean > config.axisMax && row.incremental > config.axisMax
+    const cleanLabel =
+      shouldShowOnlyHigher && row.clean < row.incremental ? null : formatPercent(row.clean)
+    const incrementalLabel =
+      shouldShowOnlyHigher && row.incremental <= row.clean ? null : formatPercent(row.incremental)
 
     return {
-      avName: row.avName,
+      avName: avLabel(row.avName, locale),
       cleanActual: row.clean,
       incrementalActual: row.incremental,
       totalActual: row.total,
       normalAxisMax: config.axisMax,
       cleanPlot,
-      incrementalPlot: totalPlot - cleanPlot,
-      totalPlot,
+      incrementalPlot,
+      totalPlot: Math.max(cleanPlot, incrementalPlot),
+      cleanLabel,
+      incrementalLabel,
     }
   })
-}
-
-function buildCombinedAverageChartData(rows: CompilationWorkloadRow[], config: CombinedChartConfig) {
-  return rows
-    .map((row): ChartDatum => {
-      const total =
-        (metricValue(row.ripgrep.clean, 'average') +
-          metricValue(row.ripgrep.incremental, 'average') +
-          metricValue(row.roslyn.clean, 'average') +
-          metricValue(row.roslyn.incremental, 'average')) /
-        config.valueDivisor
-      const totalPlot = config.brokenAxis.transform(total)
-
-      return {
-        avName: row.avName,
-        cleanActual: total,
-        incrementalActual: 0,
-        totalActual: total,
-        normalAxisMax: config.axisMax,
-        cleanPlot: totalPlot,
-        incrementalPlot: 0,
-        totalPlot,
-      }
-    })
-    .sort((left, right) => left.totalActual - right.totalActual)
 }
 
 function getSortedWorkloadRows(rows: CompilationWorkloadRow[], config: WorkloadChartConfig) {
@@ -643,6 +446,8 @@ function getSortedWorkloadRows(rows: CompilationWorkloadRow[], config: WorkloadC
 }
 
 function ImpactTooltip({ active, label, payload }: ImpactTooltipProps) {
+  const locale = useLocale()
+  const copy = text(locale)
   if (!active || !payload?.length) {
     return null
   }
@@ -655,44 +460,46 @@ function ImpactTooltip({ active, label, payload }: ImpactTooltipProps) {
   return (
     <div className="chart-tooltip">
       <div className="chart-tooltip-title">{label}</div>
-      <TooltipRow className="clean" label="Clean build" value={row.cleanActual} />
+      <TooltipRow className="clean" label={copy.cleanBuild} value={row.cleanActual} />
       <TooltipRow
         className="incremental"
-        label="Incremental build"
+        label={copy.incrementalBuild}
         value={row.incrementalActual}
       />
-      <div className="chart-tooltip-total">
-        <span>Total impact</span>
-        <strong>{formatPercent(row.totalActual)}</strong>
-      </div>
     </div>
   )
 }
 
-function CombinedImpactTooltip({
-  active,
-  label,
-  labelText,
-  payload,
-}: ImpactTooltipProps & { labelText: string }) {
-  if (!active || !payload?.length) {
-    return null
+function localizeWorkloadConfig(config: WorkloadChartConfig, locale: Locale): WorkloadChartConfig {
+  if (locale !== 'zh-cn') {
+    return config
   }
 
-  const row = payload[0]?.payload
-  if (!row) {
-    return null
-  }
+  const isRipgrep = config.workload === 'ripgrep'
+  const isAverage = config.metric === 'average'
+  const axisRange = isRipgrep ? '0-60%' : '0-80%'
 
-  return (
-    <div className="chart-tooltip">
-      <div className="chart-tooltip-title">{label}</div>
-      <div className="chart-tooltip-total combined">
-        <span>{labelText}</span>
-        <strong>{formatPercent(row.totalActual)}</strong>
-      </div>
-    </div>
-  )
+  return {
+    ...config,
+    seriesConfig: {
+      cleanPlot: {
+        label: '全量构建',
+        color: config.seriesConfig.cleanPlot.color,
+      },
+      incrementalPlot: {
+        label: '增量构建',
+        color: config.seriesConfig.incrementalPlot.color,
+      },
+    },
+    title: `${isRipgrep ? 'Ripgrep' : 'Roslyn'} 构建：${isAverage ? '平均影响' : '云端冷启动影响'}`,
+    subtitle: isAverage
+      ? '基于所有运行平均耗时的全量 + 增量构建影响。越低越好。'
+      : '云端信誉/缓存预热前的全量 + 增量构建影响。越低越好。',
+    yAxisLabel: isAverage ? '平均影响（%）' : '云端冷启动影响（%）',
+    footnote: isAverage
+      ? `影响值根据所有运行的平均耗时相对基线 OS 计算。断轴突出 ${axisRange} 区间。负值显示为 0%。`
+      : `云端冷启动表示首次云端/信誉系统接触；每次运行前重置虚拟机以移除本地缓存。断轴突出 ${axisRange} 区间。负值显示为 0%。`,
+  }
 }
 
 function TooltipRow({
@@ -715,12 +522,16 @@ function TooltipRow({
   )
 }
 
-function renderImpactLabel(props: unknown, config: WorkloadChartConfig | CombinedChartConfig) {
-  const { x, y, width, value, payload } = props as LabelContentProps
-  const actualValue = payload?.totalActual ?? Number(value)
-  if (!Number.isFinite(actualValue)) {
+function renderGroupedImpactLabel(
+  props: unknown,
+  config: WorkloadChartConfig,
+) {
+  const { x, y, width, value } = props as LabelContentProps
+  if (value === null || value === undefined || value === '') {
     return null
   }
+  const label = String(value)
+  const actualValue = Number.parseFloat(label)
 
   const xValue = Number(x)
   const yValue = Number(y)
@@ -735,12 +546,12 @@ function renderImpactLabel(props: unknown, config: WorkloadChartConfig | Combine
       y={Math.max(14, yValue - 8)}
       textAnchor="middle"
       className={
-        actualValue > (payload?.normalAxisMax ?? 80)
-          ? 'outlier-label'
-          : config.normalLabelClassName
+        actualValue > config.axisMax
+          ? 'outlier-label compact'
+          : `${config.normalLabelClassName} compact`
       }
     >
-      {formatPercent(actualValue)}
+      {label}
     </text>
   )
 }
@@ -787,26 +598,6 @@ function transformAverageRoslynValue(value: number) {
   }
 
   return 104 + ((Math.min(Math.max(value, 200), 240) - 200) / 40) * 24
-}
-
-function transformCombinedAverageValue(value: number) {
-  if (value <= 80) {
-    return (value / 80) * 92
-  }
-
-  return 104 + ((Math.min(Math.max(value, 200), 240) - 200) / 40) * 24
-}
-
-function transformCombinedAverageSumValue(value: number) {
-  if (value <= 80) {
-    return (value / 80) * 92
-  }
-
-  if (value <= 250) {
-    return 104 + ((Math.max(value, 180) - 180) / 70) * 12
-  }
-
-  return 124 + ((Math.min(value, 950) - 900) / 50) * 12
 }
 
 function formatAxisLabel(value: number, brokenAxis: ManualAxisBreak) {

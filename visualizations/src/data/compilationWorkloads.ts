@@ -36,6 +36,21 @@ export type MicrobenchScenarioData = {
   rows: MicrobenchScenarioRow[]
 }
 
+export type ExtensionSensitivityRow = {
+  avName: string
+  avProduct: string
+  exe: MicrobenchScenarioRow | null
+  dll: MicrobenchScenarioRow | null
+  js: MicrobenchScenarioRow | null
+  ps1: MicrobenchScenarioRow | null
+}
+
+export type ExtensionSensitivityData = {
+  id: string
+  title: string
+  rows: ExtensionSensitivityRow[]
+}
+
 export type CompilationWorkloadData = {
   experiment: string
   source: string
@@ -44,6 +59,26 @@ export type CompilationWorkloadData = {
   rows: CompilationWorkloadRow[]
   microbench: {
     fileCreateDelete: MicrobenchScenarioData
+    archiveExtract: MicrobenchScenarioData
+    fileEnumLargeDir: MicrobenchScenarioData
+    hardlinkCreate: MicrobenchScenarioData
+    junctionCreate: MicrobenchScenarioData
+    processCreateWait: MicrobenchScenarioData
+    dllLoadUnique: MicrobenchScenarioData
+    fileWriteContent: MicrobenchScenarioData
+    newExeRun: MicrobenchScenarioData
+    newExeRunMotw: MicrobenchScenarioData
+    threadCreate: MicrobenchScenarioData
+    memAllocProtect: MicrobenchScenarioData
+    memMapFile: MicrobenchScenarioData
+    netConnectLoopback: MicrobenchScenarioData
+    netDnsResolve: MicrobenchScenarioData
+    registryCrud: MicrobenchScenarioData
+    pipeRoundtrip: MicrobenchScenarioData
+    cryptoHashVerify: MicrobenchScenarioData
+    comCreateInstance: MicrobenchScenarioData
+    fsWatcher: MicrobenchScenarioData
+    extensionSensitivity: ExtensionSensitivityData
   }
 }
 
