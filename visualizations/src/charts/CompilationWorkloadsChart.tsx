@@ -5,7 +5,6 @@ import {
   ComposedChart,
   Label,
   LabelList,
-  Scatter,
   XAxis,
   YAxis,
 } from 'recharts'
@@ -29,12 +28,14 @@ import type {
   CompilationWorkloadData,
   CompilationWorkloadRow,
 } from '../data/compilationWorkloads'
+import { avLabel, text, useLocale, type Locale } from '../i18n'
 
 type Props = {
   data: CompilationWorkloadData
   onReady?: () => void
 }
 
+type MetricKey = 'cloudCold' | 'average'
 type WorkloadKey = 'ripgrep' | 'roslyn'
 
 type SortedWorkloadRow = {
@@ -53,6 +54,8 @@ type ChartDatum = {
   cleanPlot: number
   incrementalPlot: number
   totalPlot: number
+  cleanLabel: string | null
+  incrementalLabel: string | null
 }
 
 type ManualAxisBreak = {
@@ -60,6 +63,20 @@ type ManualAxisBreak = {
   ticks: number[]
   tickLabels: Map<number, number>
   transform: (value: number) => number
+}
+
+type WorkloadChartConfig = {
+  id: string
+  metric: MetricKey
+  workload: WorkloadKey
+  seriesConfig: ChartConfig
+  normalLabelClassName: string
+  title: string
+  subtitle: string
+  yAxisLabel: string
+  footnote: string
+  axisMax: number
+  brokenAxis: ManualAxisBreak
 }
 
 type LabelContentProps = {
@@ -76,7 +93,7 @@ type ImpactTooltipProps = {
   payload?: Array<{ payload?: ChartDatum }>
 }
 
-const seriesConfig = {
+const ripgrepSeriesConfig = {
   cleanPlot: {
     label: 'Clean build',
     color: 'var(--chart-1)',
@@ -87,21 +104,20 @@ const seriesConfig = {
   },
 } satisfies ChartConfig
 
-const ripgrepBrokenAxis: ManualAxisBreak = {
+const roslynSeriesConfig = {
+  cleanPlot: {
+    label: 'Clean build',
+    color: 'var(--chart-3)',
+  },
+  incrementalPlot: {
+    label: 'Incremental build',
+    color: 'var(--chart-4)',
+  },
+} satisfies ChartConfig
+
+const cloudColdRipgrepAxis: ManualAxisBreak = {
   max: 138,
-  ticks: [
-    0,
-    15.3,
-    30.7,
-    46,
-    61.3,
-    76.7,
-    92,
-    104,
-    116,
-    124,
-    136,
-  ],
+  ticks: [0, 15.3, 30.7, 46, 61.3, 76.7, 92, 104, 116, 124, 136],
   tickLabels: new Map([
     [0, 0],
     [15.3, 10],
@@ -115,10 +131,10 @@ const ripgrepBrokenAxis: ManualAxisBreak = {
     [124, 700],
     [136, 800],
   ]),
-  transform: transformRipgrepValue,
+  transform: transformCloudColdRipgrepValue,
 }
 
-const roslynBrokenAxis: ManualAxisBreak = {
+const cloudColdRoslynAxis: ManualAxisBreak = {
   max: 130,
   ticks: [0, 11.5, 23, 34.5, 46, 57.5, 69, 80.5, 92, 104, 114, 124],
   tickLabels: new Map([
@@ -135,79 +151,164 @@ const roslynBrokenAxis: ManualAxisBreak = {
     [114, 250],
     [124, 300],
   ]),
-  transform: transformRoslynValue,
+  transform: transformCloudColdRoslynValue,
 }
 
-const workloadConfig = {
-  ripgrep: {
+const averageRipgrepAxis: ManualAxisBreak = {
+  max: 138,
+  ticks: [0, 15.3, 30.7, 46, 61.3, 76.7, 92, 104, 116, 124, 136],
+  tickLabels: new Map([
+    [0, 0],
+    [15.3, 10],
+    [30.7, 20],
+    [46, 30],
+    [61.3, 40],
+    [76.7, 50],
+    [92, 60],
+    [104, 180],
+    [116, 200],
+    [124, 850],
+    [136, 900],
+  ]),
+  transform: transformAverageRipgrepValue,
+}
+
+const averageRoslynAxis: ManualAxisBreak = {
+  max: 130,
+  ticks: [0, 11.5, 23, 34.5, 46, 57.5, 69, 80.5, 92, 104, 116, 124],
+  tickLabels: new Map([
+    [0, 0],
+    [11.5, 10],
+    [23, 20],
+    [34.5, 30],
+    [46, 40],
+    [57.5, 50],
+    [69, 60],
+    [80.5, 70],
+    [92, 80],
+    [104, 200],
+    [116, 220],
+    [124, 240],
+  ]),
+  transform: transformAverageRoslynValue,
+}
+
+const chartConfigs = [
+  {
+    id: 'ripgrep-cloud-cold',
+    metric: 'cloudCold',
+    workload: 'ripgrep',
+    seriesConfig: ripgrepSeriesConfig,
+    normalLabelClassName: 'impact-label ripgrep',
     title: 'Ripgrep Build: Cloud-Cold Impact',
-    subtitle: 'Clean + incremental build impact, sorted from lowest to highest',
+    subtitle: 'Clean + incremental build impact before cloud reputation/cache warms. Lower is better.',
+    yAxisLabel: 'Cloud-cold impact (%)',
     footnote:
       'Cloud-cold means first cloud/reputation exposure; VM reset removes local cache between runs. Broken y-axis emphasizes 0-60%. Negative values are shown as 0%.',
     axisMax: 60,
-    brokenAxis: ripgrepBrokenAxis,
+    brokenAxis: cloudColdRipgrepAxis,
   },
-  roslyn: {
+  {
+    id: 'roslyn-cloud-cold',
+    metric: 'cloudCold',
+    workload: 'roslyn',
+    seriesConfig: roslynSeriesConfig,
+    normalLabelClassName: 'impact-label roslyn',
     title: 'Roslyn Build: Cloud-Cold Impact',
-    subtitle: 'Clean + incremental build impact, sorted from lowest to highest',
+    subtitle: 'Clean + incremental build impact before cloud reputation/cache warms. Lower is better.',
+    yAxisLabel: 'Cloud-cold impact (%)',
     footnote:
       'Cloud-cold means first cloud/reputation exposure; VM reset removes local cache between runs. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
     axisMax: 80,
-    brokenAxis: roslynBrokenAxis,
+    brokenAxis: cloudColdRoslynAxis,
   },
-} satisfies Record<
-  WorkloadKey,
   {
-    title: string
-    subtitle: string
-    footnote: string
-    axisMax: number
-    brokenAxis: ManualAxisBreak
-  }
->
+    id: 'ripgrep-average',
+    metric: 'average',
+    workload: 'ripgrep',
+    seriesConfig: ripgrepSeriesConfig,
+    normalLabelClassName: 'impact-label ripgrep',
+    title: 'Ripgrep Build: Average Impact',
+    subtitle: 'Clean + incremental build impact using mean wall time across all runs. Lower is better.',
+    yAxisLabel: 'Average impact (%)',
+    footnote:
+      'Impact is computed from all-runs mean wall time versus baseline OS. Broken y-axis emphasizes 0-60%. Negative values are shown as 0%.',
+    axisMax: 60,
+    brokenAxis: averageRipgrepAxis,
+  },
+  {
+    id: 'roslyn-average',
+    metric: 'average',
+    workload: 'roslyn',
+    seriesConfig: roslynSeriesConfig,
+    normalLabelClassName: 'impact-label roslyn',
+    title: 'Roslyn Build: Average Impact',
+    subtitle: 'Clean + incremental build impact using mean wall time across all runs. Lower is better.',
+    yAxisLabel: 'Average impact (%)',
+    footnote:
+      'Impact is computed from all-runs mean wall time versus baseline OS. Broken y-axis emphasizes 0-80%. Negative values are shown as 0%.',
+    axisMax: 80,
+    brokenAxis: averageRoslynAxis,
+  },
+] satisfies WorkloadChartConfig[]
 
 export function CompilationWorkloadsChart({ data, onReady }: Props) {
+  const locale = useLocale()
+  const localizedConfigs = useMemo(
+    () => chartConfigs.map((config) => localizeWorkloadConfig(config, locale)),
+    [locale],
+  )
   const [readyCount, setReadyCount] = useState(0)
   const handleChartReady = useCallback(() => {
     setReadyCount((current) => {
       const next = current + 1
-      if (next === 2) {
+      if (next === localizedConfigs.length) {
         onReady?.()
       }
       return next
     })
-  }, [onReady])
+  }, [localizedConfigs.length, onReady])
 
   return (
     <div className="figure">
       <header className="figure-header">
         <div>
-          <h1>Compilation Workload Cloud-Cold Impact</h1>
+          <h1>{locale === 'zh-cn' ? '编译构建性能影响' : 'Compilation Workload Impact'}</h1>
           <p>
-            Impact vs baseline OS before cloud reputation/cache has warmed for
-            the workload. Negative values are shown as 0%.
+            {locale === 'zh-cn'
+              ? '云端冷启动和平均耗时增幅均相对基线 OS 计算；负值按 0% 显示。'
+              : 'Cloud-cold and average impact vs baseline OS. Negative values are shown as 0%.'}
           </p>
         </div>
       </header>
 
-      <WorkloadChart data={data.rows} workload="ripgrep" onReady={handleChartReady} />
-      <WorkloadChart data={data.rows} workload="roslyn" onReady={handleChartReady} />
+      {localizedConfigs.map((config) => (
+        <WorkloadChart
+          key={config.id}
+          config={config}
+          data={data.rows}
+          locale={locale}
+          onReady={handleChartReady}
+        />
+      ))}
       <span hidden>{readyCount}</span>
     </div>
   )
 }
 
 function WorkloadChart({
+  config,
   data,
-  workload,
+  locale,
   onReady,
 }: {
+  config: WorkloadChartConfig
   data: CompilationWorkloadRow[]
-  workload: WorkloadKey
+  locale: Locale
   onReady: () => void
 }) {
-  const config = workloadConfig[workload]
-  const chartData = useMemo(() => buildChartData(data, workload), [data, workload])
+  const chartData = useMemo(() => buildChartData(data, config, locale), [data, config, locale])
+  const copy = text(locale)
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(onReady)
@@ -215,14 +316,14 @@ function WorkloadChart({
   }, [onReady])
 
   return (
-    <section className="chart-export-shell" data-workload={workload}>
+    <section className="chart-export-shell" data-chart-id={config.id}>
       <Card className="chart-card">
         <CardHeader className="chart-card-header">
           <CardTitle className="chart-card-title">{config.title}</CardTitle>
           <CardDescription>{config.subtitle}</CardDescription>
         </CardHeader>
         <CardContent className="chart-card-content">
-          <ChartContainer className="impact-chart" config={seriesConfig}>
+          <ChartContainer className="impact-chart" config={config.seriesConfig}>
             <ComposedChart
               accessibilityLayer
               data={chartData}
@@ -240,7 +341,7 @@ function WorkloadChart({
                 tickMargin={12}
               >
                 <Label
-                  value="Antivirus product"
+                  value={copy.antivirusProduct}
                   position="insideBottom"
                   offset={-54}
                   className="axis-label"
@@ -257,17 +358,14 @@ function WorkloadChart({
                 width={74}
               >
                 <Label
-                  value="Cloud-cold impact (%)"
+                  value={config.yAxisLabel}
                   angle={-90}
                   position="insideLeft"
                   offset={-14}
                   className="axis-label"
                 />
               </YAxis>
-              <ChartTooltip
-                cursor={false}
-                content={<ImpactTooltip />}
-              />
+              <ChartTooltip cursor={false} content={<ImpactTooltip />} />
               <ChartLegend
                 verticalAlign="top"
                 align="left"
@@ -276,27 +374,27 @@ function WorkloadChart({
               <Bar
                 dataKey="cleanPlot"
                 name="cleanPlot"
-                stackId="impact"
                 fill="var(--color-cleanPlot)"
-                radius={[0, 0, 4, 4]}
+                radius={[4, 4, 4, 4]}
                 maxBarSize={40}
-              />
+              >
+                <LabelList
+                  dataKey="cleanLabel"
+                  content={(props) => renderGroupedImpactLabel(props, config)}
+                />
+              </Bar>
               <Bar
                 dataKey="incrementalPlot"
                 name="incrementalPlot"
-                stackId="impact"
                 fill="var(--color-incrementalPlot)"
-                radius={[4, 4, 0, 0]}
+                radius={[4, 4, 4, 4]}
                 maxBarSize={40}
               >
+                <LabelList
+                  dataKey="incrementalLabel"
+                  content={(props) => renderGroupedImpactLabel(props, config)}
+                />
               </Bar>
-              <Scatter
-                dataKey="totalPlot"
-                legendType="none"
-                fill="transparent"
-              >
-                <LabelList dataKey="totalActual" content={renderImpactLabel} />
-              </Scatter>
             </ComposedChart>
           </ChartContainer>
         </CardContent>
@@ -306,31 +404,37 @@ function WorkloadChart({
   )
 }
 
-function buildChartData(rows: CompilationWorkloadRow[], workload: WorkloadKey) {
-  const { brokenAxis } = workloadConfig[workload]
-
-  return getSortedWorkloadRows(rows, workload).map((row): ChartDatum => {
-    const cleanPlot = brokenAxis.transform(row.clean)
-    const totalPlot = brokenAxis.transform(row.total)
+function buildChartData(rows: CompilationWorkloadRow[], config: WorkloadChartConfig, locale: Locale) {
+  return getSortedWorkloadRows(rows, config).map((row): ChartDatum => {
+    const cleanPlot = config.brokenAxis.transform(row.clean)
+    const incrementalPlot = config.brokenAxis.transform(row.incremental)
+    const shouldShowOnlyHigher =
+      row.clean > config.axisMax && row.incremental > config.axisMax
+    const cleanLabel =
+      shouldShowOnlyHigher && row.clean < row.incremental ? null : formatPercent(row.clean)
+    const incrementalLabel =
+      shouldShowOnlyHigher && row.incremental <= row.clean ? null : formatPercent(row.incremental)
 
     return {
-      avName: row.avName,
+      avName: avLabel(row.avName, locale),
       cleanActual: row.clean,
       incrementalActual: row.incremental,
       totalActual: row.total,
-      normalAxisMax: workloadConfig[workload].axisMax,
+      normalAxisMax: config.axisMax,
       cleanPlot,
-      incrementalPlot: totalPlot - cleanPlot,
-      totalPlot,
+      incrementalPlot,
+      totalPlot: Math.max(cleanPlot, incrementalPlot),
+      cleanLabel,
+      incrementalLabel,
     }
   })
 }
 
-function getSortedWorkloadRows(rows: CompilationWorkloadRow[], workload: WorkloadKey) {
+function getSortedWorkloadRows(rows: CompilationWorkloadRow[], config: WorkloadChartConfig) {
   return rows
     .map((row): SortedWorkloadRow => {
-      const clean = metricValue(row[workload].clean)
-      const incremental = metricValue(row[workload].incremental)
+      const clean = metricValue(row[config.workload].clean, config.metric)
+      const incremental = metricValue(row[config.workload].incremental, config.metric)
       return {
         avName: row.avName,
         clean,
@@ -342,6 +446,8 @@ function getSortedWorkloadRows(rows: CompilationWorkloadRow[], workload: Workloa
 }
 
 function ImpactTooltip({ active, label, payload }: ImpactTooltipProps) {
+  const locale = useLocale()
+  const copy = text(locale)
   if (!active || !payload?.length) {
     return null
   }
@@ -354,22 +460,46 @@ function ImpactTooltip({ active, label, payload }: ImpactTooltipProps) {
   return (
     <div className="chart-tooltip">
       <div className="chart-tooltip-title">{label}</div>
-      <TooltipRow
-        className="clean"
-        label="Clean build"
-        value={row.cleanActual}
-      />
+      <TooltipRow className="clean" label={copy.cleanBuild} value={row.cleanActual} />
       <TooltipRow
         className="incremental"
-        label="Incremental build"
+        label={copy.incrementalBuild}
         value={row.incrementalActual}
       />
-      <div className="chart-tooltip-total">
-        <span>Total impact</span>
-        <strong>{formatPercent(row.totalActual)}</strong>
-      </div>
     </div>
   )
+}
+
+function localizeWorkloadConfig(config: WorkloadChartConfig, locale: Locale): WorkloadChartConfig {
+  if (locale !== 'zh-cn') {
+    return config
+  }
+
+  const isRipgrep = config.workload === 'ripgrep'
+  const isAverage = config.metric === 'average'
+  const axisRange = isRipgrep ? '0-60%' : '0-80%'
+
+  return {
+    ...config,
+    seriesConfig: {
+      cleanPlot: {
+        label: '全量构建',
+        color: config.seriesConfig.cleanPlot.color,
+      },
+      incrementalPlot: {
+        label: '增量构建',
+        color: config.seriesConfig.incrementalPlot.color,
+      },
+    },
+    title: `${isRipgrep ? 'Ripgrep' : 'Roslyn'} 构建：${isAverage ? '平均耗时增幅' : '云端冷启动耗时增幅'}`,
+    subtitle: isAverage
+      ? '全量和增量构建均基于所有运行的平均耗时计算。数值越低越好。'
+      : '全量和增量构建均基于云端信誉/缓存预热前的首次运行计算。数值越低越好。',
+    yAxisLabel: isAverage ? '平均耗时增幅（%）' : '云端冷启动耗时增幅（%）',
+    footnote: isAverage
+      ? `耗时增幅根据所有运行的平均耗时相对基线 OS 计算。断轴用于突出 ${axisRange} 区间。负值按 0% 显示。`
+      : `云端冷启动表示首次接触云端信誉/缓存；每次运行前重置虚拟机以移除本地缓存。断轴用于突出 ${axisRange} 区间。负值按 0% 显示。`,
+  }
 }
 
 function TooltipRow({
@@ -392,12 +522,16 @@ function TooltipRow({
   )
 }
 
-function renderImpactLabel(props: unknown) {
-  const { x, y, width, value, payload } = props as LabelContentProps
-  const actualValue = payload?.totalActual ?? Number(value)
-  if (!Number.isFinite(actualValue)) {
+function renderGroupedImpactLabel(
+  props: unknown,
+  config: WorkloadChartConfig,
+) {
+  const { x, y, width, value } = props as LabelContentProps
+  if (value === null || value === undefined || value === '') {
     return null
   }
+  const label = String(value)
+  const actualValue = Number.parseFloat(label)
 
   const xValue = Number(x)
   const yValue = Number(y)
@@ -411,18 +545,22 @@ function renderImpactLabel(props: unknown) {
       x={xValue + widthValue / 2}
       y={Math.max(14, yValue - 8)}
       textAnchor="middle"
-      className={actualValue > (payload?.normalAxisMax ?? 80) ? 'outlier-label' : 'impact-label'}
+      className={
+        actualValue > config.axisMax
+          ? 'outlier-label compact'
+          : `${config.normalLabelClassName} compact`
+      }
     >
-      {formatPercent(actualValue)}
+      {label}
     </text>
   )
 }
 
-function metricValue(metric: BuildMetric | null) {
-  return metric ? Math.max(0, metric.value) : 0
+function metricValue(metric: BuildMetric | null, metricKey: MetricKey) {
+  return metric ? Math.max(0, metric[metricKey].value) : 0
 }
 
-function transformRipgrepValue(value: number) {
+function transformCloudColdRipgrepValue(value: number) {
   if (value <= 60) {
     return (value / 60) * 92
   }
@@ -434,12 +572,32 @@ function transformRipgrepValue(value: number) {
   return 124 + ((Math.min(value, 800) - 700) / 100) * 12
 }
 
-function transformRoslynValue(value: number) {
+function transformCloudColdRoslynValue(value: number) {
   if (value <= 80) {
     return (value / 80) * 92
   }
 
   return 104 + ((Math.min(Math.max(value, 200), 320) - 200) / 120) * 24
+}
+
+function transformAverageRipgrepValue(value: number) {
+  if (value <= 60) {
+    return (value / 60) * 92
+  }
+
+  if (value <= 200) {
+    return 104 + ((Math.max(value, 180) - 180) / 20) * 12
+  }
+
+  return 124 + ((Math.min(value, 900) - 850) / 50) * 12
+}
+
+function transformAverageRoslynValue(value: number) {
+  if (value <= 80) {
+    return (value / 80) * 92
+  }
+
+  return 104 + ((Math.min(Math.max(value, 200), 240) - 200) / 40) * 24
 }
 
 function formatAxisLabel(value: number, brokenAxis: ManualAxisBreak) {

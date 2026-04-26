@@ -5,6 +5,15 @@
   background: var(--background);
 }
 
+.workspace[lang='zh-cn'] {
+  font-family:
+    'Microsoft YaHei',
+    'Noto Sans CJK SC',
+    'PingFang SC',
+    system-ui,
+    sans-serif;
+}
+
 .export-frame {
   width: 1600px;
   max-width: 100%;
@@ -108,12 +117,48 @@
   font-weight: 700;
 }
 
-.impact-label {
+.impact-label.ripgrep {
   fill: var(--chart-1);
+}
+
+.impact-label.roslyn {
+  fill: var(--chart-3);
+}
+
+.impact-label.combined {
+  fill: var(--chart-5);
+}
+
+.impact-label.overall-primary {
+  fill: var(--chart-5);
+}
+
+.impact-label.overall-secondary {
+  fill: var(--chart-penalty);
+}
+
+.impact-label.overall-tertiary {
+  fill: var(--chart-8);
+}
+
+.impact-label.microbench {
+  fill: var(--chart-6);
+}
+
+.impact-label.microbench-secondary {
+  fill: var(--chart-7);
+}
+
+.impact-label.compact {
+  font-size: 10px;
 }
 
 .outlier-label {
   fill: oklch(0.577 0.245 27.325);
+}
+
+.outlier-label.compact {
+  font-size: 10px;
 }
 
 .chart-tooltip {
@@ -166,14 +211,225 @@
   background: var(--chart-2);
 }
 
+[data-chart-id^='roslyn'] .chart-tooltip-row i.clean {
+  background: var(--chart-3);
+}
+
+[data-chart-id^='roslyn'] .chart-tooltip-row i.incremental {
+  background: var(--chart-4);
+}
+
+[data-chart-id='extension-sensitivity-average'] .chart-tooltip-row i.extension-exe {
+  background: var(--chart-6);
+}
+
+[data-chart-id='extension-sensitivity-average'] .chart-tooltip-row i.extension-dll {
+  background: var(--chart-7);
+}
+
+[data-chart-id='extension-sensitivity-average'] .chart-tooltip-row i.extension-js {
+  background: var(--chart-8);
+}
+
+[data-chart-id='extension-sensitivity-average'] .chart-tooltip-row i.extension-ps1 {
+  background: var(--chart-9);
+}
+
+[data-chart-id='new-exe-run-sequence-average'] .chart-tooltip-row i.microbench-primary,
+[data-chart-id='new-exe-run-sequence-average'] .sequence-legend-swatch.primary {
+  background: var(--chart-6);
+}
+
+[data-chart-id='new-exe-run-sequence-average'] .chart-tooltip-row i.microbench-secondary,
+[data-chart-id='new-exe-run-sequence-average'] .sequence-legend-swatch.secondary {
+  background: var(--chart-7);
+}
+
+.sequence-legend {
+  align-items: center;
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: 12px;
+  gap: 14px;
+  padding: 0 0 8px 74px;
+}
+
+.sequence-legend-item {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.sequence-legend-swatch {
+  border-radius: 2px;
+  display: inline-block;
+  height: 8px;
+  width: 8px;
+}
+
 .chart-tooltip-total {
   border-top: 1px solid var(--border);
   margin-top: 7px;
   padding-top: 7px;
 }
 
+.chart-tooltip-total.combined {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
 .chart-export-shell + .chart-export-shell {
   margin-top: 4px;
+}
+
+.heatmap-shell {
+  padding-top: 12px;
+}
+
+.heatmap-card {
+  min-width: 1540px;
+}
+
+.heatmap-content {
+  padding: 14px 20px 0;
+}
+
+.heatmap-legend {
+  align-items: center;
+  color: var(--muted-foreground);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 11px;
+  gap: 8px 14px;
+  margin: 0 0 12px;
+  padding-left: 130px;
+}
+
+.heatmap-legend-item {
+  align-items: center;
+  display: inline-flex;
+  gap: 5px;
+}
+
+.heatmap-legend-swatch {
+  border: 1px solid color-mix(in oklch, var(--border) 55%, transparent);
+  border-radius: 3px;
+  display: inline-block;
+  height: 11px;
+  width: 18px;
+}
+
+.heatmap-grid {
+  display: grid;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.heatmap-corner,
+.heatmap-column-header,
+.heatmap-row-header,
+.heatmap-cell {
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.heatmap-corner {
+  align-items: end;
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: 11px;
+  font-weight: 600;
+  height: 86px;
+  padding: 0 8px 7px;
+}
+
+.heatmap-column-header {
+  align-items: end;
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: 10px;
+  font-weight: 650;
+  height: 86px;
+  justify-content: center;
+  line-height: 1.05;
+  padding: 0 2px 7px;
+  text-align: center;
+}
+
+.heatmap-column-header span {
+  display: block;
+  max-width: 62px;
+}
+
+.heatmap-row-header {
+  align-items: center;
+  background: color-mix(in oklch, var(--muted) 38%, transparent);
+  color: var(--foreground);
+  display: flex;
+  font-size: 12px;
+  font-weight: 650;
+  height: 30px;
+  justify-content: flex-end;
+  padding: 0 9px;
+  text-align: right;
+}
+
+.heatmap-cell {
+  align-items: center;
+  border: 1px solid color-mix(in oklch, var(--border) 40%, transparent);
+  display: flex;
+  font-size: 10px;
+  font-weight: 750;
+  height: 30px;
+  justify-content: center;
+  letter-spacing: 0;
+  line-height: 1;
+  min-width: 0;
+  padding: 0 2px;
+  white-space: nowrap;
+}
+
+.heatmap-level-0 {
+  background: oklch(0.965 0.038 145);
+  color: oklch(0.34 0.08 145);
+}
+
+.heatmap-level-1 {
+  background: oklch(0.91 0.075 143);
+  color: oklch(0.31 0.09 145);
+}
+
+.heatmap-level-2 {
+  background: oklch(0.88 0.105 104);
+  color: oklch(0.34 0.08 88);
+}
+
+.heatmap-level-3 {
+  background: oklch(0.82 0.13 72);
+  color: oklch(0.35 0.09 55);
+}
+
+.heatmap-level-4 {
+  background: oklch(0.72 0.16 38);
+  color: white;
+}
+
+.heatmap-level-5 {
+  background: oklch(0.6 0.18 325);
+  color: white;
+}
+
+.heatmap-level-6 {
+  background: oklch(0.42 0.2 295);
+  color: white;
+}
+
+.heatmap-missing {
+  background: color-mix(in oklch, var(--muted) 58%, white);
+  border-color: color-mix(in oklch, var(--border) 70%, transparent);
+  color: var(--muted-foreground);
+  font-weight: 650;
 }
 
 .message {
