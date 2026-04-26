@@ -1,144 +1,118 @@
-# Compilation Trace Analysis: ripgrep vs Roslyn
+# What Two Compilation Traces Tell Us About AV Engines
 
-This report reads two Process Monitor traces, `tmp/ripgrep.CSV` and `tmp/roslyn.CSV`, as AV-facing workload profiles. The point is not just "which build is slower?" or "which trace is larger?" For AV performance, the sharper question is what each build looks like to a product sitting in the file-system path and making trust decisions in real time.
+If you've ever wondered why your antivirus slows down one project build but barely touches another, the answer usually isn't "bigger project = slower build." It's subtler than that. The build system, the compiler toolchain, and the shape of the I/O traffic all matter — and they matter in ways that expose very different weaknesses in different AV products.
 
-For the main conclusions I use a core build-process view rather than the whole desktop trace. The analyzer reconstructs the process tree rooted at the workload-specific `avbench.exe` process and follows its children. That removes ProcMon itself, most desktop noise, and unrelated service activity better than a static process-name filter. The supporting tables are in `analysis/compilation-procmon-analysis.md`, the reproducible profiling layer is in `analysis/workload-profile-pipeline.md`, and the machine-readable summary is in `analysis/procmon-summary.json`.
+We captured two Process Monitor traces — one from building [ripgrep](https://github.com/BurntSushi/ripgrep) (a Rust CLI tool) and one from building [Roslyn](https://github.com/dotnet/roslyn) (Microsoft's C#/VB compiler platform) — and dissected them as AV-facing workload profiles. Not "which build is slower?" but "what does each build look like to a security product sitting on the file-system path, making trust decisions in real time?"
 
-## Executive Summary
+The analysis uses a core build-process view: we reconstruct the process tree rooted at our benchmark harness (`avbench.exe`) and follow its children, which cuts out ProcMon noise, desktop activity, and unrelated services. Supporting tables live in `analysis/compilation-procmon-analysis.md`, the pipeline is documented in `analysis/workload-profile-pipeline.md`, and the machine-readable data is in `analysis/procmon-summary.json`.
 
-Roslyn is not simply a larger ripgrep build. It is a different workload class at the OS boundary.
+## The Short Version
 
-The ripgrep trace is compact and native-toolchain-heavy. It has about 202k core build events and roughly 3.4k unique file paths. Most of the interesting activity is clustered around `cargo.exe`, `rustc.exe`, `link.exe`, build scripts, Rust metadata, PDBs, static/import libraries, and final native outputs. In AV terms, ripgrep is a dense artifact-production test: fewer paths, but a high concentration of fresh compiler/linker outputs.
+Roslyn is not just a bigger ripgrep. It's a fundamentally different class of workload at the OS boundary.
 
-The Roslyn trace is a managed build graph at scale. It has about 12.6M core build events and roughly 153.8k unique file paths. The trace fans out through project files, `.props`/`.targets`, source files, reference assemblies, NuGet cache content, SDK files, analyzer/compiler DLLs, generated files, and `VBCSCompiler.exe`. In AV terms, Roslyn is a path-fan-out and metadata-pressure test, with a large secondary surface from fresh generated DLLs.
+**Ripgrep** is compact and native-toolchain-heavy — about 202k core build events across roughly 3.4k unique file paths. The action clusters around `cargo.exe`, `rustc.exe`, `link.exe`, build scripts, PDBs, import/static libraries, and fresh native outputs. Think of it as a dense artifact-production test: not many paths, but each one counts.
 
-That is why the pair is useful. They are both "compilation," but they interrogate different parts of an AV product: one asks about native artifact creation, the other asks about massive managed build graph traversal and generated assembly output.
+**Roslyn** is a managed build graph at scale — about 12.6M core events spanning roughly 153.8k unique paths. The trace fans out through project files, `.props`/`.targets`, source files, reference assemblies, NuGet caches, SDK files, analyzer DLLs, generated code, and the `VBCSCompiler.exe` compiler server. It's a path-fan-out and metadata-pressure test, with a big secondary wave of freshly generated DLLs.
 
-## Source Context
+They're both "compilation," but they interrogate completely different parts of an AV product. One asks about native artifact creation. The other asks about massive managed build-graph traversal.
 
-Ripgrep is a Rust command-line search tool. Its README describes a recursive regex searcher designed for large code trees and normal developer workflows. Building it with Cargo means compiling the local package, dependencies, and any crate build scripts.
+## Background
 
-Roslyn is the open-source C# and Visual Basic compiler platform. Building it through `dotnet build` brings in MSBuild, solution/project evaluation, SDK imports, NuGet/package state, incremental input/output checks, and compiler-server behavior. That is why the Roslyn trace is full of existence checks, timestamp probes, open/query operations, reference reads, and generated outputs.
+[Ripgrep](https://github.com/BurntSushi/ripgrep) is a recursive regex search tool designed for large codebases and everyday developer use. Building it with [Cargo](https://doc.rust-lang.org/cargo/commands/cargo-build.html) means compiling the local package, its dependencies, and any [build scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html) the crates define.
 
-Sources:
+[Roslyn](https://github.com/dotnet/roslyn) is the open-source C#/VB compiler platform. Running [`dotnet build`](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build) on it brings in [MSBuild](https://learn.microsoft.com/en-us/visualstudio/msbuild/incremental-builds?view=visualstudio), solution and project evaluation, [NuGet](https://learn.microsoft.com/en-us/nuget/concepts/msbuild-props-and-targets) package state, SDK imports, incremental input/output checks, and compiler-server behavior. That's why the Roslyn trace is packed with existence checks, timestamp probes, open/query operations, reference reads, and generated outputs.
 
-- [ripgrep README](https://github.com/BurntSushi/ripgrep)
-- [Cargo build command](https://doc.rust-lang.org/cargo/commands/cargo-build.html)
-- [Cargo build scripts](https://doc.rust-lang.org/cargo/reference/build-scripts.html)
-- [Roslyn repository README](https://github.com/dotnet/roslyn)
-- [dotnet build command](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build)
-- [dotnet restore command](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-restore)
-- [MSBuild incremental builds](https://learn.microsoft.com/en-us/visualstudio/msbuild/incremental-builds?view=visualstudio)
-- [NuGet MSBuild props and targets](https://learn.microsoft.com/en-us/nuget/concepts/msbuild-props-and-targets)
+## The Real Takeaway
 
-## Main Argument
+Saying "Roslyn is bigger" is true but misses the point. The interesting finding is that ripgrep and Roslyn pressure *different AV decision paths*.
 
-The main conclusion is not simply "Roslyn is bigger." That is true, but too shallow. The more useful conclusion is that ripgrep and Roslyn pressure different AV decision paths.
+Ripgrep asks a focused, native-build question: what happens when trusted developer tools produce fresh native artifacts — PDBs, import libraries, Rust metadata, executables — in a tight burst?
 
-Ripgrep asks a compact native-build question: what happens when trusted developer tools create fresh native artifacts, PDBs, import/static libraries, Rust metadata files, and final executable outputs in a tight burst?
+Roslyn asks a sprawling, managed-build question: what happens when the build system opens, probes, reads, and writes across a vast graph of project files, MSBuild imports, SDK files, reference assemblies, NuGet assets, analyzer DLLs, generated code, and fresh DLL outputs?
 
-Roslyn asks a large managed-build question: what happens when the build system opens, probes, reads, and writes across a huge graph of project files, imported MSBuild files, SDK files, reference assemblies, NuGet assets, analyzer/compiler DLLs, generated files, and fresh DLL outputs?
+These are genuinely different security problems. A product can handle one beautifully and choke on the other — and that's not a fluke. A product with strong Microsoft SDK allowlisting might breeze through most of Roslyn's input side, then stumble when the fresh local DLLs start landing. A product with excellent metadata-query filtering might survive Roslyn's project graph but slow down on ripgrep because it treats fresh native executable generation as something worth inspecting more carefully.
 
-Those are different problems. An AV product can handle one well and the other poorly without that being random. A product with strong Microsoft SDK allowlisting may make part of Roslyn look cheap, then still stumble on the fresh local DLL output phase. A product with excellent metadata-query filtering may survive Roslyn's project graph, then slow down ripgrep because it treats fresh native executable generation as more suspicious.
+## Why This Pair, Specifically
 
-## Why Choose These Two Workloads
+"Compilation" isn't one workload — it's a whole family. A real developer build can involve dependency discovery, source reads, metadata checks, compiler process trees, image loads, linker outputs, generated DLL/EXE writes, package caches, cloud reputation lookups, and policy decisions around developer tools. Ripgrep and Roslyn land in genuinely different corners of that space.
 
-"Compilation" is not a single workload. A real developer build can involve dependency discovery, source reads, metadata checks, compiler process trees, image loads, linker outputs, generated DLL/EXE writes, package caches, cloud reputation, and policy decisions around developer tools. Ripgrep and Roslyn land in different parts of that space.
+**Ripgrep as a native-build representative:**
 
-Ripgrep is the compact native-build representative:
+- It's a real application, not a "hello world" synthetic. Cargo orchestrates a dependency graph and invokes `rustc` repeatedly, so the workload includes real package-graph orchestration.
+- On Windows/MSVC, the final path includes native linker/resource tooling, PDBs, import libraries, object files, and executable creation.
+- The build is small enough that AV overhead isn't buried under a massive build-system baseline.
+- The AV question it poses is sharp: does the product penalize fresh native outputs and linker/compiler artifacts?
 
-- It is a real Rust application, not a synthetic "compile hello world" case.
-- Cargo builds a dependency graph and invokes `rustc` repeatedly, so the workload includes package graph orchestration and compiler activity.
-- On Windows/MSVC, the final path includes native linker/resource tooling, PDBs, import libraries, object-like artifacts, and executable creation.
-- The build is small enough that AV overhead is not buried inside a massive build-system baseline.
-- The key AV question is dense: does the product penalize fresh native outputs and linker/compiler artifacts?
+**Roslyn as a managed-build representative:**
 
-Roslyn is the large managed-build representative:
+- It's a large, real-world .NET compiler-platform repository with many projects, source files, resources, generated files, analyzers, tests, and reference dependencies.
+- `dotnet build` uses MSBuild, which naturally pulls in project evaluation, NuGet/cache behavior, SDK resolution, and target/import processing.
+- MSBuild's incremental logic is built around input/output relationships and timestamps — even when work can be skipped, it has to inspect many files to figure that out.
+- The trace captures `VBCSCompiler.exe`, so it includes compiler-server input scanning rather than just short-lived compiler invocations.
+- The AV question it poses is broad: can the product handle enormous file-graph fan-out and generated managed assembly output without per-open/per-query overhead exploding?
 
-- It is a real, large .NET compiler-platform repository with many projects, source files, resources, generated files, analyzers, tests, and reference dependencies.
-- `dotnet build` uses MSBuild and can perform implicit restore unless disabled. That naturally pulls in project evaluation, NuGet/cache behavior, SDK resolution, and target/import processing.
-- MSBuild incremental behavior is built around input/output relationships and timestamps; even when work can be skipped, it must inspect many files to decide what is current.
-- The trace observes `VBCSCompiler.exe`, so it includes compiler-server input scanning rather than only short-lived compiler invocations.
-- The key AV question is broad: can the product handle enormous file graph fan-out and generated managed assembly output without per-open/per-query overhead exploding?
+Using both protects us from a single-workload false narrative. Ripgrep alone mostly tests native artifact creation and Rust/MSVC toolchain behavior. Roslyn alone mostly tests MSBuild/NuGet/reference-assembly traversal and managed DLL output. Together they cover two developer realities that feel similar to users but look *very* different to AV engines.
 
-The pair protects the benchmark from a false single-workload story. If we only use ripgrep, we mostly test native artifact creation and Rust/MSVC toolchain behavior. If we only use Roslyn, we mostly test MSBuild/NuGet/reference-assembly traversal and managed DLL output. Together they cover two developer realities that look similar to users but very different to AV engines.
+## Under the Hood: Why the Traces Diverge
 
-## Why They Are Mechanistically Different
+The split starts at the build system level.
 
-The divergence starts in the build systems.
+Cargo's job is comparatively direct: compile the package and its deps. In this trace, that means `cargo.exe` orchestration, many `rustc.exe` processes, build scripts, and MSVC linker/resource tools. The build stays centered on compiling crates and writing artifacts under `target\release`. Once Rustup and Cargo caches are present, the path universe stays contained.
 
-Cargo's job is comparatively direct: compile the package and its dependencies. In this trace that turns into `cargo.exe` orchestration, many `rustc.exe` processes, crate build scripts, and MSVC linker/resource tools. Cargo and rustc still read source files and metadata, but the build stays centered on compiling crates and writing artifacts under `target\release`. Once Rustup and Cargo caches are present, the path universe is fairly contained.
+MSBuild has a much broader mandate. A `dotnet build` of a full solution has to evaluate project files, imported `.props` and `.targets`, SDK files, package assets, target frameworks, analyzer configuration, reference assemblies, generated outputs, and input/output freshness. Before it can even start compiling, it's constantly asking the file system: does this file exist? Which target applies? Which reference wins? Is this output stale? That's how a .NET build creates a storm of `CreateFile`, `QueryOpen`, `QueryDirectory`, and `QueryNetworkOpenInformationFile` events — even when the final emitted binaries are only a fraction of the paths touched.
 
-MSBuild has a broader mandate. A `dotnet build` of a solution has to evaluate project files, imported `.props` and `.targets`, SDK files, package assets, target frameworks, analyzer configuration, reference assemblies, generated outputs, and input/output freshness. Before it can compile, it keeps asking the file system questions: does this file exist, which target applies, which reference wins, is this output stale, which package asset matches this framework? That is how a .NET build creates a storm of `CreateFile`, `QueryOpen`, `QueryDirectory`, and `QueryNetworkOpenInformationFile` even when the final emitted binaries are only a fraction of the paths touched.
+Roslyn amplifies this because it *is* a compiler platform. It contains C# and VB compilers, workspaces, analyzers, tests, source generators, resources, `.editorconfig` and `.globalconfig` inputs, reference-assembly use, and multi-targeted outputs. This isn't just "compile a lot of `.cs` files." It's "evaluate a massive .NET build graph, resolve many references, run compiler infrastructure, and emit many managed assemblies."
 
-Roslyn amplifies MSBuild's natural shape because Roslyn is itself a compiler-platform repository. It contains C# and VB compilers, workspaces, analyzers, tests, source generators, resources, `.editorconfig` and `.globalconfig` inputs, reference-assembly use, and multi-targeted outputs. This is not merely "compile a lot of `.cs` files." It is "evaluate a large .NET build graph, resolve many references, run compiler infrastructure, and emit many managed assemblies."
+Ripgrep amplifies the other direction. Rust compilation creates crate metadata and libraries (`.rmeta`, `.rlib`), pulls from Rustup toolchain libraries, writes PDBs and native libraries on Windows/MSVC, and invokes linker/resource tools for final outputs. Less about path fan-out, more about concentrated artifact production.
 
-Ripgrep amplifies the native compiler/linker shape instead. Rust compilation creates crate metadata and libraries (`.rmeta`, `.rlib`), pulls from Rustup toolchain libraries, writes PDBs and native libraries on Windows/MSVC, and invokes linker/resource tools for final outputs. The trace is less about path fan-out and more about concentrated artifact production.
+## Five Ways the Traces Actually Differ
 
-## What Differs In The Trace, And How
+**1. Path fan-out vs. artifact concentration.** Roslyn touches ~153.8k unique file paths. Ripgrep touches ~3.4k. That 45x gap isn't just "bigger" — it changes the security problem entirely. Every distinct path is another decision point for an AV engine: is this hash known? Is the signer trusted? Is this a package file or a freshly generated output? Hot-cache assumptions get weaker as the path set explodes.
 
-The trace splits cleanly along one axis: path fan-out versus artifact concentration.
+**2. Metadata pressure.** Roslyn has millions of open/query operations because MSBuild and .NET SDK resolution are fundamentally path-decision systems. The build has to interrogate the file system before it knows what to compile, copy, skip, or generate. Ripgrep does metadata work too, but it's not dominated by graph evaluation the way Roslyn is.
 
-Roslyn touches about 153.8k unique core file paths. Ripgrep touches about 3.4k. That 45x gap is not just a bigger number; it changes the security problem. Every distinct path is another chance for an AV engine to decide whether a hash, signer, package, location, or generated output is known. A simple hot-cache assumption gets weaker as the path set explodes.
+**3. Output type.** Ripgrep creates fewer executable-like outputs, but they're native artifacts surrounded by linker/PDB/library side effects. Roslyn creates a much larger population of fresh DLLs under `artifacts\obj`. AV engines often treat newly created executable content very differently from source text or known platform assemblies, so the output class matters as much as the count.
 
-The second difference is metadata pressure. Roslyn has millions of open/query operations because MSBuild and .NET SDK resolution are path-decision systems. The build has to interrogate the file system before it knows what to compile, copy, skip, or generate. Ripgrep performs metadata work too, but it is not dominated by graph evaluation in the same way.
+**4. Trust shape.** Roslyn has a large body of likely-known Microsoft/SDK/reference-assembly activity — but *also* a large body of fresh local outputs. Ripgrep has fewer Microsoft inputs and more Rustup/Cargo user-cache activity proportionally, with fewer but denser fresh native outputs. This is why raw DLL counts are deceptive: a Microsoft reference DLL, a NuGet package DLL, and a freshly emitted local DLL don't necessarily travel through the same AV logic.
 
-The third difference is output type. Ripgrep creates fewer executable-like outputs, but they are native build artifacts surrounded by linker/PDB/library side effects. Roslyn creates a much larger population of fresh DLLs under `artifacts\obj`. AV engines often treat newly created executable content differently from source text or known platform assemblies, so the output class matters as much as the count.
+**5. Phase structure.**
 
-The fourth difference is trust shape. Roslyn has a large body of likely-known Microsoft/SDK/reference assembly activity, but it also has a large body of fresh local outputs. Ripgrep has fewer likely Microsoft inputs, more Rustup/Cargo user-cache activity proportionally, and fewer but denser fresh native outputs. This is why raw DLL counts are a trap: a Microsoft reference DLL, a NuGet package DLL, and a freshly emitted local DLL do not necessarily travel through the same AV logic.
-
-The fifth difference is phase shape:
-
-| phase question | ripgrep answer | Roslyn answer |
+| phase | ripgrep | Roslyn |
 | --- | --- | --- |
-| main orchestration | Cargo crate graph | dotnet/MSBuild solution graph |
-| compiler core | many `rustc.exe` crate compiles | `dotnet.exe` plus `VBCSCompiler.exe` compiler-server reads |
+| orchestration | Cargo crate graph | dotnet/MSBuild solution graph |
+| compiler core | many `rustc.exe` crate compiles | `dotnet.exe` + `VBCSCompiler.exe` compiler-server reads |
 | metadata pressure | moderate | very high |
-| output pressure | concentrated native/PDB/lib/rmeta outputs | huge generated managed DLL/XML/cache/resources outputs |
-| trust profile | Rustup/Cargo cache + fresh native outputs | Microsoft SDK/NuGet/reference reads + fresh DLL outputs |
-| network/profile noise | near-local | restore/cache/telemetry-like network observed |
+| output pressure | concentrated native/PDB/lib/rmeta | huge managed DLL/XML/cache/resources |
+| trust profile | Rustup/Cargo cache + fresh native outputs | Microsoft SDK/NuGet/reference reads + fresh DLLs |
+| network noise | near-local | restore/cache/telemetry-like HTTPS observed |
 
-## Why AV Products Respond Differently
+## How AV Products Get Tripped Up
 
-AV products are not just byte scanners bolted onto file reads. A modern engine usually mixes minifilter callbacks, path policy, hash caches, signer reputation, cloud prevalence, script rules, behavior models, executable-content heuristics, process reputation, and sometimes explicit developer-tool handling. Ripgrep and Roslyn stress different combinations of those systems.
+Modern AV products aren't just byte scanners bolted onto file reads. A typical engine mixes minifilter callbacks, path policy, hash caches, signer reputation, cloud prevalence, script rules, behavior models, executable-content heuristics, process reputation, and sometimes explicit developer-tool handling. Ripgrep and Roslyn stress different cocktails of those subsystems.
 
-Here are the main AV decision points this pair separates:
+Here's where the divergence happens:
 
-1. **Per-open and metadata-query overhead**
+**Per-open and metadata-query overhead.** Roslyn is the sharper probe. If a product adds even a tiny delay to `CreateFile`, `QueryOpen`, directory queries, or metadata checks, Roslyn can multiply that penalty millions of times. The same product might look fine on ripgrep because ripgrep doesn't fan out the same way.
 
-   Roslyn is the sharper probe here. If a product adds even a tiny delay to `CreateFile`, `QueryOpen`, directory queries, or metadata checks, Roslyn can multiply that delay millions of times. The same product may look fine on ripgrep because ripgrep does not fan out across the file system the same way.
+**Fresh executable/DLL output scanning.** Both workloads hit this, but with different flavors. Ripgrep emits native executables and linker artifacts. Roslyn emits many managed DLLs. Products that deeply inspect newly created executables, wait on cloud reputation, or flag "a compiler just produced a binary" can slow either workload — but Roslyn has the larger total output surface and ripgrep has the denser native-linker surface.
 
-2. **Fresh executable/DLL output scanning**
+**Signer and path reputation.** Roslyn reads far more Microsoft/SDK/reference content. A product with strong Microsoft publisher/path reputation can fast-path a huge slice of Roslyn's input side — but fresh outputs are local and newly generated, so that shortcut doesn't help everywhere. Ripgrep reads fewer Microsoft-path artifacts and more Rustup/Cargo user-cache files, so it depends more on hash/cloud prevalence than Authenticode shortcuts.
 
-   Both workloads hit this, but with different artifacts. Ripgrep emits native executable/build-script/linker artifacts. Roslyn emits many managed DLLs. Products that deeply inspect newly created executable content, wait on cloud reputation, or flag "compiler produced a binary" behavior can slow either workload. Roslyn has the larger total output surface; ripgrep has the denser native-linker surface.
+**Package-cache trust.** NuGet and Cargo/Rustup caches are different reputation ecosystems. NuGet packages may be common and package-signed, but the contained DLLs aren't always Authenticode-signed. Rustup/Cargo artifacts may be stable among developers but rarely sit on Microsoft allowlists. AV vendors can make very different calls here.
 
-3. **Signer and path reputation**
+**Compiler-server vs. short-lived processes.** Roslyn's `VBCSCompiler.exe` concentrates a massive amount of compiler input reading inside one long-lived process. Products that build reputation around process identity and lifetime see a very different signal from that than from ripgrep's many short-lived `rustc.exe` invocations.
 
-   Roslyn reads far more likely Microsoft/SDK/reference content. A product with strong Microsoft publisher/path reputation can fast-path a large slice of Roslyn's input side. That does not automatically make Roslyn cheap, because the fresh outputs are local and newly generated. Ripgrep reads fewer Microsoft-path artifacts and more Rustup/Cargo/user-cache files proportionally, so it may depend more on hash/cloud prevalence than Microsoft Authenticode shortcuts.
+**FAST IO fallback.** Roslyn has far more `FAST IO DISALLOWED` events, which can indicate filters pushing the file system onto slower paths. If a product frequently prevents fast I/O on metadata-heavy workloads, Roslyn will expose that much more clearly.
 
-4. **Package-cache trust**
+**Cloud cache vs. local cache.** Roslyn's huge unique-path set triggers many more cache and reputation decisions. Ripgrep may be dominated by fewer but more "suspicious" fresh artifacts. A product with strong local hash caching but slower cloud reputation can show a massive first-run penalty that largely disappears on subsequent runs.
 
-   NuGet and Cargo/Rustup caches are different reputation ecosystems. NuGet packages may be common and package-signed, but contained DLLs are not guaranteed to be Authenticode-signed. Rustup/Cargo artifacts may be stable among developers, but they are less likely to sit on Microsoft publisher/path allowlists. Different AV vendors can make very different calls here.
+**Behavioral "developer tool" rules.** Compilers write executable code by design — which is exactly why they're awkward for AV engines. Some products special-case trusted toolchains; others treat code generation, linker output, or unsigned binaries as behaviorally interesting. Ripgrep tests native compiler/linker behavior. Roslyn tests managed assembly generation at scale.
 
-5. **Compiler-server and long-lived process behavior**
+This is why product rankings can flip between the two charts. A product optimized for .NET SDK allowlisting and cheap metadata hooks can look great on Roslyn until the generated-DLL phase hits. A product that's efficient on file opens but aggressive on native executable creation can survive Roslyn's metadata storm and still stumble on ripgrep's native outputs.
 
-   Roslyn's `VBCSCompiler.exe` concentrates a large amount of compiler input reading inside a compiler-server process. Some products build reputation and cache decisions around process identity and lifetime. A long-lived compiler server is not the same signal as many short-lived `rustc.exe` processes.
+## Zooming In: The Numbers
 
-6. **FAST IO fallback and filter-driver behavior**
-
-   Roslyn has far more `FAST IO DISALLOWED` events. That can indicate filters pushing the file system onto slower paths. If a product often prevents fast I/O on metadata-heavy workloads, Roslyn will expose that behavior more clearly than ripgrep.
-
-7. **Cloud cache versus local cache**
-
-   First-cloud-seen and average runs answer different security questions. Roslyn's huge unique path set can trigger many more cache and reputation decisions. Ripgrep may be dominated by fewer but more suspicious fresh artifacts. A product with strong local hash caching but slower cloud reputation can show a large first-run penalty and much better average behavior.
-
-8. **Behavioral "developer tool" rules**
-
-   Compilers write executable code by design, which is exactly why they are awkward for AV engines. Some products special-case trusted toolchains; others treat code generation, linker output, unsigned binaries, or script-generation patterns as behaviorally interesting. Ripgrep tests native compiler/linker behavior. Roslyn tests managed assembly generation at scale.
-
-This is why rankings can diverge between the two charts. A product optimized for Microsoft/.NET SDK allowlisting and cheap metadata hooks can look good on Roslyn until the generated DLL phase bites. A product efficient on file opens but aggressive on native executable creation can survive Roslyn metadata pressure and still stumble on ripgrep's native output phase.
-
-## Trace Scale
+### Scale at a Glance
 
 | metric | ripgrep | Roslyn | Roslyn / ripgrep |
 | --- | ---: | ---: | ---: |
@@ -151,9 +125,9 @@ This is why rankings can diverge between the two charts. A product optimized for
 | unique core registry paths | 6,050 | 5,477 | 0.9x |
 | trace clock window | 57s | 11m 57s | 12.6x |
 
-The most security-relevant row is unique core file paths. Roslyn touches about 45x as many distinct file paths as ripgrep. That is where the trace starts to look like an AV stress test rather than just a large build: more paths mean more cache misses, metadata decisions, reputation lookups, hash opportunities, and filter callbacks.
+The row that jumps out is unique core file paths. Roslyn touches ~45x as many distinct paths as ripgrep. That's where the trace starts looking less like "a large build" and more like an AV stress test: more paths mean more cache misses, more metadata decisions, more reputation lookups, more hash opportunities, and more filter callbacks.
 
-## Operation Family Structure
+### Operation Family Breakdown
 
 | family | ripgrep count | ripgrep % | Roslyn count | Roslyn % |
 | --- | ---: | ---: | ---: | ---: |
@@ -164,9 +138,9 @@ The most security-relevant row is unique core file paths. Roslyn touches about 4
 | profiling | 270 | 0.1% | 34,252 | 0.3% |
 | network | 45 | 0.0% | 14,630 | 0.1% |
 
-Both builds are file dominated. Roslyn is more extreme because the file graph is the workload. Ripgrep's registry share stays visible because the native MSVC path probes system, SDK, Visual Studio, and runtime configuration. Roslyn also does a lot of registry work in absolute terms, but the file graph is so large that registry becomes a smaller slice.
+Both builds are overwhelmingly file-dominated. Roslyn more so, because the file graph *is* the workload. Ripgrep's registry share stays visible because the native MSVC path probes system, SDK, Visual Studio, and runtime configuration. Roslyn does plenty of registry work in absolute terms too, but the file graph is so massive that registry becomes a rounding error.
 
-## Top Core Processes
+### Who's Doing What
 
 | process | ripgrep events | role |
 | --- | ---: | --- |
@@ -184,9 +158,9 @@ Both builds are file dominated. Roslyn is more extreme because the file graph is
 | `Conhost.exe` | 40,145 | Console host activity around the command-line build. |
 | `VsdConfigTool.exe` | 37,482 | Visual Studio/dotnet configuration helper activity, mostly registry. |
 
-The process split is one of the cleanest fingerprints. Ripgrep is a small process ecosystem around Cargo, rustc, the linker, and toolchain helpers. Roslyn is overwhelmingly `dotnet.exe` plus the compiler server.
+The process split is one of the cleanest fingerprints. Ripgrep is a small ecosystem — Cargo, rustc, the linker, and some toolchain helpers. Roslyn is overwhelmingly `dotnet.exe` plus the compiler server, with everything else as background noise.
 
-## File-Operation Profile
+### The File-Operation Profile
 
 | operation | ripgrep | Roslyn | interpretation |
 | --- | ---: | ---: | --- |
@@ -200,11 +174,11 @@ The process split is one of the cleanest fingerprints. Ripgrep is a small proces
 | `RegOpenKey` | 19,384 | 361,562 | Both query environment/toolchain/runtime configuration. |
 | `RegQueryValue` | 15,057 | 536,724 | Roslyn has more registry value lookups in absolute terms. |
 
-Roslyn has about 116x more `CreateFile`, 496x more `QueryOpen`, and 1,623x more `QueryNetworkOpenInformationFile` events than ripgrep. That is the signature of MSBuild graph evaluation: project files, imported `.props`/`.targets`, target-framework checks, reference assemblies, package files, generated outputs, and up-to-date decisions.
+Roslyn has roughly 116x more `CreateFile`, 496x more `QueryOpen`, and 1,623x more `QueryNetworkOpenInformationFile` events than ripgrep. That's the signature of MSBuild graph evaluation: project files, imported `.props`/`.targets`, target-framework checks, reference assemblies, package files, generated outputs, and up-to-date decisions all pile up.
 
-Ripgrep has only about 8.7x fewer `WriteFile` events than Roslyn despite having 63x fewer total core events. That is the tell: ripgrep is proportionally much more write-heavy. It fits the Rust/native build shape: compiler/linker outputs, PDBs, `.rlib`, `.rmeta`, `.lib`, `.o`, temp import libraries, and final binaries.
+Ripgrep, meanwhile, has only ~8.7x fewer `WriteFile` events despite having 63x fewer total core events. That's the tell: ripgrep is *proportionally* much more write-heavy. It fits the Rust/native build shape — compiler/linker outputs, PDBs, `.rlib`, `.rmeta`, `.lib`, `.o`, temp import libraries, and final binaries.
 
-## Ripgrep Build Anatomy
+## Dissecting the Ripgrep Trace
 
 Ripgrep's core activity is centered on:
 
@@ -240,11 +214,11 @@ Top write extensions:
 | `.o` | 748 | 2.2% |
 | `.a` | 747 | 2.2% |
 
-This is the ripgrep story in one paragraph: the build does not explode across hundreds of thousands of paths; it concentrates activity in `target\release`, Rustup/Cargo caches, PDBs, import/static libraries, and native linker output. Products that get expensive on artifact creation, PDB writes, linker temp files, or newly created executable/library content will show up here.
+Here's the ripgrep story in a nutshell: it doesn't explode across hundreds of thousands of paths — it concentrates activity in `target\release`, Rustup/Cargo caches, PDBs, import/static libraries, and native linker output. Products that get expensive on artifact creation, PDB writes, linker temp files, or newly created executable/library content will show up here.
 
-Network activity is negligible: 45 core network events. That makes ripgrep a clean mostly-local compilation workload.
+Network activity is negligible — just 45 core network events — making ripgrep a clean, mostly-local compilation workload.
 
-## Roslyn Build Anatomy
+## Dissecting the Roslyn Trace
 
 Roslyn's core activity is centered on:
 
@@ -282,29 +256,29 @@ Top write extensions:
 | `.xml` | 26,756 | 6.2% |
 | `.resources` | 21,138 | 4.9% |
 
-Roslyn's trace reads like a large .NET ecosystem walkthrough:
+Roslyn's trace reads like a guided tour of the .NET ecosystem:
 
-- MSBuild project evaluation and target execution: `.csproj`, `.props`, `.targets`, `.editorconfig`, `.globalconfig`.
-- Dependency and package infrastructure: `.nuget`, `.sha512`, package cache files, generated NuGet props/targets.
-- Compiler inputs: `.cs`, `.vb`, `.resx`, reference assemblies, analyzer DLLs.
-- Compiler/build outputs: `artifacts\obj`, generated `.cs`, output `.dll`, `.xml`, `.resources`, `.cache`, temp files.
-- Compiler-server behavior: a very large `VBCSCompiler.exe` read footprint, which concentrates compiler input scanning in a long-lived process.
+- **MSBuild project evaluation and target execution:** `.csproj`, `.props`, `.targets`, `.editorconfig`, `.globalconfig`.
+- **Dependency and package infrastructure:** `.nuget`, `.sha512`, package cache files, generated NuGet props/targets.
+- **Compiler inputs:** `.cs`, `.vb`, `.resx`, reference assemblies, analyzer DLLs.
+- **Compiler/build outputs:** `artifacts\obj`, generated `.cs`, output `.dll`, `.xml`, `.resources`, `.cache`, temp files.
+- **Compiler-server behavior:** a massive `VBCSCompiler.exe` read footprint, concentrating compiler input scanning in a single long-lived process.
 
-This is the kind of workload that punishes weak file-metadata caching or expensive open/query hooks. Even when the bytes are not large, the number of distinct paths and probes is enormous.
+This is the kind of workload that punishes weak file-metadata caching or expensive open/query hooks. Even when the bytes aren't large, the sheer number of distinct paths and probes is enormous.
 
-Network activity is still small proportionally, but it is not absent: 14,630 core network events. The top destinations include HTTPS traffic to Microsoft/Akamai-associated endpoints. Given the command and the NuGet/cache paths, the likely causes are restore, SDK/workload metadata, package/cache validation, or telemetry-adjacent traffic. If the goal is a strict local-only AV test, future Roslyn runs should use pre-restored packages, `--no-restore`, disabled telemetry, and ideally a blocked-network control.
+Network activity is small proportionally but not absent: 14,630 core network events, with top destinations including HTTPS traffic to Microsoft/Akamai-associated endpoints. Given the command and the NuGet/cache paths, the likely causes are restore, SDK/workload metadata, package/cache validation, or telemetry-adjacent traffic. If the goal is a strict local-only AV test, future Roslyn runs should use pre-restored packages, `--no-restore`, disabled telemetry, and ideally a blocked-network control.
 
 ## Registry and Configuration Behavior
 
-Ripgrep registry activity is proportionally higher: 25.2% of core events. The hot roots are `HKLM\System\CurrentControlSet`, `HKLM\SOFTWARE\Microsoft`, and Visual Studio/MSVC-related locations. That matches a Windows native build path: compiler discovery, linker setup, Windows SDK lookup, runtime configuration, and Visual Studio toolchain plumbing.
+Ripgrep's registry activity is proportionally higher — 25.2% of core events. The hot roots are `HKLM\System\CurrentControlSet`, `HKLM\SOFTWARE\Microsoft`, and Visual Studio/MSVC-related locations. Classic Windows native build stuff: compiler discovery, linker setup, Windows SDK lookup, runtime configuration, Visual Studio toolchain plumbing.
 
-Roslyn registry activity is much larger in absolute count but smaller proportionally: 1.34M events, or 10.6% of core events. It is dominated by `HKLM\System\CurrentControlSet` plus .NET/Visual Studio/SDK lookup. The smaller percentage does not make registry irrelevant; it means the file graph is so large that registry becomes background radiation.
+Roslyn's registry activity is much larger in absolute count but smaller as a share: 1.34M events, or 10.6%. It's dominated by `HKLM\System\CurrentControlSet` plus .NET/Visual Studio/SDK lookups. The smaller percentage doesn't make registry irrelevant — it just means the file graph is so gigantic that registry becomes background radiation.
 
-For AV performance, registry operations usually matter less than file opens and writes. But registry-heavy setup can still intersect with self-defense, behavioral monitoring, policy checks, and process/toolchain reputation.
+For AV performance, registry operations usually matter less than file opens and writes. But registry-heavy setup can still intersect with self-defense hooks, behavioral monitoring, policy checks, and process/toolchain reputation.
 
-## Error And Result Patterns
+## Errors and Non-Success Results
 
-Both traces have many non-success results that are normal for build systems:
+Both traces have plenty of non-success results — and that's completely normal for build systems:
 
 | result | ripgrep | Roslyn | interpretation |
 | --- | ---: | ---: | --- |
@@ -314,17 +288,17 @@ Both traces have many non-success results that are normal for build systems:
 | `REPARSE` | 4,230 | 128,917 | path reparse/symlink/junction behavior |
 | `NO MORE FILES` | 347 | 70,608 | directory enumeration completion |
 
-`NAME NOT FOUND` is not a failure signal by itself. Build systems probe optional files constantly. Roslyn makes that especially visible because MSBuild and NuGet evaluate many possible imports, target frameworks, package assets, SDK files, generated outputs, and reference locations.
+`NAME NOT FOUND` isn't a failure signal on its own. Build systems probe optional files constantly. Roslyn makes that especially visible because MSBuild and NuGet evaluate many possible imports, target frameworks, package assets, SDK files, generated outputs, and reference locations.
 
-`FAST IO DISALLOWED` is worth watching because file-system filters can influence whether fast I/O paths are allowed. Roslyn has far more of these events, so a product that frequently forces slower paths can hurt Roslyn more than ripgrep.
+`FAST IO DISALLOWED` is worth watching because file-system filters can influence whether fast I/O paths are allowed. Roslyn has far more of these, so a product that frequently forces slower paths can disproportionately hurt Roslyn.
 
-## How The Differences Affect AV Performance
+## How All of This Hits AV Performance
 
-### Signed/trusted binary reputation
+### The Trust Puzzle
 
-ProcMon does not record Authenticode signer, catalog signature, cloud prevalence, or an AV product's internal allowlist decision. So this analysis cannot prove that a file was trusted. The profiling pipeline uses path-based trust/reputation buckets as a proxy.
+ProcMon doesn't record Authenticode signers, catalog signatures, cloud prevalence, or an AV product's internal allowlist decisions. So we can't *prove* a file was trusted — the pipeline uses path-based trust/reputation buckets as a proxy.
 
-The trust story is not one-sided:
+The trust story isn't one-sided:
 
 | question | likely answer from the trace |
 | --- | --- |
@@ -346,11 +320,11 @@ Path-bucket summary from the enhanced profile:
 | executable-like events in fresh build outputs | 1,404 | 2,195,529 |
 | executable-like writes in fresh build outputs | 58 | 216,285 |
 
-This matters because Roslyn's huge DLL/reference footprint is not uniformly expensive. Many inputs are likely stable, signed, common, or package-cache files that a product may trust quickly. But Roslyn also creates a very large number of new DLLs, and those local outputs may not get the same signer/cloud/cache shortcuts. Ripgrep has fewer files and fewer generated executable-like writes, but the Rustup/Cargo cache and fresh native artifacts may be less covered by Microsoft Authenticode allowlists.
+This matters in practice. Roslyn's huge DLL/reference footprint isn't uniformly expensive — many inputs are likely stable, signed, common, or package-cache files that a product may trust quickly. But Roslyn also creates a *lot* of brand-new DLLs, and those local outputs won't get the same signer/cloud/cache shortcuts. Ripgrep has fewer files and fewer generated executable-like writes, but the Rustup/Cargo cache and fresh native artifacts may be less covered by Microsoft Authenticode allowlists.
 
-### Count, percentage, rate, and weighted pressure
+### Beyond Raw Counts: Rates and Weighted Pressure
 
-Event count alone is not enough. It answers "how many chances did AV have to intervene?" It does not answer "how expensive were those chances likely to be?" Percentage is useful for shape, but percentage hides scale. The pipeline therefore reports four layers:
+Event count by itself answers "how many chances did AV have to intervene?" It doesn't answer "how expensive were those chances likely to be?" Percentage tells you the shape but hides the scale. So the pipeline reports four layers:
 
 | layer | what it answers | why it matters |
 | --- | --- | --- |
@@ -370,11 +344,11 @@ Weighted-pressure summary:
 | top pressure trust bucket | fresh build output | fresh build output |
 | top pressure phase | link/resources | output/write phase |
 
-The score is heuristic, not measured latency. It uses transparent weights: metadata query is low, read is low/moderate, write is higher, image load is higher, executable-like write is very high. Likely Microsoft OS/SDK paths get a low multiplier; fresh build outputs and user/package/toolchain paths get higher multipliers.
+The score is heuristic, not measured latency — it uses transparent weights where metadata queries are cheap, reads are low/moderate, writes are higher, image loads are higher still, and executable-like writes are very high. Likely Microsoft OS/SDK paths get a low multiplier; fresh build outputs and user/package/toolchain paths get higher ones.
 
-This changes the conclusion. Roslyn has overwhelmingly more total AV pressure because it is huge and creates many fresh DLL outputs. Ripgrep has similar, slightly higher pressure density per 1,000 events because its smaller event stream is concentrated in writes and fresh native artifacts. Roslyn is the larger total stress test; ripgrep is the denser native-artifact stress test.
+What this changes: Roslyn has overwhelmingly more total AV pressure because it's huge and creates many fresh DLL outputs. But ripgrep has slightly *higher* pressure density per 1,000 events because its smaller event stream is concentrated in writes and fresh native artifacts. **Roslyn is the larger total stress test; ripgrep is the denser native-artifact stress test.**
 
-Similar reputation modifiers to track in future runs:
+Reputation factors worth tracking in future runs:
 
 - Authenticode signer and catalog signing: Microsoft-signed OS/SDK/reference binaries may take a faster AV path than unsigned local outputs.
 - Cloud prevalence and file age: common SDK/NuGet/Rustup files may be known; newly built outputs are not.
@@ -386,9 +360,9 @@ Similar reputation modifiers to track in future runs:
 - Script and MOTW semantics: `.ps1`, `.js`, downloaded files, and Zone.Identifier/MOTW can change reputation paths dramatically.
 - Cache scope: per-product local cache, cloud cache, file hash cache, and VM-reset behavior can make first-cloud-seen and average runs diverge.
 
-### Ripgrep / Rust Native Build
+### What Hits Ripgrep Hardest
 
-Primary AV pressure:
+Primary AV pressure points:
 
 - Scanning newly written compiler/linker artifacts.
 - Scanning PDB, `.lib`, `.rmeta`, `.rlib`, `.o`, `.a`, and final executable outputs.
@@ -396,32 +370,30 @@ Primary AV pressure:
 - Repeated reads of Rust toolchain libraries and Rust standard library artifacts.
 - Native Windows SDK/MSVC toolchain discovery and registry probing.
 
-Expected AV-sensitive behaviors:
+What to expect:
 
-- Products that scan every newly created object/library/debug artifact may show high impact.
-- Products with good path/hash caching for Rust toolchain libraries should improve after the cloud/cache-warm run.
-- Products that treat compiler/linker output as suspicious executable-generation behavior may add latency even with fewer unique paths.
+- Products that scan every newly created object/library/debug artifact will show high impact.
+- Products with good path/hash caching for Rust toolchain libraries should improve after cache-warm runs.
+- Products that treat compiler/linker output as suspicious executable-generation behavior may add latency even with relatively few unique paths.
 
-### Roslyn / .NET Managed Build
+### What Hits Roslyn Hardest
 
-Primary AV pressure:
+Primary AV pressure points:
 
 - Massive file open/query/read volume across source, SDK, NuGet, reference assembly, generated, and output files.
-- Many `.dll` reads and writes, including analyzers, reference assemblies, compiler/runtime components, and outputs.
+- Many `.dll` reads and writes — analyzers, reference assemblies, compiler/runtime components, and outputs.
 - MSBuild/NuGet target and property evaluation through `.props` and `.targets`.
-- Incremental-build and dependency graph checks through path existence, timestamps, metadata, and directory enumeration.
+- Incremental-build and dependency-graph checks via path existence, timestamps, metadata, and directory enumeration.
 - Compiler-server process reading large numbers of compiler inputs.
 
-Expected AV-sensitive behaviors:
+What to expect:
 
 - Products with expensive per-open or per-query filtering can suffer even if byte scanning is modest.
 - Products with weaker cache reuse across VM-reset runs will pay repeatedly for SDK, NuGet, reference assembly, and analyzer paths.
-- Products that apply heavier rules to DLLs, source generators, analyzers, or newly emitted assemblies can show strong impact.
+- Products that apply heavier rules to DLLs, source generators, analyzers, or newly emitted assemblies will show strong impact.
 - Products that perform cloud reputation checks for many distinct DLL/source/generated paths may have high first-cloud-seen impact.
 
-## Evidence Matrix
-
-This is the compact version of the argument above:
+## The Cheat Sheet
 
 | dimension | ripgrep | Roslyn |
 | --- | --- | --- |
@@ -435,28 +407,28 @@ This is the compact version of the argument above:
 
 The value is in the contrast. Treating these as duplicate samples of "compile time" throws away the signal.
 
-## Recommendations For Future Benchmark Interpretation
+## What We'd Do Differently Next Time
 
-1. Keep ripgrep and Roslyn as separate charts, not only one combined "compilation" result. Their OS-operation structures are different enough that a single combined number hides useful product behavior.
+1. **Keep the charts separate.** Ripgrep and Roslyn deserve their own results — their OS-operation structures are different enough that a single combined number hides the interesting product behavior.
 
-2. When building an overall score, treat them as two compilation sub-workloads rather than duplicate samples. A product can be excellent on ripgrep and poor on Roslyn, or the reverse, for defensible technical reasons.
+2. **Score them as sub-workloads, not duplicates.** A product can be excellent on ripgrep and poor on Roslyn, or vice versa, for entirely defensible technical reasons.
 
-3. For Roslyn, add a strictly offline/pre-restored variant if the goal is pure local AV overhead. The current trace includes some network activity, and `dotnet build` can implicitly restore or touch workload/package metadata.
+3. **Add a strict offline Roslyn variant.** The current trace includes some network activity, and `dotnet build` can implicitly restore or touch workload/package metadata. If the goal is pure local AV overhead, use pre-restored packages, `--no-restore`, and disabled telemetry.
 
-4. For both workloads, report first-cloud-seen and average/cache-warm behavior separately. The first-cloud-seen run captures cloud reputation and cold product cache behavior; the average run captures steady-state developer experience after reputation/caches have had a chance to settle.
+4. **Report first-run vs. warm-cache separately.** The first-cloud-seen run captures cold product cache and cloud reputation behavior; the average run captures the steady-state developer experience after caches have settled. These tell different stories.
 
-5. If a product is an outlier on Roslyn, inspect file-open/query latency, not only write scanning. Roslyn is dominated by path and metadata behavior more than a simple "bytes written" model.
+5. **When Roslyn is the outlier, check file-open/query latency.** Roslyn is dominated by path and metadata behavior — not a simple "bytes written" model.
 
-6. If a product is an outlier on ripgrep, inspect newly created compiler/linker artifacts, PDB writes, and temp import-library behavior.
+6. **When ripgrep is the outlier, check artifact creation.** Look at newly created compiler/linker artifacts, PDB writes, and temp import-library behavior.
 
 ## Caveats
 
-ProcMon traces are observational. They show what operations occurred, not exactly how much latency each AV product added to each operation. Counts still matter because they show the surface area exposed to file-system filters, but timing attribution needs per-product timing data or ETW/WPA-style latency analysis.
+ProcMon traces are observational — they show what operations occurred, not exactly how much latency each AV product added to each one. Counts still matter because they show the surface area exposed to file-system filters, but real timing attribution needs per-product timing data or ETW/WPA-style latency analysis.
 
-The core build-process filter is based on ProcMon process-create relationships. This is stronger than a static process-name filter, but not perfect: it includes console/helper children such as `Conhost.exe`, and it can miss build-related work performed by long-running system services that were not descendants of the benchmark process.
+The core build-process filter is based on ProcMon's process-create relationships. It's stronger than a static process-name filter, but not perfect: it includes console/helper children like `Conhost.exe`, and it can miss build-related work done by long-running system services that weren't descendants of the benchmark process.
 
-The byte counters in the generated JSON should be treated as directional. ProcMon `Detail` fields vary by operation, and this analysis is about operation structure, path fan-out, process mix, file type mix, and reputation surface rather than exact byte accounting.
+The byte counters in the generated JSON are directional. ProcMon `Detail` fields vary by operation, and this analysis is about operation structure, path fan-out, process mix, file type mix, and reputation surface — not exact byte accounting.
 
-## Bottom Line
+## The Bottom Line
 
-Ripgrep is the compact native-artifact stress test. Roslyn is the large managed-graph stress test. They are both compilation workloads, but they ask different AV questions. That is exactly why both should stay in the suite.
+Ripgrep is the compact native-artifact stress test. Roslyn is the sprawling managed-graph stress test. They're both compilation workloads, but they ask very different AV questions. That's exactly why both belong in the suite.
