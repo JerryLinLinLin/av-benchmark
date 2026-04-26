@@ -286,3 +286,30 @@ $$\text{总分} = \frac{\sum_{c \in \text{可用场景}} 2^{\text{level}_c}}{|\t
 | ⭐ 影响较高 | Dr.Web、G DATA、Malwarebytes、小红伞 | 441–570 |
 | 影响显著 | Emsisoft、Sophos、趋势科技、比特梵德 | 690–933 |
 
+第一梯队的四款产品在绝大多数场景中都将开销控制在较低水平，各自仅在少数场景中出现较高增幅。第二梯队整体表现良好但存在明确的单项弱点。第三梯队在多个场景中出现超过一倍的开销。第四梯队则在文件系统、注册表、COM 等核心路径上普遍产生数倍甚至数十倍的延迟。
+
+## 结语
+
+本文通过 2 个编译工作负载和 20 个 API 级微基准，在 VM 快照还原的受控环境下对 16 款杀软的性能开销进行了系统性的量化。几点核心发现值得重申：
+
+第一，**没有全能冠军**。迈克菲在文件系统微基准中几乎零开销，却在 DLL 加载和新 EXE 运行上被拉至数千百分比的增幅；火绒在进程创建和线程创建中表现最佳，却在 PE 内容写入上出现了 31,552% 的极端数据；Microsoft Defender 在进程创建路径上排名第一，但 MOTW 标记的新可执行文件触发了 SmartScreen 的深度检查使其增幅飙升至 3,342%。每款产品都有自己的优势路径和代价路径，选择时应当根据自身工作负载的特征来权衡。
+
+第二，**编译工作负载与微基准的结论可以存在显著差异**。Malwarebytes 在 ripgrep 全量构建中仅增加 11.5%，但文件创建/删除微基准高达 253.9%——因为真实编译过程中大量的读取和查询操作稀释了写入路径上的高开销。这正是设计两条互补测试线的价值：编译工作负载给出端到端的真实体验，微基准则定位到具体的 API 路径瓶颈。
+
+第三，**杀软的性能代价集中在 I/O 密集型的安全敏感路径上**。加密哈希校验（纯 CPU 计算）和线程创建（轻量内核通知）场景中，所有产品的增幅都在噪声水平以内；而文件写入 PE 内容、DLL 加载、注册表增删改查和新 EXE 运行序列则跨越了数个数量级的分化——这些恰恰是杀软必须执行内容扫描、映像检查或行为监控的核心路径。
+
+最后需要说明本测试的局限性。首先，所有测量均在单一 VM 配置（24 vCPU/15 GB RAM/Windows 10 22H2）上完成，不同硬件、操作系统版本或杀软配置可能产生不同结果。其次，测试使用的是各产品的默认配置，未调整任何扫描策略或排除规则——实际部署中管理员通常会为开发目录配置排除项，这可能显著降低开销。再次，杀软版本随时更新，厂商可能在后续版本中优化特定路径的性能。此外，本测试仅衡量性能开销，不涉及检出率、误报率、防护深度等安全效能指标——性能与安全之间往往存在权衡，开销更高的产品可能提供了更深层次的行为分析和内容检查。
+
+完整的测试代码、原始数据和可交互的可视化图表均已开源：[GitHub 仓库](https://github.com/JerryLinLinLin/av-benchmark)。读者可复现测试、提取自己关注的场景数据，或基于此框架扩展新的工作负载。
+
+## 引用
+
+1. AV-Comparatives. *Performance Test*. [https://www.av-comparatives.org/tests/performance-test-april-2025/](https://www.av-comparatives.org/tests/performance-test-april-2025/)
+2. AV-TEST. *The best Windows antivirus software for home users*. [https://www.av-test.org/en/antivirus/home-windows/](https://www.av-test.org/en/antivirus/home-windows/)
+3. UL Solutions. *Procyon Benchmark*. [https://benchmarks.ul.com/procyon](https://benchmarks.ul.com/procyon)
+4. Andrew Gallant. *ripgrep*. [https://github.com/BurntSushi/ripgrep](https://github.com/BurntSushi/ripgrep)
+5. .NET Foundation. *Roslyn - The .NET Compiler Platform*. [https://github.com/dotnet/roslyn](https://github.com/dotnet/roslyn)
+6. Microsoft. *File System Minifilter Drivers*. [https://learn.microsoft.com/en-us/windows-hardware/drivers/ifs/file-system-minifilter-drivers](https://learn.microsoft.com/en-us/windows-hardware/drivers/ifs/file-system-minifilter-drivers)
+7. Microsoft. *Process Security and Access Rights*. [https://learn.microsoft.com/en-us/windows/win32/procthread/process-security-and-access-rights](https://learn.microsoft.com/en-us/windows/win32/procthread/process-security-and-access-rights)
+8. Microsoft. *Mark of the Web (MOTW)*. [https://learn.microsoft.com/en-us/deployoffice/security/internet-macros-blocked](https://learn.microsoft.com/en-us/deployoffice/security/internet-macros-blocked)
+9. Mark Russinovich. *Process Monitor*. [https://learn.microsoft.com/en-us/sysinternals/downloads/procmon](https://learn.microsoft.com/en-us/sysinternals/downloads/procmon)
