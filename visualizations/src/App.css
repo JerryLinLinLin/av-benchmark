@@ -134,6 +134,10 @@
 }
 
 .impact-label.overall-secondary {
+  fill: var(--chart-penalty);
+}
+
+.impact-label.overall-tertiary {
   fill: var(--chart-8);
 }
 

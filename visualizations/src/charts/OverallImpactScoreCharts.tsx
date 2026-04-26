@@ -23,6 +23,8 @@ import {
   average,
   buildWorkloadColumns,
   getAvNames,
+  levelPenaltyScore,
+  normalizedLevel,
   normalizedLogScore,
   valuesForColumn,
   workloadCategories,
@@ -33,7 +35,7 @@ type Props = {
   onReady: () => void
 }
 
-type ScoreMode = 'equal-workload' | 'category-balanced'
+type ScoreMode = 'equal-workload' | 'category-balanced' | 'severity-weighted'
 
 type ScoreDatum = {
   avName: string
@@ -93,12 +95,28 @@ const categoryBalancedConfig = {
   seriesConfig: {
     score: {
       label: 'Impact score',
+      color: 'var(--chart-penalty)',
+    },
+  },
+} satisfies ScoreChartConfig
+
+const severityWeightedConfig = {
+  chartId: 'overall-impact-severity-weighted',
+  mode: 'severity-weighted',
+  title: 'Overall Performance Impact Score: Severity-Weighted',
+  subtitle: 'Workload severity levels are scored exponentially, so severe individual slowdowns count more. Lower is better.',
+  footnote:
+    'Each workload uses its heatmap level: lowest=1, very low=2, low=4, mid=8, high=16, very high=32, highest=64. The chart shows an availability-adjusted total, so missing cells do not make a product look artificially better.',
+  labelClassName: 'impact-label overall-tertiary',
+  seriesConfig: {
+    score: {
+      label: 'Severity-weighted score',
       color: 'var(--chart-8)',
     },
   },
 } satisfies ScoreChartConfig
 
-const chartConfigs = [equalWorkloadConfig, categoryBalancedConfig]
+const chartConfigs = [equalWorkloadConfig, categoryBalancedConfig, severityWeightedConfig]
 
 export function OverallImpactScoreCharts({ data, onReady }: Props) {
   const locale = useLocale()
@@ -134,6 +152,10 @@ function OverallImpactScoreChart({
 }) {
   const chartData = useMemo(() => buildScoreRows(data, config.mode, locale), [config.mode, data, locale])
   const copy = text(locale)
+  const axisMax = config.mode === 'severity-weighted' ? niceAxisMax(Math.max(...chartData.map((row) => row.score))) : 100
+  const ticks = config.mode === 'severity-weighted'
+    ? createTicks(axisMax)
+    : [0, 20, 40, 60, 80, 100]
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(onReady)
@@ -153,20 +175,20 @@ function OverallImpactScoreChart({
               accessibilityLayer
               data={chartData}
               layout="vertical"
-              margin={{ top: 14, right: 62, bottom: 38, left: 34 }}
+              margin={{ top: 14, right: 62, bottom: 38, left: 12 }}
             >
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis
                 type="number"
-                domain={[0, 100]}
-                ticks={[0, 20, 40, 60, 80, 100]}
+                domain={[0, axisMax]}
+                ticks={ticks}
                 tickFormatter={(value) => `${value}`}
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
               >
                 <Label
-                  value={copy.impactScoreAxis}
+                  value={config.mode === 'severity-weighted' ? copy.severityWeightedScoreAxis : copy.impactScoreAxis}
                   position="insideBottom"
                   offset={-24}
                   className="axis-label"
@@ -179,7 +201,7 @@ function OverallImpactScoreChart({
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                width={104}
+                width={150}
               />
               <ChartTooltip cursor={false} content={<ScoreTooltip mode={config.mode} />} />
               <Bar
@@ -191,7 +213,7 @@ function OverallImpactScoreChart({
               >
                 <LabelList
                   dataKey="score"
-                  content={(props) => renderScoreLabel(props, config.labelClassName)}
+                  content={(props) => renderScoreLabel(props, config.labelClassName, config.mode)}
                 />
               </Bar>
             </ComposedChart>
@@ -224,8 +246,16 @@ function buildScoreRows(data: CompilationWorkloadData, mode: ScoreMode, locale: 
             ),
         ),
       )
+      const levelScores = columns.map((column) => {
+        const level = normalizedLevel(column.value(avName), valuesByColumn.get(column.key) ?? [])
+        return level === null ? null : levelPenaltyScore(level)
+      })
       const score =
-        mode === 'equal-workload' ? average(workloadScores) : average(categoryScores)
+        mode === 'equal-workload'
+          ? average(workloadScores)
+          : mode === 'category-balanced'
+            ? average(categoryScores)
+            : availabilityAdjustedTotal(levelScores, columns.length)
 
       return {
         avName: avLabel(avName, locale),
@@ -253,18 +283,18 @@ function ScoreTooltip({ active, label, mode, payload }: TooltipProps & { mode: S
     <div className="chart-tooltip">
       <div className="chart-tooltip-title">{label}</div>
       <div className="chart-tooltip-total combined">
-        <span>{copy.impactScore}</span>
-        <strong>{formatScore(row.score)}</strong>
+        <span>{mode === 'severity-weighted' ? copy.severityWeightedScore : copy.impactScore}</span>
+        <strong>{formatScore(row.score, mode)}</strong>
       </div>
       <div className="chart-tooltip-row single">
         <span>{mode === 'equal-workload' ? copy.workloads : copy.categories}</span>
-        <strong>{mode === 'equal-workload' ? row.workloadCount : row.categoryCount}</strong>
+        <strong>{mode === 'category-balanced' ? row.categoryCount : row.workloadCount}</strong>
       </div>
     </div>
   )
 }
 
-function renderScoreLabel(props: unknown, className: string) {
+function renderScoreLabel(props: unknown, className: string, mode: ScoreMode) {
   const { x, y, width, height, value } = props as LabelContentProps
   const score = Number(value)
   if (!Number.isFinite(score)) {
@@ -286,13 +316,33 @@ function renderScoreLabel(props: unknown, className: string) {
       textAnchor="start"
       className={className}
     >
-      {formatScore(score)}
+      {formatScore(score, mode)}
     </text>
   )
 }
 
-function formatScore(score: number) {
-  return score.toFixed(1)
+function availabilityAdjustedTotal(scores: Array<number | null>, totalWorkloads: number) {
+  const meanScore = average(scores)
+  return meanScore === null ? null : meanScore * totalWorkloads
+}
+
+function niceAxisMax(value: number) {
+  if (!Number.isFinite(value) || value <= 0) {
+    return 100
+  }
+
+  const magnitude = 10 ** Math.floor(Math.log10(value))
+  const normalized = value / magnitude
+  const niceNormalized = normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10
+  return niceNormalized * magnitude
+}
+
+function createTicks(max: number) {
+  return Array.from({ length: 6 }, (_, index) => Math.round((max / 5) * index))
+}
+
+function formatScore(score: number, mode?: ScoreMode) {
+  return mode === 'severity-weighted' ? score.toFixed(0) : score.toFixed(1)
 }
 
 function localizeScoreConfig(config: ScoreChartConfig, locale: Locale): ScoreChartConfig {
@@ -303,10 +353,10 @@ function localizeScoreConfig(config: ScoreChartConfig, locale: Locale): ScoreCha
   if (config.mode === 'equal-workload') {
     return {
       ...config,
-      title: '总体影响分数：工作负载等权',
-      subtitle: '对各工作负载列的对数归一化分数取平均。越低越好。',
+      title: '总体影响分数：测试项等权',
+      subtitle: '对各测试项的对数归一化分数取平均。数值越低越好。',
       footnote:
-        '每个工作负载列在 AV 产品之间对数归一化后等权计入。分数是 0-100 的相对值，不是原始变慢百分比。',
+        '每个测试项先在各产品之间做对数归一化，再等权计入。分数为 0-100 的相对值，不是原始变慢百分比。',
       seriesConfig: {
         score: {
           label: '影响分数',
@@ -316,12 +366,28 @@ function localizeScoreConfig(config: ScoreChartConfig, locale: Locale): ScoreCha
     }
   }
 
+  if (config.mode === 'severity-weighted') {
+    return {
+      ...config,
+      title: '总体性能影响分数：严重度加权',
+      subtitle: '按测试项严重程度等级指数计分，让单项严重变慢获得更高权重。数值越低越好。',
+      footnote:
+        '每个测试项按热力图等级计分：本项最低=1、很低=2、低=4、中等=8、高=16、很高=32、本项最高=64。若某些测试项缺少数据，会根据已有结果估算完整总分，避免产品因缺项而得到偏低的总分。',
+      seriesConfig: {
+        score: {
+          label: '严重度加权分数',
+          color: config.seriesConfig.score.color,
+        },
+      },
+    }
+  }
+
   return {
     ...config,
     title: '总体影响分数：类别均衡',
-    subtitle: '先在类别内平均工作负载，再让各类别等权。越低越好。',
+    subtitle: '先在类别内平均各测试项，再让各类别等权。数值越低越好。',
     footnote:
-      '类别均衡分数避免测试项更多的类别主导结果。构建使用全量 25%、增量 75%；新 EXE 取较差步骤；扩展名敏感性取 EXE/DLL/JS/PS1 平均值。',
+      '类别均衡分数可避免测试项数量较多的类别主导结果。构建按全量 25%、增量 75% 加权；新 EXE 取两步中较高的耗时增幅；扩展名敏感度取 EXE/DLL/JS/PS1 平均值。',
     seriesConfig: {
       score: {
         label: '影响分数',

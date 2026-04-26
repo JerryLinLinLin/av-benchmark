@@ -149,11 +149,11 @@ export function ExtensionSensitivityChart({ data, onReady }: Props) {
       <Card className="chart-card">
         <CardHeader className="chart-card-header">
           <CardTitle className="chart-card-title">
-            {locale === 'zh-cn' ? '扩展名敏感性：平均影响' : 'Extension Sensitivity: Average Impact'}
+            {locale === 'zh-cn' ? '扩展名敏感度：平均耗时增幅' : 'Extension Sensitivity: Average Impact'}
           </CardTitle>
           <CardDescription>
             {locale === 'zh-cn'
-              ? '按文件扩展名统计所有成功运行的平均耗时影响。越低越好。'
+              ? '按文件扩展名统计所有成功运行的平均耗时增幅。数值越低越好。'
               : 'Mean wall-time impact by file extension across all successful runs. Lower is better.'}
           </CardDescription>
         </CardHeader>
@@ -223,7 +223,7 @@ export function ExtensionSensitivityChart({ data, onReady }: Props) {
         </CardContent>
         <CardFooter className="chart-card-footer">
           {locale === 'zh-cn'
-            ? '影响值根据扩展名敏感性微基准的 `all_runs_mean_wall_ms` 相对基线 OS 计算。断轴突出 0-100% 区间。详细数值可在提示框查看；每个 AV 超过 200% 的最高值会以红色标注。'
+            ? '耗时增幅根据扩展名敏感度测试的 `all_runs_mean_wall_ms` 相对基线 OS 计算。断轴用于突出 0-100% 区间。详细数值可在提示框查看；每个产品超过 200% 的最高值会以红色标注。'
             : "Impact is computed from `all_runs_mean_wall_ms` versus baseline OS for the extension sensitivity microbenchmarks. Broken y-axis emphasizes 0-100%. Values are available in the tooltip; each AV's highest value above 200% is labeled in red."}
         </CardFooter>
       </Card>

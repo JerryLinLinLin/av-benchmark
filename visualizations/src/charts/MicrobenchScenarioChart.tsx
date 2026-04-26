@@ -111,7 +111,7 @@ export function MicrobenchScenarioChart({
           <CardTitle className="chart-card-title">{displayTitle}</CardTitle>
           <CardDescription>
             {locale === 'zh-cn'
-              ? '所有成功运行的平均耗时影响。越低越好。'
+              ? '基于所有成功运行的平均耗时计算，数值越低越好。'
               : 'Mean wall-time impact across all successful runs. Lower is better.'}
           </CardDescription>
         </CardHeader>
@@ -171,10 +171,9 @@ export function MicrobenchScenarioChart({
           </ChartContainer>
         </CardContent>
         <CardFooter className="chart-card-footer">
-          Impact is computed from `all_runs_mean_wall_ms` versus baseline OS for
           {locale === 'zh-cn'
-            ? ` \`${data.id}\` 微基准，基于 \`all_runs_mean_wall_ms\` 相对基线 OS 计算。负值显示为 0%。`
-            : ` the \`${data.id}\` microbenchmark. ${scaleNote} Negative values are shown as 0%.`}
+            ? `耗时增幅 =（杀毒软件平均耗时 - 基线 OS 平均耗时）/ 基线 OS 平均耗时。${formatScaleNote(axis, locale)}负值按 0% 显示。`
+            : `Percent impact = (AV mean wall time - baseline OS mean wall time) / baseline OS mean wall time. ${formatScaleNote(axis, locale) || scaleNote} Negative values are shown as 0%.`}
         </CardFooter>
       </Card>
     </section>
@@ -284,6 +283,20 @@ function transformMicrobenchValue(value: number) {
 function formatAxisLabel(value: number, axis: ManualAxisBreak) {
   const label = axis.tickLabels.get(value)
   return label === undefined ? '' : `${label}%`
+}
+
+function formatScaleNote(axis: ManualAxisBreak, locale: ReturnType<typeof useLocale>) {
+  if (isLinearAxis(axis)) {
+    return locale === 'zh-cn' ? 'Y 轴为线性刻度。' : 'The y-axis uses a linear scale.'
+  }
+
+  return locale === 'zh-cn'
+    ? 'Y 轴对高离群值做了压缩，以保留 0-100% 区间的可读性。'
+    : 'The y-axis is compressed for high outliers so the 0-100% range stays readable.'
+}
+
+function isLinearAxis(axis: ManualAxisBreak) {
+  return axis.ticks.every((tick) => axis.tickLabels.get(tick) === tick)
 }
 
 function formatPercent(value: number) {

@@ -74,7 +74,7 @@ export function NewExeRunSequenceChart({ data, onReady }: Props) {
   const locale = useLocale()
   const copy = text(locale)
   const run1Label = locale === 'zh-cn' ? '第 1 次：冷启动，无 MOTW' : 'Run 1: cold, no MOTW'
-  const run2Label = locale === 'zh-cn' ? '第 2 次：缓存已热 + MOTW' : 'Run 2: warm cache + MOTW'
+  const run2Label = locale === 'zh-cn' ? '第 2 次：缓存已预热 + MOTW' : 'Run 2: warm cache + MOTW'
   const seriesConfig = useMemo(
     () => ({
       run1Plot: {
@@ -100,11 +100,11 @@ export function NewExeRunSequenceChart({ data, onReady }: Props) {
       <Card className="chart-card">
         <CardHeader className="chart-card-header">
           <CardTitle className="chart-card-title">
-            {locale === 'zh-cn' ? '新 EXE 运行序列：平均影响' : 'New EXE Run Sequence: Average Impact'}
+            {locale === 'zh-cn' ? '新 EXE 运行序列：平均耗时增幅' : 'New EXE Run Sequence: Average Impact'}
           </CardTitle>
           <CardDescription>
             {locale === 'zh-cn'
-              ? '先冷启动且无 MOTW，再在缓存已热时带 MOTW 运行。越低越好。'
+              ? '先进行无 MOTW 的冷启动，再在缓存已预热且带 MOTW 的状态下运行。数值越低越好。'
               : 'First cold without MOTW, then warm-cache run with MOTW. Lower is better.'}
           </CardDescription>
         </CardHeader>
@@ -185,7 +185,7 @@ export function NewExeRunSequenceChart({ data, onReady }: Props) {
         </CardContent>
         <CardFooter className="chart-card-footer">
           {locale === 'zh-cn'
-            ? '影响值根据 `all_runs_mean_wall_ms` 相对基线 OS 计算。第 2 次在第 1 次之后运行，添加 MOTW 且不重置虚拟机。缺少任一运行的数据行会被排除。'
+            ? '耗时增幅根据 `all_runs_mean_wall_ms` 相对基线 OS 计算。第 2 次在第 1 次之后运行，添加 MOTW 且不重置虚拟机。缺少任一运行结果的产品会被排除。'
             : 'Impact is computed from `all_runs_mean_wall_ms` versus baseline OS. Run 2 runs after Run 1, with MOTW added and no VM reset. Rows missing either run are excluded.'}
         </CardFooter>
       </Card>
@@ -230,7 +230,7 @@ function buildChartData(run1Rows: MicrobenchScenarioRow[], run2Rows: MicrobenchS
 function NewExeRunSequenceTooltip({ active, label, payload }: TooltipProps) {
   const locale = useLocale()
   const run1Label = locale === 'zh-cn' ? '第 1 次：冷启动，无 MOTW' : 'Run 1: cold, no MOTW'
-  const run2Label = locale === 'zh-cn' ? '第 2 次：缓存已热 + MOTW' : 'Run 2: warm cache + MOTW'
+  const run2Label = locale === 'zh-cn' ? '第 2 次：缓存已预热 + MOTW' : 'Run 2: warm cache + MOTW'
   if (!active || !payload?.length) {
     return null
   }

@@ -23,7 +23,26 @@ export function isZh(locale: Locale) {
   return locale === 'zh-cn'
 }
 
-const avNames: Record<string, string> = {
+const englishAvNames: Record<string, string> = {
+  '360ts': '360 Total Security',
+  avast: 'Avast',
+  avira: 'Avira',
+  bitdefender: 'Bitdefender',
+  drweb: 'Dr.Web',
+  emsisoft: 'Emsisoft',
+  eset: 'ESET',
+  gdata: 'G DATA',
+  huorong: 'Huorong',
+  kaspersky: 'Kaspersky',
+  malwarebytes: 'Malwarebytes',
+  mcafee: 'McAfee',
+  'ms-defender': 'Microsoft Defender',
+  sophos: 'Sophos',
+  'tencent-pcmgr': 'Tencent PC Manager',
+  trendmicro: 'Trend Micro',
+}
+
+const zhAvNames: Record<string, string> = {
   '360ts': '360 Total Security',
   avast: 'Avast',
   avira: '小红伞',
@@ -50,11 +69,11 @@ const workloadLabels: Record<string, string> = {
   'file-write-content': '文件写入',
   'archive-extract': '压缩包解压',
   'hardlink-create': '创建硬链接',
-  'junction-create': '创建 Junction',
+  'junction-create': '创建目录联接',
   'fs-watcher': '文件监视器',
   'process-create-wait': '进程创建/等待',
-  'new-exe-sequence': '新 EXE 序列',
-  'dll-load-unique': 'DLL 唯一加载',
+  'new-exe-sequence': '新 EXE 运行序列',
+  'dll-load-unique': '加载唯一 DLL',
   'com-create-instance': 'COM 实例创建',
   'thread-create': '线程创建',
   'mem-alloc-protect': '内存分配/保护',
@@ -62,34 +81,36 @@ const workloadLabels: Record<string, string> = {
   'net-connect-loopback': '回环连接',
   'net-dns-resolve': 'DNS 解析',
   'pipe-roundtrip': '管道往返',
-  'registry-crud': '注册表 CRUD',
-  'crypto-hash-verify': '加密哈希验证',
-  'extension-sensitivity': '扩展名敏感性',
+  'registry-crud': '注册表增删改查',
+  'crypto-hash-verify': '加密哈希校验',
+  'extension-sensitivity': '扩展名敏感度',
 }
 
 const microbenchTitles: Record<string, string> = {
-  'file-create-delete': '文件创建/删除：平均影响',
-  'archive-extract': '压缩包解压：平均影响',
-  'file-enum-large-dir': '大目录枚举：平均影响',
-  'hardlink-create': '创建硬链接：平均影响',
-  'junction-create': '创建 Junction：平均影响',
-  'process-create-wait': '进程创建/等待：平均影响',
-  'dll-load-unique': 'DLL 唯一加载：平均影响',
-  'file-write-content': '文件写入：平均影响',
-  'thread-create': '线程创建：平均影响',
-  'mem-alloc-protect': '内存分配/保护：平均影响',
-  'mem-map-file': '内存映射文件：平均影响',
-  'net-connect-loopback': '回环连接：平均影响',
-  'net-dns-resolve': 'DNS 解析：平均影响',
-  'registry-crud': '注册表 CRUD：平均影响',
-  'pipe-roundtrip': '管道往返：平均影响',
-  'crypto-hash-verify': '加密哈希验证：平均影响',
-  'com-create-instance': 'COM 实例创建：平均影响',
-  'fs-watcher': '文件系统监视器：平均影响',
+  'file-create-delete': '文件创建/删除：平均耗时增幅',
+  'archive-extract': '压缩包解压：平均耗时增幅',
+  'file-enum-large-dir': '大目录枚举：平均耗时增幅',
+  'hardlink-create': '创建硬链接：平均耗时增幅',
+  'junction-create': '创建目录联接：平均耗时增幅',
+  'process-create-wait': '进程创建/等待：平均耗时增幅',
+  'dll-load-unique': '加载唯一 DLL：平均耗时增幅',
+  'file-write-content': '文件写入：平均耗时增幅',
+  'thread-create': '线程创建：平均耗时增幅',
+  'mem-alloc-protect': '内存分配/保护：平均耗时增幅',
+  'mem-map-file': '内存映射文件：平均耗时增幅',
+  'net-connect-loopback': '回环连接：平均耗时增幅',
+  'net-dns-resolve': 'DNS 解析：平均耗时增幅',
+  'registry-crud': '注册表增删改查：平均耗时增幅',
+  'pipe-roundtrip': '管道往返：平均耗时增幅',
+  'crypto-hash-verify': '加密哈希校验：平均耗时增幅',
+  'com-create-instance': 'COM 实例创建：平均耗时增幅',
+  'fs-watcher': '文件系统监视器：平均耗时增幅',
 }
 
 export function avLabel(avName: string, locale: Locale) {
-  return isZh(locale) ? (avNames[avName] ?? avName) : avName
+  return isZh(locale)
+    ? (zhAvNames[avName] ?? englishAvNames[avName] ?? avName)
+    : (englishAvNames[avName] ?? avName)
 }
 
 export function workloadLabel(key: string, fallback: string, locale: Locale) {
@@ -104,20 +125,22 @@ export function text(locale: Locale) {
   const zh = isZh(locale)
 
   return {
-    antivirusProduct: zh ? '杀毒软件产品' : 'Antivirus product',
-    avProduct: zh ? 'AV 产品' : 'AV product',
-    lowerIsBetter: zh ? '越低越好。' : 'Lower is better.',
-    averageImpact: zh ? '平均影响' : 'Average impact',
-    averageImpactPct: zh ? '平均影响（%）' : 'Average impact (%)',
-    cloudColdImpactPct: zh ? '云端冷启动影响（%）' : 'Cloud-cold impact (%)',
+    antivirusProduct: zh ? '杀毒软件' : 'Antivirus product',
+    avProduct: zh ? '杀毒软件' : 'AV product',
+    lowerIsBetter: zh ? '数值越低越好。' : 'Lower is better.',
+    averageImpact: zh ? '平均耗时增幅' : 'Average impact',
+    averageImpactPct: zh ? '平均耗时增幅（%）' : 'Average impact (%)',
+    cloudColdImpactPct: zh ? '云端冷启动耗时增幅（%）' : 'Cloud-cold impact (%)',
     cleanBuild: zh ? '全量构建' : 'Clean build',
     incrementalBuild: zh ? '增量构建' : 'Incremental build',
     meanWallTime: zh ? '平均耗时' : 'Mean wall time',
-    baselineMean: zh ? '基线平均耗时' : 'Baseline mean',
+    baselineMean: zh ? '基线耗时' : 'Baseline mean',
     status: zh ? '状态' : 'Status',
     impactScore: zh ? '影响分数' : 'Impact score',
     impactScoreAxis: zh ? '影响分数（0-100）' : 'Impact score (0-100)',
-    workloads: zh ? '工作负载' : 'Workloads',
+    severityWeightedScore: zh ? '严重度加权分数' : 'Severity-weighted score',
+    severityWeightedScoreAxis: zh ? '严重度加权分数' : 'Severity-weighted score',
+    workloads: zh ? '测试项' : 'Workloads',
     categories: zh ? '类别' : 'Categories',
     loading: zh ? '正在加载图表数据...' : 'Loading chart data...',
     loadError: zh ? '无法加载图表数据' : 'Unable to load chart data',

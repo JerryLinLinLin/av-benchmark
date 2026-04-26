@@ -13,7 +13,7 @@ import {
   buildWorkloadColumns,
   formatImpactPercent,
   getAvNames,
-  normalizedLogScore,
+  normalizedLevel,
   valuesForColumn,
 } from './workloadImpactModel'
 
@@ -45,13 +45,13 @@ const levelLabels = [
 ]
 
 const zhLevelLabels = [
-  '本列最低',
+  '本项最低',
   '很低',
   '低',
   '中等',
   '高',
   '很高',
-  '本列最高',
+  '本项最高',
 ]
 
 export function WorkloadImpactHeatmap({ data, onReady }: Props) {
@@ -70,11 +70,11 @@ export function WorkloadImpactHeatmap({ data, onReady }: Props) {
       <Card className="chart-card heatmap-card">
         <CardHeader className="chart-card-header">
           <CardTitle className="chart-card-title">
-            {locale === 'zh-cn' ? '杀毒软件工作负载影响热力图' : 'Antivirus Workload Impact Heatmap'}
+            {locale === 'zh-cn' ? '杀毒软件性能影响热力图' : 'Antivirus Workload Impact Heatmap'}
           </CardTitle>
           <CardDescription>
             {locale === 'zh-cn'
-              ? '平均耗时影响相对基线 OS 计算。越低越好。颜色在每个工作负载列内进行对数归一化。'
+              ? '平均耗时增幅相对基线 OS 计算，数值越低越好。颜色按测试项分别做对数归一化。'
               : 'Mean wall-time impact versus baseline OS. Lower is better. Color is log-normalized within each workload column.'}
           </CardDescription>
         </CardHeader>
@@ -106,7 +106,7 @@ export function WorkloadImpactHeatmap({ data, onReady }: Props) {
         </CardContent>
         <CardFooter className="chart-card-footer">
           {locale === 'zh-cn'
-            ? '构建列按全量 25%、增量 75% 加权。新 EXE 序列取两个步骤中较差者。扩展名敏感性取 EXE、DLL、JS、PS1 的平均值。颜色按列对数归一化；单元格文字显示实际影响。'
+            ? '构建测试按全量 25%、增量 75% 加权。新 EXE 运行序列取两步中较高的耗时增幅。扩展名敏感度取 EXE、DLL、JS、PS1 的平均值。颜色按测试项分别归一化；每个格子显示实际耗时增幅。'
             : 'Build columns weight clean at 25% and incremental at 75%. New EXE sequence uses the worse of the two sequence steps. Extension sensitivity averages EXE, DLL, JS, and PS1. Color is log-normalized per column; cell text shows actual impact.'}
         </CardFooter>
       </Card>
@@ -151,7 +151,7 @@ function buildHeatmap(data: CompilationWorkloadData) {
         key: column.key,
         label: column.label,
         value,
-        level: normalizedLevel(value, valuesByColumn.get(column.key) ?? []),
+        level: normalizedLevel(value, valuesByColumn.get(column.key) ?? []) ?? 0,
       }
     })
 
@@ -159,13 +159,4 @@ function buildHeatmap(data: CompilationWorkloadData) {
   })
 
   return { columns, rows }
-}
-
-function normalizedLevel(value: number | null, values: number[]) {
-  const score = normalizedLogScore(value, values)
-  if (score === null) {
-    return 0
-  }
-
-  return Math.min(6, Math.max(0, Math.floor((score / 100) * 7)))
 }

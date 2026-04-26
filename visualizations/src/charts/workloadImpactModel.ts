@@ -119,6 +119,19 @@ export function normalizedLogScore(value: number | null, values: number[]) {
   return (Math.log1p(value - min) / Math.log1p(max - min)) * 100
 }
 
+export function normalizedLevel(value: number | null, values: number[]) {
+  const score = normalizedLogScore(value, values)
+  if (score === null) {
+    return null
+  }
+
+  return Math.min(6, Math.max(0, Math.floor((score / 100) * 7)))
+}
+
+export function levelPenaltyScore(level: number) {
+  return 2 ** level
+}
+
 export function average(values: Array<number | null>) {
   const finiteValues = values.filter((value): value is number => value !== null && Number.isFinite(value))
   return finiteValues.length

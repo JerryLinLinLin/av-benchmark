@@ -22,6 +22,10 @@ const outputs = [
     path: path.join(outputDir, 'overall-impact-score-category-balanced.png'),
   },
   {
+    chartId: 'overall-impact-severity-weighted',
+    path: path.join(outputDir, 'overall-performance-impact-score-severity-weighted.png'),
+  },
+  {
     chartId: 'ripgrep-cloud-cold',
     path: path.join(outputDir, 'ripgrep-build-cloud-cold-impact.png'),
   },

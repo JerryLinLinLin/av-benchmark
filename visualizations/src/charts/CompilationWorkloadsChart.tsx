@@ -273,10 +273,10 @@ export function CompilationWorkloadsChart({ data, onReady }: Props) {
     <div className="figure">
       <header className="figure-header">
         <div>
-          <h1>{locale === 'zh-cn' ? '编译工作负载影响' : 'Compilation Workload Impact'}</h1>
+          <h1>{locale === 'zh-cn' ? '编译构建性能影响' : 'Compilation Workload Impact'}</h1>
           <p>
             {locale === 'zh-cn'
-              ? '云端冷启动与平均影响均相对基线 OS 计算。负值显示为 0%。'
+              ? '云端冷启动和平均耗时增幅均相对基线 OS 计算；负值按 0% 显示。'
               : 'Cloud-cold and average impact vs baseline OS. Negative values are shown as 0%.'}
           </p>
         </div>
@@ -491,14 +491,14 @@ function localizeWorkloadConfig(config: WorkloadChartConfig, locale: Locale): Wo
         color: config.seriesConfig.incrementalPlot.color,
       },
     },
-    title: `${isRipgrep ? 'Ripgrep' : 'Roslyn'} 构建：${isAverage ? '平均影响' : '云端冷启动影响'}`,
+    title: `${isRipgrep ? 'Ripgrep' : 'Roslyn'} 构建：${isAverage ? '平均耗时增幅' : '云端冷启动耗时增幅'}`,
     subtitle: isAverage
-      ? '基于所有运行平均耗时的全量 + 增量构建影响。越低越好。'
-      : '云端信誉/缓存预热前的全量 + 增量构建影响。越低越好。',
-    yAxisLabel: isAverage ? '平均影响（%）' : '云端冷启动影响（%）',
+      ? '全量和增量构建均基于所有运行的平均耗时计算。数值越低越好。'
+      : '全量和增量构建均基于云端信誉/缓存预热前的首次运行计算。数值越低越好。',
+    yAxisLabel: isAverage ? '平均耗时增幅（%）' : '云端冷启动耗时增幅（%）',
     footnote: isAverage
-      ? `影响值根据所有运行的平均耗时相对基线 OS 计算。断轴突出 ${axisRange} 区间。负值显示为 0%。`
-      : `云端冷启动表示首次云端/信誉系统接触；每次运行前重置虚拟机以移除本地缓存。断轴突出 ${axisRange} 区间。负值显示为 0%。`,
+      ? `耗时增幅根据所有运行的平均耗时相对基线 OS 计算。断轴用于突出 ${axisRange} 区间。负值按 0% 显示。`
+      : `云端冷启动表示首次接触云端信誉/缓存；每次运行前重置虚拟机以移除本地缓存。断轴用于突出 ${axisRange} 区间。负值按 0% 显示。`,
   }
 }
 
