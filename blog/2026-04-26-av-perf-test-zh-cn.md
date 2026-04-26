@@ -8,7 +8,7 @@ mermaid: true
 media_subpath: /assets/img/2026-04-26-av-perf-test
 ---
 
-安全产品的性能评测报告屡见不鲜，其中 [AV-Comparatives](https://www.av-comparatives.org/) 与 [AV-TEST](https://www.av-test.org/) 的方法非常流行。它们在标准硬件上执行文件复制、压缩解压、应用安装启动、网页浏览等日常操作，区分首次与后续运行，取多次测试的中位数，并在每次测试前还原系统镜像。AV-Comparatives 还引入了 UL Procyon 办公基准套件作为第三方参照。这套体系主要面向消费者场景，衡量的是"安装杀软后日常操作的放缓程度"，其结论直观且具有显著的参考价值。
+在安全产品的性能评测报告中，目前最为广泛采用的是 [AV-Comparatives](https://www.av-comparatives.org/) 与 [AV-TEST](https://www.av-test.org/)。它们在标准硬件上执行文件复制、压缩解压、应用安装启动、网页浏览等日常操作，区分首次与后续运行，取多次测试的中位数，并在每次测试前还原系统镜像。AV-Comparatives 还引入了 UL Procyon 办公基准套件作为第三方参照。这套体系主要面向消费者场景，衡量的是"安装杀软后日常操作的放缓程度"，其结论直观且具有显著的参考价值。
 
 然而，性能测试本身是一项复杂的工程。熟悉手机评测的读者对此深有体会：跑分软件的排名年年变化，厂商针对特定基准测试进行优化已非秘密，而单纯的 Geekbench 分数无法反映日常滑动的流畅度。杀软评测面临同样的问题：选定的工作负载直接决定了结论的适用范围。AV-Comparatives 测试的是"复制文件、安装软件、启动 Office"，其结论自然仅适用于这些场景；一旦更换工作负载（例如代码编译），排名完全可能逆转。因此，"某款杀软在 AV-TEST 中排名第一"并不等同于"它不会拖慢你的 Rust 构建速度"。
 
@@ -28,21 +28,19 @@ media_subpath: /assets/img/2026-04-26-av-perf-test
 
 ## 测试产品
 
-覆盖产品包括：
-
-360 Total Security
-Avast
-小红伞
-比特梵德
-Dr.Web
-Emsisoft
-ESET
-G DATA
-火绒
-卡巴斯基
-Malwarebytes
-迈克菲
-Microsoft Defender
-Sophos
-腾讯电脑管家
-趋势科技
+360 Total Security 11.0.0.1314
+Avast 26.3.10886g (build 26.3.10886.978)
+小红伞 1.1.115.3317
+比特梵德 27.0.58.324
+Dr.Web 12.0
+Emsisoft 2026.1.0.12700
+ESET 19.1.12.0
+G DATA 25.5.20
+火绒 6.0.9.3
+卡巴斯基 21.25.7.504
+Malwarebytes 5.5.4.252
+迈克菲 1.38.166.1
+Microsoft Defender 4.18.26030.3011
+Sophos 2024.3.3.1.0
+腾讯电脑管家 18.0.29988.215
+趋势科技 17.9.1161
