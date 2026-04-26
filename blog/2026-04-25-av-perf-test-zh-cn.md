@@ -1,11 +1,11 @@
 ---
 title: 再谈杀软性能测试
-date: 2026-04-26 18:00:00 -0500
+date: 2026-04-25 18:00:00 -0500
 categories: [Research]
 tags: [antivirus, edr, endpoint security, performance, antimalware]
 description: 用编译工作负载和 API 级微基准量化 16 款杀软的性能开销。
 mermaid: true
-media_subpath: /assets/img/2026-04-26-av-perf-test-zh-cn
+media_subpath: /assets/img/2026-04-25-av-perf-test-zh-cn
 ---
 
 在安全产品的性能评测报告中，目前最为广泛采用的是 [AV-Comparatives](https://www.av-comparatives.org/) 与 [AV-TEST](https://www.av-test.org/)。它们在标准硬件上执行文件复制、压缩解压、应用安装启动、网页浏览等日常操作，区分首次与后续运行，取多次测试的中位数，并在每次测试前还原系统镜像。AV-Comparatives 还引入了 UL Procyon 办公基准套件作为第三方参照。这套体系主要面向消费者场景，衡量的是"安装杀软后日常操作的放缓程度"，其结论直观且具有显著的参考价值。
