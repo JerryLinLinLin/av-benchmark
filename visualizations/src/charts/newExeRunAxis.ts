@@ -1,30 +1,31 @@
 import type { ManualAxisBreak } from './MicrobenchScenarioChart'
 
 export const newExeRunAxis: ManualAxisBreak = {
-  max: 160,
-  ticks: [0, 18.4, 36.8, 55.2, 73.6, 92, 108, 124, 136, 148, 160],
+  max: 168,
+  ticks: [0, 18, 36, 54, 72, 90, 106, 122, 136, 148, 158, 168],
   tickLabels: new Map([
     [0, 0],
-    [18.4, 20],
-    [36.8, 40],
-    [55.2, 60],
-    [73.6, 80],
-    [92, 100],
-    [108, 200],
-    [124, 500],
+    [18, 20],
+    [36, 40],
+    [54, 60],
+    [72, 80],
+    [90, 100],
+    [106, 200],
+    [122, 500],
     [136, 1000],
     [148, 2000],
-    [160, 4000],
+    [158, 4000],
+    [168, 8000],
   ]),
   transform: transformNewExeRunValue,
 }
 
 function transformNewExeRunValue(value: number) {
-  return interpolateAxis(value, [0, 20, 40, 60, 80, 100, 200, 500, 1000, 2000, 4000])
+  return interpolateAxis(value, [0, 20, 40, 60, 80, 100, 200, 500, 1000, 2000, 4000, 8000])
 }
 
 function interpolateAxis(value: number, actualStops: number[]) {
-  const plotStops = [0, 18.4, 36.8, 55.2, 73.6, 92, 108, 124, 136, 148, 160]
+  const plotStops = [0, 18, 36, 54, 72, 90, 106, 122, 136, 148, 158, 168]
 
   if (value <= actualStops[0]) {
     return plotStops[0]

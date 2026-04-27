@@ -139,6 +139,7 @@ export function NewExeRunSequenceChart({ data, onReady }: Props) {
                 domain={[0, newExeRunAxis.max]}
                 ticks={newExeRunAxis.ticks}
                 tickFormatter={(value) => formatAxisLabel(Number(value))}
+                interval={0}
                 tickLine={false}
                 axisLine={false}
                 width={74}
